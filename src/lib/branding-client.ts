@@ -49,8 +49,21 @@ function defaults() {
   return isOSS() ? OSS_DEFAULTS : PRO_DEFAULTS;
 }
 
+// DNA patch: each property is read statically so the build can
+// inline it. The dynamic lookup this replaced never was.
+const CLIENT_ENV: Record<string, string | undefined> = {
+  NEXT_PUBLIC_BRAND_NAME: process.env.NEXT_PUBLIC_BRAND_NAME,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  NEXT_PUBLIC_LOGO_URL: process.env.NEXT_PUBLIC_LOGO_URL,
+  NEXT_PUBLIC_FAVICON_URL: process.env.NEXT_PUBLIC_FAVICON_URL,
+  NEXT_PUBLIC_PRIMARY_COLOR: process.env.NEXT_PUBLIC_PRIMARY_COLOR,
+  NEXT_PUBLIC_ACCENT_COLOR: process.env.NEXT_PUBLIC_ACCENT_COLOR,
+  NEXT_PUBLIC_BACKGROUND_COLOR: process.env.NEXT_PUBLIC_BACKGROUND_COLOR,
+  NEXT_PUBLIC_TEXT_COLOR: process.env.NEXT_PUBLIC_TEXT_COLOR,
+};
+
 function env(key: string): string | undefined {
-  return process.env[key] || undefined;
+  return CLIENT_ENV[key] || undefined;
 }
 
 function cleanLocalUrl(url: string): string {
