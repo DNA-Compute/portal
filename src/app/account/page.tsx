@@ -448,8 +448,8 @@ function AccountContent() {
           position: sticky;
           top: 0;
           z-index: 50;
-          border-bottom: 1px solid var(--line);
-          background: rgba(255, 255, 255, 0.92);
+          border-bottom: 1px solid rgba(200, 255, 61, 0.16);
+          background: rgba(7, 17, 15, 0.92); /* DNA theme */
           backdrop-filter: blur(12px);
         }
         .account-header-inner {
@@ -493,7 +493,7 @@ function AccountContent() {
         /* ═══ Left panel — dark, sells ═══ */
         .account-left {
           flex: 1 1 50%;
-          background: linear-gradient(135deg, #0a0a0a 0%, #111827 50%, #0f172a 100%);
+          background: linear-gradient(135deg, #07110f 0%, #10201b 55%, #0b1713 100%);
           color: white;
           display: flex;
           align-items: center;
@@ -857,6 +857,16 @@ function AccountContent() {
             flex: none;
             padding: 32px 24px 48px;
           }
+        }
+
+        .account-header-link {
+          color: rgba(223, 230, 220, 0.72);
+        }
+        .account-header-link:hover {
+          color: #dfe6dc;
+        }
+        .account-header-signin {
+          color: #dfe6dc;
         }
       `}</style>
     </div>
