@@ -60,6 +60,10 @@ const CLIENT_ENV: Record<string, string | undefined> = {
   NEXT_PUBLIC_ACCENT_COLOR: process.env.NEXT_PUBLIC_ACCENT_COLOR,
   NEXT_PUBLIC_BACKGROUND_COLOR: process.env.NEXT_PUBLIC_BACKGROUND_COLOR,
   NEXT_PUBLIC_TEXT_COLOR: process.env.NEXT_PUBLIC_TEXT_COLOR,
+  // DNA patch: SUPPORT_EMAIL has no NEXT_PUBLIC_ prefix, so Next never exposes
+  // it to the browser and getSupportEmail() fell through to the edition default
+  // - showing upstream's help@packet.ai on the post-payment pages.
+  NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
 };
 
 function env(key: string): string | undefined {
@@ -94,7 +98,9 @@ export function getApiBaseUrl(): string {
 }
 
 export function getSupportEmail(): string {
-  return env("SUPPORT_EMAIL") || defaults().supportEmail;
+  // NEXT_PUBLIC_ first, since that is the only one the client bundle carries.
+  // SUPPORT_EMAIL stays as a fallback for any server-side caller of this module.
+  return env("NEXT_PUBLIC_SUPPORT_EMAIL") || env("SUPPORT_EMAIL") || defaults().supportEmail;
 }
 
 export function getLogoUrl(): string {
