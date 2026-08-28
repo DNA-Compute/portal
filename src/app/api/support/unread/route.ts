@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       if (await isTicketClosed(ticket)) continue;
 
       const articles = await getTicketArticles(ticket.id);
-      const publicArticles = articles.filter((a) => !a.internal);
+      const publicArticles = articles.filter((a: any) => !a.internal);
       const lastArticle = publicArticles[publicArticles.length - 1];
       if (lastArticle && lastArticle.sender !== "Customer") {
         hasUnreadReplies = true;
