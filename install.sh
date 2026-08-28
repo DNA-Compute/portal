@@ -268,6 +268,11 @@ DB_CLIENT="mariadb"
 if ! command -v mariadb &>/dev/null; then
   DB_CLIENT="mysql"
 fi
+# DNA patch: the database is RDS, not localhost. With no local server
+# the unconditional CREATE DATABASE below aborts the install under set -e.
+if ! systemctl is-active --quiet mariadb 2>/dev/null && ! systemctl is-active --quiet mysql 2>/dev/null; then
+  DB_CLIENT="true"
+fi
 
 sudo $DB_CLIENT -u root <<EOF
 CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -288,6 +293,9 @@ if [[ -d "$INSTALL_DIR/.git" ]]; then
 else
   run_with_progress "Cloning repository" bash -c "git clone --depth 1 --branch ${BRANCH} ${REPO_URL} ${INSTALL_DIR} && chown -R ${APP_USER}:${APP_USER} ${INSTALL_DIR}"
 fi
+
+# DNA patch: chown unconditionally, not only in the clone branch.
+chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
 
 cd "$INSTALL_DIR"
 
