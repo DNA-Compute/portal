@@ -2,6 +2,9 @@
 
 import React from "react";
 
+// DNA patch: the brand name is configuration, not a literal.
+import { getBrandName } from "@/lib/branding-client";
+
 interface ValidatedVoucher {
   code: string;
   name: string;
@@ -245,7 +248,7 @@ export function WelcomeModal({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <span className="text-xs font-medium text-teal-400 uppercase tracking-wider">Welcome to Packet</span>
+                <span className="text-xs font-medium text-teal-400 uppercase tracking-wider">Welcome to {getBrandName()}</span>
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
                 {redeemSuccess !== null
