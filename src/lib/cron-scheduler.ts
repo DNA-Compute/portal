@@ -53,6 +53,25 @@ const jobs: CronJob[] = [
     method: "POST",
     enabled: true,
   },
+  {
+    // DNA patch: /api/cron/admin-stats exists and writes adminStatsSnapshot,
+    // but nothing was registered to call it - so the table stayed empty and
+    // /api/admin/stats fell through to its hardcoded zeros. Every headline on
+    // the admin dashboard read 0 permanently: customers, active pods, MRR,
+    // new-this-week, revenue-this-week and all the growth deltas. On
+    // 2026-08-31 the dashboard showed "Total Customers 0" directly above a
+    // list of three of them.
+    //
+    // Hourly rather than daily. The snapshot is keyed by date and written with
+    // upsert, so re-running it within a day refreshes today's row rather than
+    // adding one; hourly costs almost nothing and means a dashboard opened in
+    // the afternoon is not reporting the small hours.
+    name: "admin-stats",
+    path: "/api/cron/admin-stats",
+    schedule: { type: "interval", ms: 3_600_000 }, // 1 hour
+    method: "POST",
+    enabled: true,
+  },
 ];
 
 let started = false;

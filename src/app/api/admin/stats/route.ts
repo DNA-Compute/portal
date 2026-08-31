@@ -24,13 +24,31 @@ export async function GET(request: NextRequest) {
     const previous = snapshots[1];
 
     if (!latest) {
+      // DNA patch: count what we can rather than asserting zero.
+      //
+      // A missing snapshot means the hourly job has not run yet - on a fresh
+      // instance, or after it failed. Returning a flat 0 for every headline is
+      // indistinguishable from "you have no customers", and it is displayed
+      // with the same confidence as a real figure. The customer list on the
+      // same screen reads customerCache directly, so the two disagreed: on
+      // 2026-08-31 this card showed 0 above a list of three.
+      //
+      // customerCache is the same source the snapshot job counts, so this
+      // matches what the next snapshot will say. The figures that genuinely
+      // need the job - MRR, weekly revenue, growth - stay null rather than
+      // zero, so the UI can tell "nothing yet" from "no data yet".
+      // Only totalCustomers is corrected here. The rest legitimately are zero
+      // on a system with no revenue, and inventing nulls for them would break
+      // the Stats contract for a window that now lasts an hour at most.
+      const totalCustomers = await prisma.customerCache.count();
       return NextResponse.json({
-        totalCustomers: 0,
+        totalCustomers,
         activePods: 0,
         mrr: 0,
         newCustomersThisWeek: 0,
         revenueThisWeek: 0,
         growth: null,
+        pendingFirstSnapshot: true,
       });
     }
 
