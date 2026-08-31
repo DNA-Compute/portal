@@ -86,10 +86,40 @@ export default function AdminLoginPage() {
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      // DNA patch: parse defensively and keep the status code.
+      //
+      // A failing route does not answer in JSON. A 500 comes back as Next's
+      // HTML error page and a dead upstream as nginx's 502, so response.json()
+      // throws a SyntaxError, the catch below reports "Failed to process
+      // login", and the status code - the one fact that says where to look -
+      // is discarded before anyone sees it.
+      //
+      // That is not hypothetical. On 2026-08-31 the RDS master password
+      // rotated out from under the application, every query returned Prisma
+      // P1000, and this screen said only "Failed to process login". Nothing
+      // pointed at a database, and the outage was diagnosed from journalctl
+      // instead of from the message the operator was actually looking at.
+      let data: { error?: string; requiresTwoFactor?: boolean; token?: string; success?: boolean } = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch {
+          // Content-Type claimed JSON and the body was not. Nothing to
+          // recover; the status code below carries the useful half.
+        }
+      }
 
       if (!response.ok) {
-        setError(data.error || "Something went wrong");
+        // data.error when the route answered properly, status when it did not.
+        // Deliberately no exception text: this page is unauthenticated, and
+        // the status is enough to separate "wrong password" from "the server
+        // is broken", which is the distinction that was missing.
+        setError(
+          data.error ||
+            `Sign-in failed with HTTP ${response.status}. This is a server-side ` +
+              `fault rather than a bad password - check the service and database ` +
+              `before retrying.`,
+        );
         return;
       }
 
@@ -107,8 +137,19 @@ export default function AdminLoginPage() {
 
       // Magic link flow — show "check email" message
       setSubmitted(true);
-    } catch {
-      setError("Failed to process login");
+    } catch (err) {
+      // Only genuine transport failures reach here now that the parse above is
+      // guarded. fetch() rejects with a TypeError when the request never
+      // completed, which is a different problem from the server answering
+      // badly, and telling them apart saves the first ten minutes of any
+      // investigation. The full error goes to the console for whoever is
+      // looking; the screen stays free of exception text.
+      console.error("[admin/login] sign-in request failed:", err);
+      setError(
+        err instanceof TypeError
+          ? "Could not reach the server. Check your connection, then try again."
+          : "The sign-in request failed before the server replied. See the browser console for details.",
+      );
     } finally {
       setLoading(false);
     }
