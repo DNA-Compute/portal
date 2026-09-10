@@ -377,7 +377,7 @@ function HuggingFacePageContent() {
               className={`px-4 py-3 border rounded-lg transition-colors flex items-center gap-2 ${
                 showFilters || selectedTask || selectedLibrary || selectedParamSize
                   ? "border-teal-500 text-teal-600 bg-teal-50"
-                  : "border-gray-300 text-gray-600 hover:border-gray-400"
+                  : "border-gray-300 text-gray-600 hover:border-gray-300"
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

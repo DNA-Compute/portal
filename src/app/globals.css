@@ -1,31 +1,186 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ============================================================================
+   DNA Compute theme.
+
+   These values are not invented here. They are lifted from the marketing site
+   (dnacompute.com), so that a customer moving from the order form at
+   /contact#inquiry into this portal does not cross a visual seam. If the
+   marketing palette changes, change it here to match.
+
+   Structure:
+     1. :root        - the design tokens, named the way the marketing site
+                       names them.
+     2. @theme       - remaps Tailwind's own palette so the ~830 hardcoded
+                       utility classes across 94 components resolve to this
+                       theme without editing the components.
+     3. base         - element defaults.
+     4. utilities    - the handful of Tailwind utilities that cannot be fixed
+                       by remapping a token alone.
+
+   BrandStyles.tsx overwrites --blue, --blue-dark, --teal, --background,
+   --foreground and the RGB triples at runtime from platform settings. Any
+   token it does not name is fixed here.
+   ========================================================================= */
+
 :root {
-  --background: #f7f8fb;
-  --foreground: #0b0f1c;
-  --panel: #ffffff;
-  --muted: #5b6476;
-  --line: #e4e7ef;
-  --blue: #1a4fff;
-  --blue-dark: #1238c9;
-  --teal: #18b6a8;
-  --primary-r: 26;
-  --primary-g: 79;
-  --primary-b: 255;
-  --accent-r: 24;
-  --accent-g: 182;
-  --accent-b: 168;
+  /* ── Grounds ─────────────────────────────────────────────────────────── */
+  --ink: #07110f;        /* page */
+  --ink-soft: #0c1916;   /* panels, cards, table headers */
+  --ink-raise: #10201b;  /* hover, raised surfaces, active rows */
+  --ink-sink: #050c0b;   /* wells, code blocks, inset areas */
+  --paper: #f3f1e9;      /* the light ground, used sparingly */
+  --paper-2: #e9e7dd;
+
+  /* ── Accent ──────────────────────────────────────────────────────────── */
+  --acid: #c8ff3d;
+  --acid-deep: #9fdb14;
+  --acid-ink: #46660a;   /* legible on an acid fill */
+  --mint: #77f2c6;
+
+  /* ── Text ────────────────────────────────────────────────────────────── */
+  --fg: #ffffff;
+  --fg-soft: rgba(255, 255, 255, 0.82);
+  --fg-muted: rgba(255, 255, 255, 0.66);
+  --fg-faint: rgba(255, 255, 255, 0.40);
+
+  /* ── Lines ───────────────────────────────────────────────────────────── */
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.22);
+
+  /* ── Type ────────────────────────────────────────────────────────────── */
+  /* The marketing site sets no webfont; it uses the platform grotesque and a
+     platform monospace. Matching that stack exactly is what makes the two
+     properties look like one product, and it costs no network requests. */
+  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --copy-body: 19px;
+  --copy-card: 17px;
+  --copy-supporting: 15px;
+  --copy-table: 16px;
+  --copy-lead: clamp(22px, 1.8vw, 24px);
+  --heading-hero: clamp(56px, 5vw, 72px);
+  --heading-section: clamp(32px, 3.5vw, 48px);
+
+  /* Headings carry negative tracking that tightens as they grow. */
+  --track-hero: -0.05em;
+  --track-section: -0.04em;
+
+  /* The micro-label: monospace, uppercase, wide. Used for every field label,
+     eyebrow, table header and stat caption. It is the most recognisable
+     element of the marketing design and the cheapest to carry across. */
+  --label-size: 12px;
+  --label-weight: 700;
+  --label-track: 0.1em;
+
+  /* ── Rhythm ──────────────────────────────────────────────────────────── */
+  --header-height: 82px;
+  --section-gap: 64px;
+
+  /* ── Aliases the app already refers to ───────────────────────────────── */
+  /* --ink and --font-display were referenced by src/app/account/page.tsx while
+     being defined nowhere, so every heading and label on the sign-up screen
+     silently fell back to inherited Arial at an inherited colour. --ink is
+     defined above; the rest are mapped here. */
+  --background: var(--ink);
+  --foreground: var(--fg);
+  --panel: var(--ink-soft);
+  --muted: var(--fg-muted);
+
+  /* ── Brand hooks ─────────────────────────────────────────────────────── */
+  /* Defaults only. BrandStyles.tsx replaces these from platform settings on
+     every request, so treat them as a fallback for a misconfigured install
+     rather than as the source of truth. */
+  --blue: #315f50;
+  --blue-dark: #274c40;
+  --teal: var(--acid);
+  --primary-r: 49;
+  --primary-g: 95;
+  --primary-b: 80;
+  --accent-r: 200;
+  --accent-g: 255;
+  --accent-b: 61;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================================
+   2. Tailwind palette remap
+
+   The components in this fork style themselves with literal utility classes
+   (bg-white, text-gray-500, rounded-xl) rather than tokens. Rewriting 830 of
+   those by hand would be a migration that has to be maintained forever; every
+   new component would drift back. Remapping the scale Tailwind resolves those
+   utilities against fixes all of them at once and keeps working for code
+   written later.
+
+   The gray ramp is used positionally in this codebase - low shades are
+   surfaces, high shades are text - so it inverts cleanly. The two places that
+   break that convention (text-gray-50 and bg-gray-900) are corrected at the
+   call site instead.
+   ========================================================================= */
+
+@theme {
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Square corners throughout. rounded-full resolves to calc(infinity * 1px)
+     rather than a token, so pills, avatars and spinners keep their shape. */
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+
+  /* Surfaces climbing out of the page, then text descending from full white. */
+  --color-gray-50: #0c1916;
+  --color-gray-100: #10201b;
+  --color-gray-200: #162923;
+  --color-gray-300: #1e372f;
+  --color-gray-400: rgba(255, 255, 255, 0.40);
+  --color-gray-500: rgba(255, 255, 255, 0.55);
+  --color-gray-600: rgba(255, 255, 255, 0.66);
+  --color-gray-700: rgba(255, 255, 255, 0.78);
+  --color-gray-800: rgba(255, 255, 255, 0.90);
+  --color-gray-900: #ffffff;
+  --color-gray-950: #ffffff;
+
+  /* slate appears three times and is treated as an alias of gray. */
+  --color-slate-50: #0c1916;
+  --color-slate-100: #10201b;
+  --color-slate-200: #162923;
+  --color-slate-300: #1e372f;
+  --color-slate-400: rgba(255, 255, 255, 0.40);
+  --color-slate-500: rgba(255, 255, 255, 0.55);
+  --color-slate-600: rgba(255, 255, 255, 0.66);
+  --color-slate-700: rgba(255, 255, 255, 0.78);
+  --color-slate-800: rgba(255, 255, 255, 0.90);
+  --color-slate-900: #ffffff;
+  --color-slate-950: #ffffff;
+
+  /* Shadows read as smudge on a near-black ground. Depth here comes from the
+     surface ramp and a hairline, not from a drop shadow. */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --shadow-inner: none;
 }
 
-html, body {
+/* ============================================================================
+   3. Base
+   ========================================================================= */
+
+html,
+body {
   margin: 0;
   padding: 0;
 }
@@ -33,112 +188,145 @@ html, body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  font-size: var(--copy-card);
   position: relative;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Animated Mesh Gradient Background */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+h1 {
+  letter-spacing: var(--track-hero);
+  font-weight: 550;
+}
+
+h2,
+h3 {
+  letter-spacing: var(--track-section);
+  font-weight: 540;
+}
+
+/* One focus treatment everywhere, matching the marketing site: a hard white
+   ring, no colour shift, no glow. It reads on every surface in this palette. */
+:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 0;
+}
+
+::selection {
+  background: var(--acid);
+  color: var(--ink);
+}
+
+::placeholder {
+  color: var(--fg-faint);
+}
+
+/* Form controls do not inherit the page font on their own. */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+/* The native select arrow and date picker indicator render as dark-on-dark. */
+select {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+}
+
+/* ── Ambient background ──────────────────────────────────────────────────
+   Kept from the stock theme but re-tuned. On the old light ground these were
+   faint colour washes; on near-black the same opacities turn to haze, so the
+   mesh is dropped to a single low-lying pool and the grid is left as a dim
+   ruled field, which is what the marketing site does behind its hero. */
+
 body::before {
   content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 70% 60% at 70% 80%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 10% 90%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.04) 0%, transparent 50%);
-  animation: meshShift 20s ease-in-out infinite;
+  background: radial-gradient(
+      ellipse 90% 60% at 50% -10%,
+      rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.05) 0%,
+      transparent 60%
+    );
 }
 
-/* Grid Pattern with Glow */
 body::after {
   content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
-  animation: gridGlow 8s ease-in-out infinite;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, black 0%, transparent 75%);
 }
 
-@keyframes gridGlow {
-  0%, 100% {
-    opacity: 0.4;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
-  }
-  50% {
-    opacity: 0.8;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 0%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 0%, transparent 70%);
-  }
-}
-
-@keyframes meshShift {
-  0%, 100% {
-    background:
-      radial-gradient(ellipse 80% 50% at 20% 30%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 70% 60% at 70% 80%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.05) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 40% at 10% 90%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.04) 0%, transparent 50%);
-  }
-  25% {
-    background:
-      radial-gradient(ellipse 70% 60% at 30% 50%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.07) 0%, transparent 50%),
-      radial-gradient(ellipse 80% 50% at 70% 30%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 50% at 50% 70%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 40% 30% at 20% 80%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.05) 0%, transparent 50%);
-  }
-  50% {
-    background:
-      radial-gradient(ellipse 60% 40% at 50% 20%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 70% 50% at 30% 60%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.07) 0%, transparent 50%),
-      radial-gradient(ellipse 80% 40% at 80% 50%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 50% at 60% 90%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.05) 0%, transparent 50%);
-  }
-  75% {
-    background:
-      radial-gradient(ellipse 80% 60% at 40% 40%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.05) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 40% at 90% 60%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 50% at 20% 70%, rgba(var(--primary-r), var(--primary-g), var(--primary-b), 0.07) 0%, transparent 50%),
-      radial-gradient(ellipse 70% 40% at 70% 10%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.08) 0%, transparent 50%);
-  }
-}
-
-/* Ensure content stays above background */
 body > * {
   position: relative;
   z-index: 1;
 }
 
-/* Hide animated background for dashboard */
 body:has(.no-animated-bg)::before,
 body:has(.no-animated-bg)::after {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  body::before,
-  body::after {
-    animation: none !important;
+/* ============================================================================
+   4. Utility corrections
+
+   Two utilities cannot be fixed by remapping a token, because the token they
+   resolve against is shared with a utility that must not change.
+   ========================================================================= */
+
+@layer utilities {
+  /* bg-white is used 434 times for panels and must become the panel surface.
+     text-white is used 271 times and must stay white. Both resolve against
+     --color-white, so the background case is corrected here instead. */
+  .bg-white {
+    background-color: var(--panel);
+  }
+
+  /* Same argument for black: bg-black is used 54 times as a scrim or a dark
+     fill and should sit on the page ground rather than punch a hole in it.
+     text-black is unused. */
+  .bg-black {
+    background-color: var(--ink);
+  }
+
+  /* The micro-label. Applied by class where a component needs it; the account
+     screen and any new work should reach for this rather than restating it. */
+  .label-mono {
+    font-family: var(--font-code);
+    font-size: var(--label-size);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-track);
+    text-transform: uppercase;
+    color: var(--fg-muted);
   }
 }
 
-/* Shimmer animation for progress bars */
+/* ============================================================================
+   5. Motion
+   ========================================================================= */
+
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
@@ -150,6 +338,12 @@ body:has(.no-animated-bg)::after {
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer {
+    animation: none;
+  }
 }
 
 /* Mobile safe area utilities */

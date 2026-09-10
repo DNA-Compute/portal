@@ -673,7 +673,7 @@ export function PoolOverviewTab() {
 
       {data.clusters.length === 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <Database className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <Database className="w-12 h-12 text-gray-600 mx-auto mb-3" />
           <h3 className="text-lg font-medium text-gray-900 mb-1">
             No Active Clusters
           </h3>

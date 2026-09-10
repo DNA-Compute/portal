@@ -231,7 +231,7 @@ export function NodesSubTab({
                             setCopiedSshNode(node.id + "-pass");
                             setTimeout(() => setCopiedSshNode(null), 2000);
                           }}
-                          className="w-full text-center px-2 py-1 mt-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs"
+                          className="w-full text-center px-2 py-1 mt-1 bg-gray-200 hover:bg-gray-300 text-white rounded text-xs"
                         >
                           {copiedSshNode === node.id + "-pass" ? "Copied!" : "Copy Password"}
                         </button>
@@ -309,7 +309,7 @@ export function NodesSubTab({
                         <button
                           onClick={() => openEditPricingModal(node)}
                           disabled={actionLoading === node.id}
-                          className="text-xs px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-white rounded disabled:opacity-50"
                         >
                           Edit Pricing
                         </button>
@@ -333,7 +333,7 @@ export function NodesSubTab({
                         <button
                           onClick={() => openEditPricingModal(node)}
                           disabled={actionLoading === node.id}
-                          className="text-xs px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-white rounded disabled:opacity-50"
                         >
                           Edit Pricing
                         </button>
@@ -360,7 +360,7 @@ export function NodesSubTab({
                         <button
                           onClick={() => openEditPricingModal(node)}
                           disabled={actionLoading === node.id}
-                          className="text-xs px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 text-white rounded disabled:opacity-50"
                         >
                           Edit Pricing
                         </button>

@@ -207,7 +207,7 @@ export function AdminSidebar({
                       } ${
                         isActive
                           ? "bg-[#1a4fff] text-white"
-                          : "text-gray-300 hover:bg-white/5 hover:text-white"
+                          : "text-gray-600 hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
@@ -254,7 +254,7 @@ export function AdminSidebar({
         <button
           onClick={onLogout}
           title={isCollapsed ? "Logout" : undefined}
-          className={`w-full flex items-center gap-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors ${
+          className={`w-full flex items-center gap-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-white/5 hover:text-white rounded-lg transition-colors ${
             isCollapsed ? "justify-center px-2" : "px-4"
           }`}
         >

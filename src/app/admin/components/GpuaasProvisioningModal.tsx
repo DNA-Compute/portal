@@ -468,13 +468,13 @@ export function GpuaasProvisioningModal({
                   <button
                     onClick={handleGetSshKeys}
                     disabled={actionLoading}
-                    className="w-full py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 text-sm"
+                    className="w-full py-2 bg-gray-200 text-white rounded-lg font-medium hover:bg-gray-300 disabled:opacity-50 text-sm"
                   >
                     {actionLoading ? "Fetching..." : "Get SSH Keys to Install Manually"}
                   </button>
                 ) : (
                   <>
-                    <div className="bg-gray-900 rounded-lg p-3 mb-3">
+                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
                       <p className="text-xs text-gray-400 mb-2">
                         Add to ~/.ssh/authorized_keys on {node.sshUsername}@{node.ipAddress}:
                       </p>

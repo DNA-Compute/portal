@@ -638,7 +638,7 @@ export default function CustomerDetailPage() {
                             event.type.startsWith("hf_") ? "bg-pink-500" :
                             event.type.startsWith("lora_") || event.type.startsWith("batch_") || event.type === "inference" ? "bg-cyan-500" :
                             event.type.startsWith("snapshot_") ? "bg-orange-500" :
-                            "bg-gray-500"
+                            "bg-gray-200"
                           }`} />
                           {event.type.replace(/_/g, " ")}
                         </span>

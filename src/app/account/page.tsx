@@ -157,13 +157,15 @@ function AccountContent() {
       {/* Minimal header — logo + one link, nothing more */}
       <header className="account-header">
         <div className="account-header-inner">
+          {/* 44px matches the mark's optical size in the marketing header. At
+              the previous 32px the wordmark fell below legibility. */}
           <a href={getAppUrl()}>
             <BrandLogo
               src={LOGO_URL}
               alt={getBrandName()}
-              width={120}
-              height={40}
-              style={{ height: "32px", width: "auto" }}
+              width={194}
+              height={44}
+              style={{ height: "44px", width: "auto" }}
             />
           </a>
           <div className="account-header-nav">
@@ -223,7 +225,7 @@ function AccountContent() {
                 "No credit card required",
               ]).map((text) => (
                 <div key={text} className="account-benefit">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>{text}</span>
@@ -287,7 +289,7 @@ function AccountContent() {
                 {SIGNUP_MAINTENANCE && mode === "signup" ? (
                   <div style={{ padding: "24px", background: "#FEF3C7", borderRadius: "12px", border: "1px solid #F59E0B", marginBottom: "16px" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
                         <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <div>
@@ -399,7 +401,7 @@ function AccountContent() {
               /* ─── Magic link sent ─── */
               <div className="account-sent">
                 <div className="account-sent-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -436,11 +438,21 @@ function AccountContent() {
       </div>
 
       <style jsx>{`
+        /* ═══════════════════════════════════════════════════════════════
+           This screen is the seam. A customer arrives here straight from the
+           order form at dnacompute.com/contact#inquiry, so every value below
+           is the marketing site's own: square corners, a monospace uppercase
+           micro-label, acid on near-black, and a hard white focus ring.
+
+           Tokens live in src/app/globals.css.
+           ═══════════════════════════════════════════════════════════════ */
+
         /* ═══ Page shell ═══ */
         .account-page {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
+          background: var(--ink);
         }
 
         /* ═══ Header ═══ */
@@ -448,15 +460,15 @@ function AccountContent() {
           position: sticky;
           top: 0;
           z-index: 50;
-          border-bottom: 1px solid rgba(200, 255, 61, 0.16);
-          background: rgba(7, 17, 15, 0.92); /* DNA theme */
+          border-bottom: 1px solid var(--line);
+          background: rgba(7, 16, 14, 0.94);
           backdrop-filter: blur(12px);
         }
         .account-header-inner {
           max-width: 1120px;
           margin: 0 auto;
           padding: 0 24px;
-          height: 56px;
+          height: var(--header-height);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -464,24 +476,31 @@ function AccountContent() {
         .account-header-nav {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 24px;
         }
         .account-header-link {
           font-size: 14px;
-          color: var(--muted);
+          color: var(--fg-muted);
           text-decoration: none;
           transition: color 0.15s;
         }
         .account-header-link:hover {
-          color: var(--ink);
+          color: var(--fg);
         }
         .account-header-signin {
-          font-size: 14px;
-          color: var(--ink);
-          font-weight: 500;
+          font-family: var(--font-code);
+          font-size: var(--label-size);
+          font-weight: var(--label-weight);
+          letter-spacing: var(--label-track);
+          text-transform: uppercase;
+          color: var(--acid);
           background: none;
           border: none;
           cursor: pointer;
+          padding: 0;
+        }
+        .account-header-signin:hover {
+          color: var(--fg);
         }
 
         /* ═══ Layout ═══ */
@@ -490,11 +509,11 @@ function AccountContent() {
           display: flex;
         }
 
-        /* ═══ Left panel — dark, sells ═══ */
+        /* ═══ Left panel — the argument ═══ */
         .account-left {
           flex: 1 1 50%;
           background: linear-gradient(135deg, #07110f 0%, #10201b 55%, #0b1713 100%);
-          color: white;
+          color: var(--fg);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -502,14 +521,16 @@ function AccountContent() {
           position: relative;
           overflow: hidden;
         }
+        /* The two ambient pools were still the stock packet-oss blue and teal.
+           They are the brand colours now, and quieter: on a near-black ground
+           the old opacities read as haze rather than light. */
         .account-left-glow-1 {
           position: absolute;
           top: -120px;
           right: -80px;
           width: 400px;
           height: 400px;
-          background: radial-gradient(circle, rgba(26, 79, 255, 0.12) 0%, transparent 70%);
-          border-radius: 50%;
+          background: radial-gradient(circle, rgba(200, 255, 61, 0.10) 0%, transparent 70%);
           filter: blur(60px);
           pointer-events: none;
         }
@@ -519,8 +540,7 @@ function AccountContent() {
           left: -60px;
           width: 300px;
           height: 300px;
-          background: radial-gradient(circle, rgba(20, 184, 166, 0.08) 0%, transparent 70%);
-          border-radius: 50%;
+          background: radial-gradient(circle, rgba(119, 242, 198, 0.07) 0%, transparent 70%);
           filter: blur(40px);
           pointer-events: none;
         }
@@ -533,17 +553,19 @@ function AccountContent() {
 
         /* ═══ Left panel typography ═══ */
         .account-headline {
-          font-size: clamp(1.8rem, 3vw, 2.4rem);
-          font-weight: 700;
-          line-height: 1.15;
-          margin: 0 0 16px;
           font-family: var(--font-display);
+          font-size: clamp(32px, 3.5vw, 48px);
+          font-weight: 540;
+          letter-spacing: var(--track-section);
+          line-height: 1.08;
+          margin: 0 0 20px;
         }
         .account-subheadline {
-          font-size: 16px;
-          color: rgba(255, 255, 255, 0.65);
+          font-size: var(--copy-card);
+          color: var(--fg-soft);
           line-height: 1.6;
-          margin: 0 0 32px;
+          margin: 0 0 36px;
+          max-width: 34ch;
         }
 
         /* ═══ Benefits ═══ */
@@ -560,10 +582,11 @@ function AccountContent() {
         }
         .account-benefit svg {
           flex-shrink: 0;
+          color: var(--acid);
         }
         .account-benefit span {
-          font-size: 15px;
-          color: rgba(255, 255, 255, 0.8);
+          font-size: var(--copy-supporting);
+          color: var(--fg-soft);
         }
 
         /* ═══ Trust bar ═══ */
@@ -571,29 +594,38 @@ function AccountContent() {
           display: flex;
           gap: 28px;
           padding-top: 24px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid var(--line);
           flex-wrap: wrap;
         }
         .account-trust-value {
+          font-family: var(--font-code);
           font-size: 17px;
           font-weight: 700;
-          color: white;
+          color: var(--fg);
+          font-variant-numeric: tabular-nums;
         }
         .account-trust-label {
+          font-family: var(--font-code);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.4);
+          font-weight: var(--label-weight);
+          letter-spacing: var(--label-track);
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          color: var(--fg-muted);
+          margin-top: 2px;
         }
 
-        /* ═══ Right panel — white, converts ═══ */
+        /* ═══ Right panel — the form ═══
+           This was white, which is the seam the customer sees on arrival. It
+           is the panel surface now, separated from the left by a hairline
+           rather than by a change of world. */
         .account-right {
           flex: 1 1 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 60px 48px;
-          background: white;
+          background: var(--ink-soft);
+          border-left: 1px solid var(--line);
         }
         .account-form-container {
           max-width: 380px;
@@ -605,43 +637,56 @@ function AccountContent() {
           margin-bottom: 28px;
         }
         .account-form-title {
-          font-size: 22px;
-          font-weight: 700;
-          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 26px;
+          font-weight: 540;
+          letter-spacing: var(--track-section);
+          color: var(--fg);
           margin: 0 0 6px;
         }
         .account-form-subtitle {
           font-size: 14px;
-          color: var(--muted);
+          color: var(--fg-muted);
           margin: 0;
         }
 
         /* ═══ Form fields ═══ */
         .account-field {
-          margin-bottom: 16px;
+          margin-bottom: 18px;
         }
+        /* The micro-label. This single treatment is the most recognisable
+           thing carried over from the marketing site. */
         .account-label {
           display: block;
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--ink);
-          margin-bottom: 6px;
+          font-family: var(--font-code);
+          font-size: var(--label-size);
+          font-weight: var(--label-weight);
+          letter-spacing: var(--label-track);
+          text-transform: uppercase;
+          color: var(--fg-muted);
+          margin-bottom: 8px;
         }
         .account-input {
           width: 100%;
-          padding: 12px 14px;
-          border: 1px solid var(--line);
-          border-radius: 10px;
-          font-size: 15px;
-          color: var(--ink);
+          padding: 15px 14px;
+          border: 1px solid var(--line-strong);
+          border-radius: 0;
+          font-size: var(--copy-card);
+          color: var(--fg);
+          background: var(--ink);
           outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: border-color 0.15s;
           box-sizing: border-box;
-          background: white;
         }
+        .account-input:hover {
+          border-color: rgba(255, 255, 255, 0.34);
+        }
+        /* One focus treatment, matching the marketing site: a hard white ring,
+           no colour shift and no glow. It reads on every surface here. */
         .account-input:focus {
-          border-color: var(--blue);
-          box-shadow: 0 0 0 3px rgba(26, 79, 255, 0.1);
+          outline: 3px solid var(--fg);
+          outline-offset: 0;
+          border-color: transparent;
         }
 
         /* ═══ Terms ═══ */
@@ -656,58 +701,58 @@ function AccountContent() {
           margin-top: 2px;
           width: 16px;
           height: 16px;
-          accent-color: var(--blue);
+          accent-color: var(--acid);
           flex-shrink: 0;
         }
         .account-terms-text {
           font-size: 13px;
-          color: var(--muted);
+          color: var(--fg-muted);
           line-height: 1.5;
         }
         .account-terms-text a {
-          color: var(--blue);
+          color: var(--acid);
           text-decoration: none;
         }
         .account-terms-text a:hover {
           text-decoration: underline;
         }
         .account-consent-note {
-          font-size: 11px;
-          color: var(--muted);
+          font-size: 12px;
+          color: var(--fg-muted);
           margin: -8px 0 16px;
           line-height: 1.5;
-          opacity: 0.7;
         }
 
         /* ═══ Error ═══ */
         .account-error {
-          color: #ef4444;
+          color: #ff6b6b;
           font-size: 13px;
           margin: 0 0 12px;
+          padding: 10px 12px;
+          background: rgba(255, 107, 107, 0.08);
+          border: 1px solid rgba(255, 107, 107, 0.3);
         }
 
         /* ═══ Submit button ═══ */
         .account-submit {
           width: 100%;
-          padding: 13px;
-          background: var(--blue);
-          color: white;
+          padding: 15px;
+          background: var(--acid);
+          color: var(--ink);
           border: none;
-          border-radius: 10px;
-          font-size: 15px;
-          font-weight: 600;
+          border-radius: 0;
+          font-size: 14px;
+          font-weight: 800;
           cursor: pointer;
-          transition: opacity 0.15s, transform 0.1s;
-          box-shadow: 0 4px 14px rgba(26, 79, 255, 0.25);
+          transition: background 0.15s;
         }
         .account-submit:hover:not(:disabled) {
-          opacity: 0.92;
-        }
-        .account-submit:active:not(:disabled) {
-          transform: scale(0.99);
+          background: var(--acid-deep);
         }
         .account-submit:disabled {
-          opacity: 0.55;
+          background: transparent;
+          color: var(--fg-muted);
+          box-shadow: inset 0 0 0 1px var(--line-strong);
           cursor: not-allowed;
         }
 
@@ -717,11 +762,12 @@ function AccountContent() {
           align-items: center;
           gap: 8px;
         }
+        /* The spinner sits on the acid fill, so it is inked, not white. */
         .account-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
+          border: 2px solid rgba(7, 17, 15, 0.25);
+          border-top-color: var(--ink);
           border-radius: 50%;
           animation: account-spin 0.6s linear infinite;
           display: inline-block;
@@ -731,11 +777,11 @@ function AccountContent() {
         .account-mode-switch {
           text-align: center;
           font-size: 14px;
-          color: var(--muted);
+          color: var(--fg-muted);
           margin: 24px 0 0;
         }
         .account-mode-switch button {
-          color: var(--blue);
+          color: var(--acid);
           background: none;
           border: none;
           cursor: pointer;
@@ -753,8 +799,11 @@ function AccountContent() {
           justify-content: center;
           gap: 6px;
           margin-top: 12px;
-          color: var(--muted);
-          font-size: 12px;
+          color: var(--fg-muted);
+          font-family: var(--font-code);
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
         }
 
         /* ═══ Magic link sent state ═══ */
@@ -764,7 +813,8 @@ function AccountContent() {
         .account-sent-icon {
           width: 56px;
           height: 56px;
-          background: var(--blue);
+          background: var(--acid);
+          color: var(--ink);
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -772,39 +822,40 @@ function AccountContent() {
           margin: 0 auto 20px;
         }
         .account-sent-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 22px;
+          font-weight: 540;
+          letter-spacing: var(--track-section);
+          color: var(--fg);
           margin: 0 0 8px;
         }
         .account-sent-text {
           font-size: 14px;
-          color: var(--muted);
+          color: var(--fg-muted);
           margin: 0 0 20px;
         }
         .account-sent-text strong {
-          color: var(--ink);
+          color: var(--fg);
         }
         .account-sent-note {
           padding: 12px;
-          background: var(--background);
-          border-radius: 8px;
+          background: var(--ink);
           border: 1px solid var(--line);
           font-size: 13px;
-          color: var(--muted);
+          color: var(--fg-muted);
           margin-bottom: 12px;
         }
+        /* The caution box was a light-mode amber that glared on this ground. */
         .account-sent-hint {
           padding: 12px;
-          background: #FFFBEB;
-          border-radius: 8px;
-          border: 1px solid #FDE68A;
+          background: rgba(255, 196, 0, 0.08);
+          border: 1px solid rgba(255, 196, 0, 0.28);
           font-size: 13px;
-          color: #92400E;
+          color: #ffd479;
           margin-bottom: 20px;
         }
         .account-sent-hint button {
-          color: var(--blue);
+          color: var(--acid);
           background: none;
           border: none;
           cursor: pointer;
@@ -813,18 +864,24 @@ function AccountContent() {
         }
         .account-sent-retry {
           font-size: 14px;
-          color: var(--muted);
+          color: var(--fg-muted);
           background: none;
           border: none;
           cursor: pointer;
         }
         .account-sent-retry:hover {
-          color: var(--blue);
+          color: var(--acid);
         }
 
         /* ═══ Animation ═══ */
         @keyframes account-spin {
           to { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .account-spinner {
+            animation-duration: 2s;
+          }
         }
 
         /* ═══ Responsive ═══ */
@@ -837,7 +894,7 @@ function AccountContent() {
             padding: 32px 24px;
           }
           .account-headline {
-            font-size: 1.5rem;
+            font-size: 28px;
           }
           .account-subheadline {
             font-size: 14px;
@@ -856,17 +913,9 @@ function AccountContent() {
           .account-right {
             flex: none;
             padding: 32px 24px 48px;
+            border-left: none;
+            border-top: 1px solid var(--line);
           }
-        }
-
-        .account-header-link {
-          color: rgba(223, 230, 220, 0.72);
-        }
-        .account-header-link:hover {
-          color: #dfe6dc;
-        }
-        .account-header-signin {
-          color: #dfe6dc;
         }
       `}</style>
     </div>

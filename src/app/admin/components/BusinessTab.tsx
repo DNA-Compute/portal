@@ -162,7 +162,7 @@ export function BusinessTab() {
               style={{ height: `${Math.max(height, 2)}%` }}
               title={`${d.date}: ${format(value)}`}
             >
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-50 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
                 {d.date}: {format(value)}
               </div>
             </div>

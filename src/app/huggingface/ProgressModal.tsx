@@ -154,7 +154,7 @@ export function ProgressModal({
           {logs && (
             <div className="mb-6">
               <p className="text-sm font-medium text-gray-700 mb-2">Logs</p>
-              <pre className="bg-gray-900 text-gray-100 text-xs p-4 rounded-lg overflow-x-auto max-h-48 overflow-y-auto font-mono">
+              <pre className="bg-gray-50 text-gray-800 text-xs p-4 rounded-lg overflow-x-auto max-h-48 overflow-y-auto font-mono">
                 {logs}
               </pre>
             </div>

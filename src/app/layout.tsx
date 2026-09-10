@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { isPro } from "@/lib/edition";
 import { getBrandName, getAppUrl, getLogoUrl, getFaviconUrl } from "@/lib/branding";
@@ -11,15 +10,10 @@ const appUrl = getAppUrl();
 const logoUrl = getLogoUrl();
 const faviconUrl = getFaviconUrl();
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// No webfont is loaded. The marketing site sets its type in the platform
+// grotesque and a platform monospace, and matching that stack exactly is what
+// makes the two properties read as one product. The faces are declared in
+// globals.css; see --font-display / --font-body / --font-code there.
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -221,9 +215,7 @@ c.parentNode.insertBefore(t,c)}();`}
           </Script>
         )}
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         {proMode && tenant.isDefault && (
           <script
             type="application/ld+json"
