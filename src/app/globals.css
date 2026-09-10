@@ -49,6 +49,10 @@
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.22);
 
+  /* Sticky headers sit over scrolling content, so they need to stay slightly
+     translucent for the backdrop blur to mean anything. */
+  --panel-veil: rgba(12, 25, 22, 0.86);
+
   /* ── Status ──────────────────────────────────────────────────────────────
      The stock theme drew these as light washes - bg-amber-50, bg-green-50 and
      friends - with a dark text colour restated on top. Two things go wrong with
@@ -346,6 +350,19 @@ body:has(.no-animated-bg)::after {
      text-black is unused. */
   .bg-black {
     background-color: var(--ink);
+  }
+
+  /* bg-white/N is a different generated class from bg-white, so the override
+     above never reaches it and these kept painting white. On /success and
+     /subscribed that put a white bar across the top of a dark page.
+
+     Only the high-opacity ones are redirected. bg-white/5 and bg-white/20 are
+     faint light washes, which is exactly the right idiom on this ground, and
+     they are left alone. */
+  .bg-white\/50,
+  .bg-white\/80,
+  .bg-white\/95 {
+    background-color: var(--panel-veil);
   }
 
   /* The micro-label. Applied by class where a component needs it; the account

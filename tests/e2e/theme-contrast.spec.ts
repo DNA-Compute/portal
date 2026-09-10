@@ -114,6 +114,44 @@ const AUDIT = `() => {
   return failures;
 }`;
 
+/**
+ * A light panel on a dark page is a theme bug even when it carries no text, so
+ * the contrast walk above cannot see it. The sticky headers on /success and
+ * /subscribed shipped as a white bar for exactly that reason: they use
+ * bg-white/80, which Tailwind emits as its own class, so the .bg-white override
+ * in globals.css never applied to them and nothing flagged it.
+ *
+ * Any opaque-enough surface brighter than the midpoint is reported. Faint
+ * washes (bg-white/5 and friends) stay under the alpha cut and are ignored,
+ * which is right - they are the correct idiom on this ground.
+ */
+const LIGHT_SURFACES = `() => {
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = 1;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  const parse = (css) => {
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = css;
+    ctx.fillRect(0, 0, 1, 1);
+    const d = ctx.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2], d[3] / 255];
+  };
+  const rl = (c) => { const v = c.slice(0, 3).map((x) => x / 255).map((x) => (x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+
+  const found = [];
+  for (const el of document.querySelectorAll("*")) {
+    const r = el.getBoundingClientRect();
+    if (r.width < 24 || r.height < 12) continue;
+    const cs = getComputedStyle(el);
+    if (cs.visibility === "hidden" || cs.display === "none") continue;
+    const bg = parse(cs.backgroundColor);
+    if (bg[3] < 0.5) continue;
+    if (rl(bg) <= 0.5) continue;
+    found.push({ tag: el.tagName.toLowerCase(), cls: (el.className || "").toString().slice(0, 70) });
+  }
+  return found;
+}`;
+
 for (const path of PUBLIC_PAGES) {
   test(`no unreadable text on ${path}`, async ({ page }) => {
     await page.goto(path, { waitUntil: "networkidle" });
@@ -122,5 +160,12 @@ for (const path of PUBLIC_PAGES) {
       .map((f) => `  ${f.ratio}:1 (needs ${f.need})  <${f.tag}> "${f.text}"`)
       .join("\n");
     expect(failures, `contrast failures on ${path}:\n${report}`).toEqual([]);
+  });
+
+  test(`no light surfaces on ${path}`, async ({ page }) => {
+    await page.goto(path, { waitUntil: "networkidle" });
+    const found = await page.evaluate(LIGHT_SURFACES);
+    const report = found.map((f) => `  <${f.tag}> ${f.cls}`).join("\n");
+    expect(found, `light surfaces on the dark page ${path}:\n${report}`).toEqual([]);
   });
 }
