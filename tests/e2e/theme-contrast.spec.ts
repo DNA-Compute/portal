@@ -16,6 +16,13 @@ import { test, expect } from "@playwright/test";
  * Three other elements on the same page had the same fault and nobody had
  * noticed them.
  *
+ * The same day, the selected GPU card on /checkout shipped to production at
+ * 1.06:1 - the mirror image. gray, zinc and slate were remapped but the fifteen
+ * hue ramps were not, so bg-blue-50 stayed a near-white surface while the text
+ * on it inherited the new white foreground. Roughly 479 bg-*-50/100/200
+ * surfaces across the app are still in that state; the ones reachable without a
+ * session are covered below, the rest are not yet.
+ *
  * These pages are checked because they need no session. The signed-in product
  * is not covered here and still needs eyes on it.
  */
@@ -25,6 +32,14 @@ const PUBLIC_PAGES = [
   "/account?reason=session_expired",
   "/admin/login",
   "/admin/login?reason=session_expired",
+  // /checkout was missing from this list when the theme first shipped, and that
+  // is exactly how the bug below reached production: the selected GPU card sat
+  // on bg-blue-50 while its text had become white and acid, measuring 1.06:1 on
+  // the page a customer pays from. Any page a signed-out visitor can reach
+  // belongs here.
+  "/checkout",
+  "/success",
+  "/subscribed",
 ];
 
 /** WCAG 2.1 relative luminance / contrast, with alpha composited onto the real

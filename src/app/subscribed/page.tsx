@@ -79,8 +79,8 @@ function SubscribedContent() {
         <div className="max-w-md text-center px-6">
           {pollFailed ? (
             <>
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-8">
-                <svg className="w-8 h-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 bg-[var(--warn-fill)] rounded-full flex items-center justify-center mx-auto mb-8">
+                <svg className="w-8 h-8 text-[var(--warn)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 3h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3z" />
                 </svg>
               </div>

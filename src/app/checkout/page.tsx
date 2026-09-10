@@ -221,8 +221,8 @@ function CheckoutContent() {
             <div className="animate-spin h-6 w-6 border-2 border-[var(--acid)] border-t-transparent rounded-full"></div>
           </div>
         ) : products.length === 0 ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-yellow-800 text-sm">No products available. Please check back later.</p>
+          <div className="bg-[var(--warn-fill)] border border-[var(--warn-line)] rounded-lg p-4 mb-6">
+            <p className="text-[var(--warn)] text-sm">No products available. Please check back later.</p>
           </div>
         ) : (
           <div className="space-y-3 mb-6">
@@ -232,7 +232,7 @@ function CheckoutContent() {
                   onClick={() => setSelectedProduct(product)}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all relative ${
                     selectedProduct?.id === product.id
-                      ? "border-[var(--acid)] bg-blue-50"
+                      ? "border-[var(--acid)] bg-[var(--ink-raise)]"
                       : "border-[var(--line)] hover:border-[var(--acid)]/50"
                   }`}
                 >
@@ -367,14 +367,14 @@ function CheckoutContent() {
                     <p className="text-red-500 text-xs">{voucherError}</p>
                   )}
                   {validatedVoucher && (
-                    <div className="p-2 bg-green-50 border border-green-200 rounded-lg text-left text-sm">
-                      <p className="text-green-700 font-medium">{validatedVoucher.name}</p>
-                      <p className="text-green-600 text-xs">
+                    <div className="p-2 bg-[var(--ok-fill)] border border-[var(--ok-line)] rounded-lg text-left text-sm">
+                      <p className="text-[var(--ok)] font-medium">{validatedVoucher.name}</p>
+                      <p className="text-[var(--ok)] text-xs">
                         ${(validatedVoucher.creditCents / 100).toFixed(0)} credit applied
                         {getDepositAmount() === 0 && " - No payment required!"}
                       </p>
                       {validatedVoucher.minTopupCents && (
-                        <p className="text-amber-600 text-xs mt-1">
+                        <p className="text-[var(--warn)] text-xs mt-1">
                           Requires a minimum ${(validatedVoucher.minTopupCents / 100).toFixed(0)} deposit
                         </p>
                       )}

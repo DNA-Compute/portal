@@ -49,6 +49,27 @@
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.22);
 
+  /* ── Status ──────────────────────────────────────────────────────────────
+     The stock theme drew these as light washes - bg-amber-50, bg-green-50 and
+     friends - with a dark text colour restated on top. Two things go wrong with
+     that on this ground. Where the text was restated, the card survives as a
+     glare island in an otherwise dark page. Where it was inherited, the text
+     turned white while the wash stayed light and the content disappeared: the
+     selected GPU card on /checkout shipped at 1.06:1.
+
+     So each status is a low-opacity wash of its own hue over the ink, with a
+     light text colour carrying the same meaning. The hue still says warning or
+     success; only the direction of the contrast changes. */
+  --ok: #7ce7b0;
+  --ok-line: rgba(119, 242, 198, 0.28);
+  --ok-fill: rgba(119, 242, 198, 0.08);
+  --warn: #ffd479;
+  --warn-line: rgba(255, 196, 0, 0.28);
+  --warn-fill: rgba(255, 196, 0, 0.08);
+  --danger: #ff8f8f;
+  --danger-line: rgba(255, 107, 107, 0.30);
+  --danger-fill: rgba(255, 107, 107, 0.08);
+
   /* ── Type ────────────────────────────────────────────────────────────── */
   /* The marketing site sets no webfont; it uses the platform grotesque and a
      platform monospace. Matching that stack exactly is what makes the two
