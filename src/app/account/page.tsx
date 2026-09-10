@@ -195,6 +195,8 @@ function AccountContent() {
           <div className="account-left-glow-2" />
 
           <div className="account-left-content">
+            <p className="account-eyebrow">On-Demand GPU Cloud for AI &amp; ML</p>
+
             <h1 className="account-headline">
               {hasGpuContext ? (
                 <>Deploy {gpuName}<br />in minutes.</>
@@ -547,45 +549,66 @@ function AccountContent() {
         .account-left-content {
           position: relative;
           z-index: 1;
-          max-width: 440px;
+          max-width: 560px;
           width: 100%;
         }
 
-        /* ═══ Left panel typography ═══ */
+        /* ═══ Left panel typography ═══
+           This panel is half the window and carried about 290px of content in
+           it, so on a tall screen the headline floated in an empty green field.
+           The words are unchanged - it is the same brand name, the same one
+           line of copy and the same three benefits - but they are set at the
+           scale the marketing hero uses rather than at card scale, which is
+           what the panel was actually asking for.
+
+           Nothing here invents a claim. The trust bar in the markup above is
+           deliberately left suppressed: its numbers are upstream packet-oss
+           marketing (500+ GPUs, 99.9% uptime) that DNA cannot stand behind. */
+        .account-eyebrow {
+          font-family: var(--font-code);
+          font-size: var(--label-size);
+          font-weight: var(--label-weight);
+          letter-spacing: var(--label-track);
+          text-transform: uppercase;
+          color: var(--acid);
+          margin: 0 0 24px;
+        }
         .account-headline {
           font-family: var(--font-display);
-          font-size: clamp(32px, 3.5vw, 48px);
-          font-weight: 540;
-          letter-spacing: var(--track-section);
-          line-height: 1.08;
-          margin: 0 0 20px;
+          font-size: var(--heading-hero);
+          font-weight: 550;
+          letter-spacing: var(--track-hero);
+          line-height: 1.02;
+          margin: 0 0 24px;
         }
         .account-subheadline {
-          font-size: var(--copy-card);
+          font-size: var(--copy-lead);
           color: var(--fg-soft);
-          line-height: 1.6;
-          margin: 0 0 36px;
-          max-width: 34ch;
+          line-height: 1.45;
+          margin: 0 0 44px;
+          max-width: 30ch;
         }
 
         /* ═══ Benefits ═══ */
         .account-benefits {
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          margin-bottom: 36px;
+          gap: 18px;
+          margin-bottom: 0;
+          padding-top: 28px;
+          border-top: 1px solid var(--line);
         }
         .account-benefit {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
         }
         .account-benefit svg {
           flex-shrink: 0;
           color: var(--acid);
         }
         .account-benefit span {
-          font-size: var(--copy-supporting);
+          font-size: var(--copy-card);
           color: var(--fg-soft);
         }
 
@@ -893,16 +916,21 @@ function AccountContent() {
             flex: none;
             padding: 32px 24px;
           }
+          .account-eyebrow {
+            margin-bottom: 14px;
+          }
           .account-headline {
-            font-size: 28px;
+            font-size: 34px;
+            line-height: 1.06;
           }
           .account-subheadline {
-            font-size: 14px;
+            font-size: 16px;
             margin-bottom: 24px;
           }
           .account-benefits {
             gap: 10px;
             margin-bottom: 24px;
+            padding-top: 20px;
           }
           .account-benefit span {
             font-size: 14px;
