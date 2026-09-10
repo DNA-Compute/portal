@@ -29,14 +29,21 @@ const PRO_DEFAULTS = {
   faviconUrl: "/favicon.ico",
   primaryColor: "#1a4fff",
   accentColor: "#18b6a8",
-  backgroundColor: "#f7f8fb",
-  textColor: "#0b0f1c",
+  backgroundColor: "#07110f",
+  textColor: "#ffffff",
   companyName: "Hosted AI Inc.",
   companyAddress: "622 North 9th Street, San Jose, CA 95112, USA",
   emailFromName: "",
   emailFromAddress: "",
   emailFooterText: "",
 } as const;
+
+// The DNA fork is a dark product. backgroundColor and textColor below are
+// injected into :root by BrandStyles at request time, after globals.css, so they
+// decide the ground for every screen that does not paint its own. Leaving them
+// at upstream's light values left body at #f7f8fb underneath a dark UI, which
+// showed through wherever a page had no wrapper of its own. See
+// src/app/globals.css for the tokens these mirror.
 
 // ── OSS defaults ────────────────────────────────────────────────────────────
 
@@ -50,8 +57,8 @@ const OSS_DEFAULTS = {
   faviconUrl: "/favicon.ico",
   primaryColor: "#1a4fff",
   accentColor: "#18b6a8",
-  backgroundColor: "#f7f8fb",
-  textColor: "#0b0f1c",
+  backgroundColor: "#07110f",
+  textColor: "#ffffff",
   companyName: "",
   companyAddress: "",
   emailFromName: "",

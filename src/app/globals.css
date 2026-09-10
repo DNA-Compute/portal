@@ -137,29 +137,45 @@
   --radius-3xl: 0px;
   --radius-4xl: 0px;
 
-  /* Surfaces climbing out of the page, then text descending from full white. */
+  /* Surfaces climbing out of the page, then text descending from full white.
+     The text tiers start at 55% rather than 40%: on the panel, 40% white
+     measures 3.81:1, under the 4.5:1 AA minimum for body copy. */
   --color-gray-50: #0c1916;
   --color-gray-100: #10201b;
   --color-gray-200: #162923;
   --color-gray-300: #1e372f;
-  --color-gray-400: rgba(255, 255, 255, 0.40);
-  --color-gray-500: rgba(255, 255, 255, 0.55);
-  --color-gray-600: rgba(255, 255, 255, 0.66);
-  --color-gray-700: rgba(255, 255, 255, 0.78);
-  --color-gray-800: rgba(255, 255, 255, 0.90);
+  --color-gray-400: rgba(255, 255, 255, 0.55);
+  --color-gray-500: rgba(255, 255, 255, 0.62);
+  --color-gray-600: rgba(255, 255, 255, 0.72);
+  --color-gray-700: rgba(255, 255, 255, 0.82);
+  --color-gray-800: rgba(255, 255, 255, 0.92);
   --color-gray-900: #ffffff;
   --color-gray-950: #ffffff;
+
+  /* zinc is this codebase's dominant neutral, used 1,333 times - more than
+     gray and slate combined. Same positional convention, same inversion. */
+  --color-zinc-50: #0c1916;
+  --color-zinc-100: #10201b;
+  --color-zinc-200: #162923;
+  --color-zinc-300: #1e372f;
+  --color-zinc-400: rgba(255, 255, 255, 0.55);
+  --color-zinc-500: rgba(255, 255, 255, 0.62);
+  --color-zinc-600: rgba(255, 255, 255, 0.72);
+  --color-zinc-700: rgba(255, 255, 255, 0.82);
+  --color-zinc-800: rgba(255, 255, 255, 0.92);
+  --color-zinc-900: #ffffff;
+  --color-zinc-950: #ffffff;
 
   /* slate appears three times and is treated as an alias of gray. */
   --color-slate-50: #0c1916;
   --color-slate-100: #10201b;
   --color-slate-200: #162923;
   --color-slate-300: #1e372f;
-  --color-slate-400: rgba(255, 255, 255, 0.40);
-  --color-slate-500: rgba(255, 255, 255, 0.55);
-  --color-slate-600: rgba(255, 255, 255, 0.66);
-  --color-slate-700: rgba(255, 255, 255, 0.78);
-  --color-slate-800: rgba(255, 255, 255, 0.90);
+  --color-slate-400: rgba(255, 255, 255, 0.55);
+  --color-slate-500: rgba(255, 255, 255, 0.62);
+  --color-slate-600: rgba(255, 255, 255, 0.72);
+  --color-slate-700: rgba(255, 255, 255, 0.82);
+  --color-slate-800: rgba(255, 255, 255, 0.92);
   --color-slate-900: #ffffff;
   --color-slate-950: #ffffff;
 

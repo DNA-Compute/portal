@@ -375,8 +375,8 @@ export function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f7f8fb] flex items-center justify-center">
-        <p className="text-xl text-[#0b0f1c]">Loading...</p>
+      <div className="min-h-screen bg-[var(--ink)] flex items-center justify-center">
+        <p className="text-xl text-[var(--fg)]">Loading...</p>
       </div>
     );
   }
@@ -428,7 +428,7 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8fb]">
+    <div className="min-h-screen bg-[var(--ink)]">
       {/* Sidebar */}
       <AdminSidebar
         activeTab={activeTab}
@@ -442,50 +442,50 @@ export function AdminDashboard() {
       {/* Main Content */}
       <div className={`min-h-screen transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
         {/* Top Header with Stats */}
-        <header className="bg-white border-b border-[#e4e7ef] px-8 py-6">
-          <h1 className="text-2xl font-bold text-[#0b0f1c] mb-4">{getTabLabel(activeTab)}</h1>
+        <header className="bg-white border-b border-[var(--line)] px-8 py-6">
+          <h1 className="text-2xl font-bold text-[var(--fg)] mb-4">{getTabLabel(activeTab)}</h1>
 
           {/* Stats Row */}
           <div className="grid grid-cols-5 gap-4">
-            <div className="bg-[#f7f8fb] rounded-lg p-3">
-              <p className="text-[#5b6476] text-xs">Total Customers</p>
-              <p className="text-xl font-bold text-[#0b0f1c]">{stats.totalCustomers}</p>
+            <div className="bg-[var(--ink)] rounded-lg p-3">
+              <p className="text-[var(--fg-muted)] text-xs">Total Customers</p>
+              <p className="text-xl font-bold text-[var(--fg)]">{stats.totalCustomers}</p>
               {stats.growth && (
                 <p className={`text-xs mt-1 ${stats.growth.totalCustomers >= 0 ? "text-green-600" : "text-red-500"}`}>
                   {stats.growth.totalCustomers >= 0 ? "+" : ""}{stats.growth.totalCustomers} from yesterday
                 </p>
               )}
             </div>
-            <div className="bg-[#f7f8fb] rounded-lg p-3">
-              <p className="text-[#5b6476] text-xs">Active Pods</p>
-              <p className="text-xl font-bold text-[#0b0f1c]">{stats.activePods}</p>
+            <div className="bg-[var(--ink)] rounded-lg p-3">
+              <p className="text-[var(--fg-muted)] text-xs">Active Pods</p>
+              <p className="text-xl font-bold text-[var(--fg)]">{stats.activePods}</p>
               {stats.growth && (
                 <p className={`text-xs mt-1 ${stats.growth.activePods >= 0 ? "text-green-600" : "text-red-500"}`}>
                   {stats.growth.activePods >= 0 ? "+" : ""}{stats.growth.activePods} from yesterday
                 </p>
               )}
             </div>
-            <div className="bg-[#f7f8fb] rounded-lg p-3">
-              <p className="text-[#5b6476] text-xs">MRR</p>
-              <p className="text-xl font-bold text-[#0b0f1c]">${(stats.mrr / 100).toFixed(2)}</p>
+            <div className="bg-[var(--ink)] rounded-lg p-3">
+              <p className="text-[var(--fg-muted)] text-xs">MRR</p>
+              <p className="text-xl font-bold text-[var(--fg)]">${(stats.mrr / 100).toFixed(2)}</p>
               {stats.growth && (
                 <p className={`text-xs mt-1 ${stats.growth.mrr >= 0 ? "text-green-600" : "text-red-500"}`}>
                   {stats.growth.mrr >= 0 ? "+" : ""}{stats.growth.mrr >= 0 ? "$" : "-$"}{(Math.abs(stats.growth.mrr) / 100).toFixed(0)} from yesterday
                 </p>
               )}
             </div>
-            <div className="bg-[#f7f8fb] rounded-lg p-3">
-              <p className="text-[#5b6476] text-xs">New This Week</p>
-              <p className="text-xl font-bold text-[#0b0f1c]">{stats.newCustomersThisWeek}</p>
+            <div className="bg-[var(--ink)] rounded-lg p-3">
+              <p className="text-[var(--fg-muted)] text-xs">New This Week</p>
+              <p className="text-xl font-bold text-[var(--fg)]">{stats.newCustomersThisWeek}</p>
               {stats.growth && (
                 <p className={`text-xs mt-1 ${stats.growth.newCustomersThisWeek >= 0 ? "text-green-600" : "text-red-500"}`}>
                   {stats.growth.newCustomersThisWeek >= 0 ? "+" : ""}{stats.growth.newCustomersThisWeek} from yesterday
                 </p>
               )}
             </div>
-            <div className="bg-[#f7f8fb] rounded-lg p-3">
-              <p className="text-[#5b6476] text-xs">Revenue This Week</p>
-              <p className="text-xl font-bold text-[#0b0f1c]">${(stats.revenueThisWeek / 100).toFixed(2)}</p>
+            <div className="bg-[var(--ink)] rounded-lg p-3">
+              <p className="text-[var(--fg-muted)] text-xs">Revenue This Week</p>
+              <p className="text-xl font-bold text-[var(--fg)]">${(stats.revenueThisWeek / 100).toFixed(2)}</p>
               {stats.growth && (
                 <p className={`text-xs mt-1 ${stats.growth.revenueThisWeek >= 0 ? "text-green-600" : "text-red-500"}`}>
                   {stats.growth.revenueThisWeek >= 0 ? "+" : ""}{stats.growth.revenueThisWeek >= 0 ? "$" : "-$"}{(Math.abs(stats.growth.revenueThisWeek) / 100).toFixed(0)} from yesterday

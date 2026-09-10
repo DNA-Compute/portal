@@ -155,7 +155,7 @@ export function NodesSubTab({
         <select
           value={filter}
           onChange={(e) => onFilterChange(e.target.value)}
-          className="px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c]"
+          className="px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)]"
         >
           <option value="all">All Nodes</option>
           <option value="pending_validation">Pending Validation</option>
@@ -166,23 +166,23 @@ export function NodesSubTab({
         </select>
       </div>
 
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#f7f8fb] border-b border-[#e4e7ef]">
+          <thead className="bg-[var(--ink)] border-b border-[var(--line)]">
             <tr>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Server</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Provider</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Status</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">GPU</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Pricing</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Submitted</th>
-              <th className="text-right px-4 py-3 text-sm font-medium text-[#5b6476]">Actions</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Server</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Provider</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Status</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">GPU</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Pricing</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Submitted</th>
+              <th className="text-right px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e4e7ef]">
+          <tbody className="divide-y divide-[var(--line)]">
             {nodes.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-[#5b6476]">
+                <td colSpan={7} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                   No nodes found
                 </td>
               </tr>
@@ -190,8 +190,8 @@ export function NodesSubTab({
               nodes.map((node) => (
                 <tr key={node.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-[#0b0f1c]">{node.hostname || "—"}</div>
-                    <div className="text-xs text-[#5b6476]">{node.ipAddress}</div>
+                    <div className="font-medium text-[var(--fg)]">{node.hostname || "—"}</div>
+                    <div className="text-xs text-[var(--fg-muted)]">{node.ipAddress}</div>
                     {node.sshPassword && (
                       <button
                         onClick={() => setShowSshForNode(showSshForNode === node.id ? null : node.id)}
@@ -203,16 +203,16 @@ export function NodesSubTab({
                     {showSshForNode === node.id && node.sshPassword && (
                       <div className="mt-2 p-2 bg-gray-100 rounded text-xs font-mono">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[#5b6476]">User:</span>
-                          <span className="text-[#0b0f1c]">{node.sshUsername || "root"}</span>
+                          <span className="text-[var(--fg-muted)]">User:</span>
+                          <span className="text-[var(--fg)]">{node.sshUsername || "root"}</span>
                         </div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[#5b6476]">Pass:</span>
-                          <span className="text-[#0b0f1c]">{node.sshPassword}</span>
+                          <span className="text-[var(--fg-muted)]">Pass:</span>
+                          <span className="text-[var(--fg)]">{node.sshPassword}</span>
                         </div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-[#5b6476]">Port:</span>
-                          <span className="text-[#0b0f1c]">{node.sshPort || 22}</span>
+                          <span className="text-[var(--fg-muted)]">Port:</span>
+                          <span className="text-[var(--fg)]">{node.sshPort || 22}</span>
                         </div>
                         <button
                           onClick={() => {
@@ -238,7 +238,7 @@ export function NodesSubTab({
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                     {node.provider?.companyName || "Unknown"}
                   </td>
                   <td className="px-4 py-3">
@@ -246,11 +246,11 @@ export function NodesSubTab({
                       {node.status.replace("_", " ")}
                     </span>
                     {node.statusMessage && (
-                      <div className="text-xs text-[#5b6476] mt-1">{node.statusMessage}</div>
+                      <div className="text-xs text-[var(--fg-muted)] mt-1">{node.statusMessage}</div>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-[#0b0f1c]">
+                    <div className="text-sm text-[var(--fg)]">
                       {node.gpuModel ? `${node.gpuCount}x ${node.gpuModel}` : "—"}
                     </div>
                     {node.requestedGpuType && (
@@ -262,8 +262,8 @@ export function NodesSubTab({
                   <td className="px-4 py-3 text-sm">
                     {node.pricingTier ? (
                       <div>
-                        <div className="text-[#0b0f1c]">{node.pricingTier.name}</div>
-                        <div className="text-xs text-[#5b6476]">
+                        <div className="text-[var(--fg)]">{node.pricingTier.name}</div>
+                        <div className="text-xs text-[var(--fg-muted)]">
                           {node.customProviderRateCents
                             ? formatCents(node.customProviderRateCents)
                             : formatCents(node.pricingTier.providerRateCents)}{" "}
@@ -276,10 +276,10 @@ export function NodesSubTab({
                         )}
                       </div>
                     ) : (
-                      <span className="text-[#5b6476]">—</span>
+                      <span className="text-[var(--fg-muted)]">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                     {new Date(node.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right space-x-2">
@@ -322,7 +322,7 @@ export function NodesSubTab({
                         <button
                           onClick={() => onAction(node.id, "set-live")}
                           disabled={actionLoading === node.id}
-                          className="text-xs px-2 py-1 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded disabled:opacity-50"
                         >
                           Set Live
                         </button>
@@ -385,27 +385,27 @@ export function NodesSubTab({
       {pricingModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
-            <h3 className="text-lg font-semibold text-[#0b0f1c] mb-4">
+            <h3 className="text-lg font-semibold text-[var(--fg)] mb-4">
               {pricingModal.mode === "approve" ? "Approve Server & Set Pricing" : "Edit Node Pricing"}
             </h3>
 
             {/* Server Info */}
-            <div className="bg-[#f7f8fb] rounded-lg p-4 mb-4">
+            <div className="bg-[var(--ink)] rounded-lg p-4 mb-4">
               <div className="text-sm">
-                <span className="text-[#5b6476]">Server:</span>{" "}
-                <span className="font-medium text-[#0b0f1c]">
+                <span className="text-[var(--fg-muted)]">Server:</span>{" "}
+                <span className="font-medium text-[var(--fg)]">
                   {pricingModal.node.hostname || pricingModal.node.ipAddress}
                 </span>
               </div>
               <div className="text-sm">
-                <span className="text-[#5b6476]">Provider:</span>{" "}
-                <span className="font-medium text-[#0b0f1c]">
+                <span className="text-[var(--fg-muted)]">Provider:</span>{" "}
+                <span className="font-medium text-[var(--fg)]">
                   {pricingModal.node.provider?.companyName}
                 </span>
               </div>
               <div className="text-sm">
-                <span className="text-[#5b6476]">GPU:</span>{" "}
-                <span className="font-medium text-[#0b0f1c]">
+                <span className="text-[var(--fg-muted)]">GPU:</span>{" "}
+                <span className="font-medium text-[var(--fg)]">
                   {pricingModal.node.gpuModel
                     ? `${pricingModal.node.gpuCount}x ${pricingModal.node.gpuModel}`
                     : "—"}
@@ -413,18 +413,18 @@ export function NodesSubTab({
               </div>
               {pricingModal.node.requestedGpuType && (
                 <div className="text-sm">
-                  <span className="text-[#5b6476]">Requested GPU Type:</span>{" "}
+                  <span className="text-[var(--fg-muted)]">Requested GPU Type:</span>{" "}
                   <span className="font-medium text-blue-600">
                     {pricingModal.node.requestedGpuType.name}
                   </span>
-                  <span className="text-xs text-[#5b6476] ml-2">
+                  <span className="text-xs text-[var(--fg-muted)] ml-2">
                     (Default: {formatCents(pricingModal.node.requestedGpuType.defaultProviderRateCents)})
                   </span>
                 </div>
               )}
               {pricingModal.mode === "edit" && (
-                <div className="text-sm mt-2 pt-2 border-t border-[#e4e7ef]">
-                  <span className="text-[#5b6476]">Status:</span>{" "}
+                <div className="text-sm mt-2 pt-2 border-t border-[var(--line)]">
+                  <span className="text-[var(--fg-muted)]">Status:</span>{" "}
                   <span className={`font-medium ${
                     pricingModal.node.status === "active" ? "text-green-600" :
                     pricingModal.node.status === "approved" ? "text-purple-600" : "text-orange-600"
@@ -437,7 +437,7 @@ export function NodesSubTab({
 
             {/* Pricing Tier Selection */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                 Pricing Tier
               </label>
               <select
@@ -449,7 +449,7 @@ export function NodesSubTab({
                     useCustomRate: false,
                   })
                 }
-                className="w-full px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm"
+                className="w-full px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm"
               >
                 <option value="">Select a pricing tier...</option>
                 {pricingTiers.map((tier) => (
@@ -460,7 +460,7 @@ export function NodesSubTab({
                 ))}
               </select>
               {selectedTier && (
-                <div className="mt-2 text-xs text-[#5b6476]">
+                <div className="mt-2 text-xs text-[var(--fg-muted)]">
                   Provider rate: {formatCents(selectedTier.providerRateCents)} | Customer rate:{" "}
                   {formatCents(selectedTier.customerRateCents)}
                   {selectedTier.isRevenueShare && ` | Revenue share: ${selectedTier.revenueSharePercent}%`}
@@ -477,13 +477,13 @@ export function NodesSubTab({
                   onChange={(e) =>
                     setPricingModal({ ...pricingModal, useCustomRate: e.target.checked })
                   }
-                  className="rounded border-[#e4e7ef]"
+                  className="rounded border-[var(--line)]"
                 />
-                <span className="text-[#0b0f1c]">Use custom provider rate</span>
+                <span className="text-[var(--fg)]">Use custom provider rate</span>
               </label>
               {pricingModal.useCustomRate && (
                 <div className="mt-2">
-                  <label className="block text-xs text-[#5b6476] mb-1">
+                  <label className="block text-xs text-[var(--fg-muted)] mb-1">
                     Custom Provider Rate (cents/hr)
                   </label>
                   <input
@@ -496,7 +496,7 @@ export function NodesSubTab({
                       })
                     }
                     placeholder="e.g., 85 for $0.85/hr"
-                    className="w-full px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm"
+                    className="w-full px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm"
                   />
                   {pricingModal.customProviderRateCents && (
                     <div className="text-xs text-green-600 mt-1">
@@ -510,7 +510,7 @@ export function NodesSubTab({
             {/* Revenue Share Override (if applicable) */}
             {selectedTier?.isRevenueShare && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   Revenue Share Percent (optional override)
                 </label>
                 <input
@@ -520,7 +520,7 @@ export function NodesSubTab({
                     setPricingModal({ ...pricingModal, revenueSharePercent: e.target.value })
                   }
                   placeholder={`Default: ${selectedTier.revenueSharePercent}%`}
-                  className="w-full px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm"
+                  className="w-full px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm"
                 />
               </div>
             )}
@@ -529,7 +529,7 @@ export function NodesSubTab({
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => setPricingModal(null)}
-                className="px-4 py-2 text-sm text-[#5b6476] hover:text-[#0b0f1c]"
+                className="px-4 py-2 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]"
               >
                 Cancel
               </button>
@@ -539,7 +539,7 @@ export function NodesSubTab({
                 className={`px-4 py-2 text-sm text-white rounded-lg disabled:opacity-50 ${
                   pricingModal.mode === "approve"
                     ? "bg-green-600 hover:bg-green-700"
-                    : "bg-[#1a4fff] hover:bg-[#1238c9]"
+                    : "bg-[var(--acid)] hover:bg-[var(--acid-deep)]"
                 }`}
               >
                 {pricingModal.mode === "approve" ? "Approve with Pricing" : "Update Pricing"}

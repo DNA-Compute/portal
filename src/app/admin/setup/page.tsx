@@ -87,7 +87,7 @@ function AdminSetupContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-zinc-400">Validating invite...</p>
@@ -98,7 +98,7 @@ function AdminSetupContent() {
 
   if (!tokenValid) {
     return (
-      <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
         <div className="text-center max-w-md px-6">
           <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,8 +114,8 @@ function AdminSetupContent() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white flex flex-col">
-      <header className="border-b border-zinc-800 bg-zinc-900">
+    <div className="min-h-screen bg-zinc-50 text-white flex flex-col">
+      <header className="border-b border-zinc-200 bg-zinc-50">
         <div className="mx-auto max-w-6xl px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <BrandLogo
@@ -142,7 +142,7 @@ function AdminSetupContent() {
               type="email"
               value={email}
               disabled
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-zinc-400 cursor-not-allowed"
+              className="w-full px-4 py-3 bg-zinc-100/50 border border-zinc-300 rounded-lg text-zinc-400 cursor-not-allowed"
             />
 
             <input
@@ -153,7 +153,7 @@ function AdminSetupContent() {
               required
               autoComplete="new-password"
               autoFocus
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
+              className="w-full px-4 py-3 bg-zinc-100 border border-zinc-300 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
             />
 
             <input
@@ -163,7 +163,7 @@ function AdminSetupContent() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               autoComplete="new-password"
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
+              className="w-full px-4 py-3 bg-zinc-100 border border-zinc-300 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
             />
 
             {error && (
@@ -173,7 +173,7 @@ function AdminSetupContent() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 px-4 bg-white hover:bg-zinc-200 text-zinc-900 rounded-lg font-medium transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] font-semibold transition-colors disabled:bg-transparent disabled:text-[var(--fg-muted)] disabled:shadow-[inset_0_0_0_1px_var(--line-strong)] disabled:cursor-not-allowed"
             >
               {submitting ? "Setting up..." : "Set Password & Log In"}
             </button>
@@ -188,7 +188,7 @@ export default function AdminSetupPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+        <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-zinc-400">Loading...</p>

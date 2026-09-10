@@ -68,15 +68,15 @@ export default function TwoFactorSettings({
   }
 
   // Theme classes
-  const containerBg = isDark ? "bg-zinc-800" : "bg-white";
+  const containerBg = isDark ? "bg-zinc-100" : "bg-white";
   const textPrimary = isDark ? "text-white" : "text-[var(--ink)]";
   const textSecondary = isDark ? "text-zinc-400" : "text-[var(--muted)]";
-  const textStrong = isDark ? "text-zinc-300" : "text-[var(--ink)]";
+  const textStrong = isDark ? "text-zinc-600" : "text-[var(--ink)]";
   const cardBorder = isDark ? "" : "border border-[var(--line)]";
   const cardRounded = isDark ? "rounded-lg" : "rounded-2xl";
   const buttonRounded = isDark ? "rounded-lg" : "rounded-xl";
-  const borderLine = isDark ? "border-zinc-700" : "border-[var(--line)]";
-  const inputBg = isDark ? "bg-zinc-700 border-zinc-600" : "border-[var(--line)]";
+  const borderLine = isDark ? "border-zinc-300" : "border-[var(--line)]";
+  const inputBg = isDark ? "bg-zinc-200 border-zinc-600" : "border-[var(--line)]";
   const inputText = isDark ? "text-white" : "";
 
   // Error/success theme classes
@@ -103,7 +103,7 @@ export default function TwoFactorSettings({
               className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                 enabled
                   ? (isDark ? "bg-emerald-900" : "bg-emerald-100")
-                  : (isDark ? "bg-zinc-700" : "bg-zinc-100")
+                  : (isDark ? "bg-zinc-200" : "bg-zinc-100")
               }`}
             >
               <svg
@@ -167,7 +167,7 @@ export default function TwoFactorSettings({
                 setError(null);
               }}
               className={`px-4 py-2 text-sm font-medium ${
-                isDark ? "text-zinc-300 hover:text-white border-zinc-700" : "text-[var(--muted)] hover:text-zinc-700 border-[var(--line)]"
+                isDark ? "text-zinc-600 hover:text-white border-zinc-300" : "text-[var(--muted)] hover:text-zinc-700 border-[var(--line)]"
               } border ${buttonRounded} transition-colors`}
             >
               Regenerate Backup Codes
@@ -226,7 +226,7 @@ export default function TwoFactorSettings({
           </div>
 
           {/* Manual Entry */}
-          <div className={`p-4 ${isDark ? "bg-zinc-700" : "bg-zinc-50"} ${buttonRounded}`}>
+          <div className={`p-4 ${isDark ? "bg-zinc-200" : "bg-zinc-50"} ${buttonRounded}`}>
             <p className={`text-xs ${textSecondary} mb-2`}>
               Or enter this code manually:
             </p>
@@ -265,7 +265,7 @@ export default function TwoFactorSettings({
               {setupData.backupCodes.map((code, i) => (
                 <code
                   key={i}
-                  className={`px-3 py-1.5 ${isDark ? "bg-zinc-800 text-white" : "bg-white"} rounded text-sm font-mono text-center`}
+                  className={`px-3 py-1.5 ${isDark ? "bg-zinc-100 text-white" : "bg-white"} rounded text-sm font-mono text-center`}
                 >
                   {code}
                 </code>
@@ -323,7 +323,7 @@ export default function TwoFactorSettings({
           {/* Cancel */}
           <button
             onClick={resetSetup}
-            className={`text-sm ${textSecondary} hover:${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            className={`text-sm ${textSecondary} hover:${isDark ? "text-zinc-600" : "text-zinc-700"}`}
           >
             Cancel setup
           </button>
@@ -363,7 +363,7 @@ export default function TwoFactorSettings({
 
           <button
             onClick={resetDisable}
-            className={`text-sm ${textSecondary} hover:${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            className={`text-sm ${textSecondary} hover:${isDark ? "text-zinc-600" : "text-zinc-700"}`}
           >
             Cancel
           </button>
@@ -407,7 +407,7 @@ export default function TwoFactorSettings({
 
           <button
             onClick={resetRegenerate}
-            className={`text-sm ${textSecondary} hover:${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            className={`text-sm ${textSecondary} hover:${isDark ? "text-zinc-600" : "text-zinc-700"}`}
           >
             Cancel
           </button>
@@ -477,7 +477,7 @@ export default function TwoFactorSettings({
             </button>
             <button
               onClick={resetNewBackupCodes}
-              className={`px-4 py-2 text-sm font-medium ${textSecondary} hover:${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+              className={`px-4 py-2 text-sm font-medium ${textSecondary} hover:${isDark ? "text-zinc-600" : "text-zinc-700"}`}
             >
               Done
             </button>

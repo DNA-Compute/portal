@@ -155,19 +155,19 @@ export function BannersTab() {
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-[#5b6476]">Loading banners...</div>;
+    return <div className="text-center py-8 text-[var(--fg-muted)]">Loading banners...</div>;
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-[#5b6476]">
+        <p className="text-[var(--fg-muted)]">
           Manage campaign banners displayed at the top of the marketing site.
         </p>
         <button
           onClick={openCreate}
-          className="px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1238c9] transition-colors text-sm font-medium"
+          className="px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid-deep)] transition-colors text-sm font-medium"
         >
           Create Banner
         </button>
@@ -175,13 +175,13 @@ export function BannersTab() {
 
       {/* Banner List */}
       {banners.length === 0 ? (
-        <div className="bg-white border border-[#e4e7ef] rounded-lg p-8 text-center text-[#5b6476]">
+        <div className="bg-white border border-[var(--line)] rounded-lg p-8 text-center text-[var(--fg-muted)]">
           No banners yet. Create one to display promotions across the site.
         </div>
       ) : (
         <div className="space-y-3">
           {banners.map((banner) => (
-            <div key={banner.id} className="bg-white border border-[#e4e7ef] rounded-lg p-4">
+            <div key={banner.id} className="bg-white border border-[var(--line)] rounded-lg p-4">
               {/* Preview */}
               <div
                 className="rounded-md px-4 py-2 text-center text-sm font-medium mb-3"
@@ -194,7 +194,7 @@ export function BannersTab() {
               </div>
               {/* Meta */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-xs text-[#5b6476]">
+                <div className="flex items-center gap-3 text-xs text-[var(--fg-muted)]">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                     banner.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                   }`}>
@@ -207,13 +207,13 @@ export function BannersTab() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleToggleActive(banner)}
-                    className="text-xs text-[#5b6476] hover:text-[#0b0f1c] transition-colors"
+                    className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
                   >
                     {banner.active ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     onClick={() => openEdit(banner)}
-                    className="text-xs text-[#1a4fff] hover:text-[#1238c9] transition-colors"
+                    className="text-xs text-[var(--acid)] hover:text-[var(--acid-deep)] transition-colors"
                   >
                     Edit
                   </button>
@@ -234,40 +234,40 @@ export function BannersTab() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowForm(false)}>
           <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-[#0b0f1c] mb-4">
+            <h3 className="text-lg font-bold text-[var(--fg)] mb-4">
               {editingId ? "Edit Banner" : "Create Banner"}
             </h3>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Banner Text *</label>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">Banner Text *</label>
                 <input
                   type="text"
                   value={form.text}
                   onChange={(e) => setForm({ ...form, text: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                   placeholder="Limited time: Get 20% off monthly plans!"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Link URL</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Link URL</label>
                   <input
                     type="text"
                     value={form.linkUrl}
                     onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                     placeholder="/checkout"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Link Text</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Link Text</label>
                   <input
                     type="text"
                     value={form.linkText}
                     onChange={(e) => setForm({ ...form, linkText: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                     placeholder="Get started"
                   />
                 </div>
@@ -275,36 +275,36 @@ export function BannersTab() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Background Color</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Background Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={form.backgroundColor}
                       onChange={(e) => setForm({ ...form, backgroundColor: e.target.value })}
-                      className="w-10 h-10 rounded border border-[#e4e7ef] cursor-pointer"
+                      className="w-10 h-10 rounded border border-[var(--line)] cursor-pointer"
                     />
                     <input
                       type="text"
                       value={form.backgroundColor}
                       onChange={(e) => setForm({ ...form, backgroundColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                      className="flex-1 px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Text Color</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Text Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={form.textColor}
                       onChange={(e) => setForm({ ...form, textColor: e.target.value })}
-                      className="w-10 h-10 rounded border border-[#e4e7ef] cursor-pointer"
+                      className="w-10 h-10 rounded border border-[var(--line)] cursor-pointer"
                     />
                     <input
                       type="text"
                       value={form.textColor}
                       onChange={(e) => setForm({ ...form, textColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                      className="flex-1 px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -313,7 +313,7 @@ export function BannersTab() {
               {/* Preview */}
               {form.text && (
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Preview</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Preview</label>
                   <div
                     className="rounded-md px-4 py-2 text-center text-sm font-medium"
                     style={{ backgroundColor: form.backgroundColor, color: form.textColor }}
@@ -328,33 +328,33 @@ export function BannersTab() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Starts At</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Starts At</label>
                   <input
                     type="datetime-local"
                     value={form.startsAt}
                     onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Expires At</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Expires At</label>
                   <input
                     type="datetime-local"
                     value={form.expiresAt}
                     onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Display Order</label>
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">Display Order</label>
                   <input
                     type="number"
                     value={form.displayOrder}
                     onChange={(e) => setForm({ ...form, displayOrder: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:ring-2 focus:ring-[#1a4fff] focus:outline-none"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--acid)] focus:outline-none"
                   />
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer pt-6">
@@ -362,18 +362,18 @@ export function BannersTab() {
                     type="checkbox"
                     checked={form.active}
                     onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                    className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                   />
-                  <span className="text-sm text-[#0b0f1c]">Active</span>
+                  <span className="text-sm text-[var(--fg)]">Active</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer pt-6">
                   <input
                     type="checkbox"
                     checked={form.dismissible}
                     onChange={(e) => setForm({ ...form, dismissible: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                    className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                   />
-                  <span className="text-sm text-[#0b0f1c]">Dismissible</span>
+                  <span className="text-sm text-[var(--fg)]">Dismissible</span>
                 </label>
               </div>
 
@@ -381,14 +381,14 @@ export function BannersTab() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1238c9] disabled:opacity-50 text-sm font-medium transition-colors"
+                  className="flex-1 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid-deep)] disabled:opacity-50 text-sm font-medium transition-colors"
                 >
                   {saving ? "Saving..." : editingId ? "Update Banner" : "Create Banner"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 bg-[#e4e7ef] text-[#5b6476] rounded-lg hover:bg-[#d1d5e0] text-sm font-medium transition-colors"
+                  className="px-4 py-2 bg-[var(--ink-raise)] text-[var(--fg-muted)] rounded-lg hover:bg-[var(--ink-raise)] text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>

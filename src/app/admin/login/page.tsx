@@ -157,7 +157,7 @@ export default function AdminLoginPage() {
 
   if (loginMode === "loading") {
     return (
-      <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
         <div className="text-zinc-400">Loading...</div>
       </div>
     );
@@ -167,8 +167,8 @@ export default function AdminLoginPage() {
   const isPassword = loginMode === "password" || isSetup;
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white flex flex-col">
-      <header className="border-b border-zinc-800 bg-zinc-900">
+    <div className="min-h-screen bg-zinc-50 text-white flex flex-col">
+      <header className="border-b border-zinc-200 bg-zinc-50">
         <div className="mx-auto max-w-6xl px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <BrandLogo
@@ -211,7 +211,7 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
+                className="w-full px-4 py-3 bg-zinc-100 border border-zinc-300 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
               />
 
               {isPassword && (
@@ -222,7 +222,7 @@ export default function AdminLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete={isSetup ? "new-password" : "current-password"}
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-zinc-100 border border-zinc-300 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
                 />
               )}
 
@@ -234,7 +234,7 @@ export default function AdminLoginPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   autoComplete="new-password"
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-zinc-100 border border-zinc-300 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#9b51e0] focus:border-transparent"
                 />
               )}
 
@@ -245,7 +245,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-white hover:bg-zinc-200 text-zinc-900 rounded-lg font-medium transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] font-semibold transition-colors disabled:bg-transparent disabled:text-[var(--fg-muted)] disabled:shadow-[inset_0_0_0_1px_var(--line-strong)] disabled:cursor-not-allowed"
               >
                 {loading
                   ? (isSetup ? "Creating Account..." : isPassword ? "Logging in..." : "Sending...")
@@ -253,7 +253,7 @@ export default function AdminLoginPage() {
               </button>
             </form>
           ) : (
-            <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-6 text-center">
+            <div className="bg-zinc-100 border border-zinc-300 rounded-lg p-6 text-center">
               <div className="w-12 h-12 bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

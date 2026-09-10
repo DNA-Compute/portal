@@ -9,8 +9,8 @@ export function GettingStartedDoc() {
       </p>
 
       {/* Table of Contents */}
-      <nav className="not-prose my-8 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3">On this page</h4>
+      <nav className="not-prose my-8 p-4 bg-zinc-50 dark:bg-zinc-50 rounded-lg border border-zinc-200 dark:border-zinc-200">
+        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-800 mb-3">On this page</h4>
         <ul className="space-y-1.5 text-sm">
           <li><a href="#platform-overview" className="text-blue-600 dark:text-blue-400 hover:underline">Platform Overview</a></li>
           <li><a href="#prerequisites" className="text-blue-600 dark:text-blue-400 hover:underline">Prerequisites</a></li>

@@ -33,18 +33,18 @@ export function SettingsTab({
   return (
     <div className="max-w-3xl space-y-8">
       {/* Pricing Settings */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-[#0b0f1c]">Billing Settings</h3>
-        <p className="text-sm text-[#5b6476] mb-6">
+      <div className="bg-white border border-[var(--line)] rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 text-[var(--fg)]">Billing Settings</h3>
+        <p className="text-sm text-[var(--fg-muted)] mb-6">
           Configure wallet auto-refill settings. GPU hourly rates and storage pricing are set in the Products tab.
         </p>
 
         <form onSubmit={onSavePricing} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Auto-Refill Threshold</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Auto-Refill Threshold</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5b6476]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">$</span>
                 <input
                   type="number"
                   step="0.01"
@@ -52,16 +52,16 @@ export function SettingsTab({
                   value={pricingForm.refillThreshold}
                   onChange={(e) => onPricingFormChange({ ...pricingForm, refillThreshold: e.target.value })}
                   placeholder="20.00"
-                  className="w-full pl-7 pr-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full pl-7 pr-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">Refill when balance drops below</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">Refill when balance drops below</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Auto-Refill Amount</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Auto-Refill Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5b6476]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">$</span>
                 <input
                   type="number"
                   step="0.01"
@@ -69,14 +69,14 @@ export function SettingsTab({
                   value={pricingForm.refillAmount}
                   onChange={(e) => onPricingFormChange({ ...pricingForm, refillAmount: e.target.value })}
                   placeholder="100.00"
-                  className="w-full pl-7 pr-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full pl-7 pr-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">Amount to add when refilling</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">Amount to add when refilling</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Stopped Instance Rate</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Stopped Instance Rate</label>
               <div className="relative">
                 <input
                   type="number"
@@ -86,16 +86,16 @@ export function SettingsTab({
                   value={pricingForm.stoppedInstanceRate}
                   onChange={(e) => onPricingFormChange({ ...pricingForm, stoppedInstanceRate: e.target.value })}
                   placeholder="25"
-                  className="w-full pl-4 pr-8 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full pl-4 pr-8 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b6476]">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">%</span>
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">Rate charged for stopped/reserved instances (% of hourly rate)</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">Rate charged for stopped/reserved instances (% of hourly rate)</p>
             </div>
           </div>
 
           {pricing?.updatedAt && (
-            <p className="text-xs text-[#5b6476]">
+            <p className="text-xs text-[var(--fg-muted)]">
               Last updated: {new Date(pricing.updatedAt).toLocaleString()}
               {pricing.updatedBy && ` by ${pricing.updatedBy}`}
             </p>
@@ -105,7 +105,7 @@ export function SettingsTab({
             <button
               type="submit"
               disabled={pricingSaving}
-              className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
             >
               {pricingSaving ? "Saving..." : "Save Pricing"}
             </button>
@@ -193,42 +193,42 @@ function RateLimitCapSection() {
   if (!loaded) return null;
 
   return (
-    <div className="bg-white border border-[#e4e7ef] rounded-lg p-6">
-      <h3 className="text-lg font-semibold mb-1 text-[#0b0f1c]">API Rate Limits</h3>
-      <p className="text-sm text-[#5b6476] mb-6">
+    <div className="bg-white border border-[var(--line)] rounded-lg p-6">
+      <h3 className="text-lg font-semibold mb-1 text-[var(--fg)]">API Rate Limits</h3>
+      <p className="text-sm text-[var(--fg-muted)] mb-6">
         Maximum requests per minute that customers can configure for Pixel Factory. Customers can set their own limits up to these caps.
       </p>
 
       <form onSubmit={handleSave} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Max RPM (Images)</label>
+            <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Max RPM (Images)</label>
             <input
               type="number"
               min="1"
               value={imageRpm}
               onChange={(e) => setImageRpm(e.target.value)}
               placeholder="60"
-              className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+              className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
             />
-            <p className="text-xs text-[#5b6476] mt-1">Maximum image generation requests per minute per customer</p>
+            <p className="text-xs text-[var(--fg-muted)] mt-1">Maximum image generation requests per minute per customer</p>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Max RPM (Videos)</label>
+            <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Max RPM (Videos)</label>
             <input
               type="number"
               min="1"
               value={videoRpm}
               onChange={(e) => setVideoRpm(e.target.value)}
               placeholder="10"
-              className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+              className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
             />
-            <p className="text-xs text-[#5b6476] mt-1">Maximum video generation requests per minute per customer</p>
+            <p className="text-xs text-[var(--fg-muted)] mt-1">Maximum video generation requests per minute per customer</p>
           </div>
         </div>
 
         {updatedAt && (
-          <p className="text-xs text-[#5b6476]">
+          <p className="text-xs text-[var(--fg-muted)]">
             Last updated: {new Date(updatedAt).toLocaleString()}
             {updatedBy && ` by ${updatedBy}`}
           </p>
@@ -244,7 +244,7 @@ function RateLimitCapSection() {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg font-medium disabled:opacity-50"
+            className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Rate Limits"}
           </button>

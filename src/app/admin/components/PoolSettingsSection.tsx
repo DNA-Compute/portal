@@ -189,7 +189,7 @@ export function PoolSettingsSection() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e4e7ef] rounded-lg p-6">
+      <div className="bg-white border border-[var(--line)] rounded-lg p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3"></div>
           <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -212,16 +212,16 @@ export function PoolSettingsSection() {
       )}
 
       {/* Default Pool Settings */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-2 text-[#0b0f1c]">Default Pool Settings</h3>
-        <p className="text-sm text-[#5b6476] mb-6">
+      <div className="bg-white border border-[var(--line)] rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-2 text-[var(--fg)]">Default Pool Settings</h3>
+        <p className="text-sm text-[var(--fg-muted)] mb-6">
           These defaults are applied when creating new GPU pools. Individual pools can override these settings below.
         </p>
 
         <form onSubmit={handleSaveDefaults} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Time Quantum</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Time Quantum</label>
               <div className="relative">
                 <input
                   type="number"
@@ -230,15 +230,15 @@ export function PoolSettingsSection() {
                   step="10"
                   value={defaultsForm.timeQuantumSec}
                   onChange={(e) => setDefaultsForm({ ...defaultsForm, timeQuantumSec: e.target.value })}
-                  className="w-full pl-4 pr-12 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full pl-4 pr-12 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b6476] text-xs">sec</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] text-xs">sec</span>
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">GPU time-slice rotation (10-300s)</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">GPU time-slice rotation (10-300s)</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Overcommit Ratio</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Overcommit Ratio</label>
               <div className="relative">
                 <input
                   type="number"
@@ -247,30 +247,30 @@ export function PoolSettingsSection() {
                   step="1"
                   value={defaultsForm.overcommitRatio}
                   onChange={(e) => setDefaultsForm({ ...defaultsForm, overcommitRatio: e.target.value })}
-                  className="w-full pl-4 pr-8 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full pl-4 pr-8 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b6476] text-xs">x</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] text-xs">x</span>
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">GPU memory oversubscription (1-10x)</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">GPU memory oversubscription (1-10x)</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Security Mode</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Security Mode</label>
               <select
                 value={defaultsForm.securityMode}
                 onChange={(e) => setDefaultsForm({ ...defaultsForm, securityMode: e.target.value })}
-                className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
               >
                 <option value="low">Low (Basic isolation)</option>
                 <option value="medium">Medium (Namespace isolation)</option>
                 <option value="high">High (Full isolation)</option>
               </select>
-              <p className="text-xs text-[#5b6476] mt-1">Pod isolation level</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">Pod isolation level</p>
             </div>
           </div>
 
           {data?.defaults?.updatedAt && (
-            <p className="text-xs text-[#5b6476]">
+            <p className="text-xs text-[var(--fg-muted)]">
               Last updated: {new Date(data.defaults.updatedAt).toLocaleString()}
               {data.defaults.updatedBy && ` by ${data.defaults.updatedBy}`}
             </p>
@@ -280,7 +280,7 @@ export function PoolSettingsSection() {
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Defaults"}
             </button>
@@ -289,17 +289,17 @@ export function PoolSettingsSection() {
       </div>
 
       {/* Pool-Specific Overrides */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg p-6">
+      <div className="bg-white border border-[var(--line)] rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#0b0f1c]">Pool-Specific Overrides</h3>
-            <p className="text-sm text-[#5b6476]">
+            <h3 className="text-lg font-semibold text-[var(--fg)]">Pool-Specific Overrides</h3>
+            <p className="text-sm text-[var(--fg-muted)]">
               Override settings for individual pools. Leave fields empty to use defaults.
             </p>
           </div>
           <button
             onClick={() => openOverrideModal()}
-            className="px-4 py-2 bg-[#0b0f1c] hover:bg-[#1a1f2e] text-white rounded-lg font-medium text-sm"
+            className="px-4 py-2 bg-[var(--fg)] hover:bg-[#1a1f2e] text-white rounded-lg font-medium text-sm"
           >
             + Add Override
           </button>
@@ -309,41 +309,41 @@ export function PoolSettingsSection() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#e4e7ef]">
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Pool</th>
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Time Quantum</th>
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Overcommit</th>
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Security</th>
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Priority</th>
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Status</th>
-                  <th className="text-left py-3 px-2 text-[#5b6476] font-medium">Notes</th>
-                  <th className="text-right py-3 px-2 text-[#5b6476] font-medium">Actions</th>
+                <tr className="border-b border-[var(--line)]">
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Pool</th>
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Time Quantum</th>
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Overcommit</th>
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Security</th>
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Priority</th>
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Status</th>
+                  <th className="text-left py-3 px-2 text-[var(--fg-muted)] font-medium">Notes</th>
+                  <th className="text-right py-3 px-2 text-[var(--fg-muted)] font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {data.overrides.map((override) => (
-                  <tr key={override.id} className="border-b border-[#e4e7ef] hover:bg-gray-50">
+                  <tr key={override.id} className="border-b border-[var(--line)] hover:bg-gray-50">
                     <td className="py-3 px-2">
-                      <div className="font-medium text-[#0b0f1c]">
+                      <div className="font-medium text-[var(--fg)]">
                         {override.poolName || `Pool ${override.gpuaasPoolId}`}
                       </div>
                       {override.node && (
-                        <div className="text-xs text-[#5b6476]">
+                        <div className="text-xs text-[var(--fg-muted)]">
                           {override.node.hostname} ({override.node.gpuModel})
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-2 text-[#0b0f1c]">
-                      {override.timeQuantumSec !== null ? `${override.timeQuantumSec}s` : <span className="text-[#5b6476] italic">default</span>}
+                    <td className="py-3 px-2 text-[var(--fg)]">
+                      {override.timeQuantumSec !== null ? `${override.timeQuantumSec}s` : <span className="text-[var(--fg-muted)] italic">default</span>}
                     </td>
-                    <td className="py-3 px-2 text-[#0b0f1c]">
-                      {override.overcommitRatio !== null ? `${override.overcommitRatio}x` : <span className="text-[#5b6476] italic">default</span>}
+                    <td className="py-3 px-2 text-[var(--fg)]">
+                      {override.overcommitRatio !== null ? `${override.overcommitRatio}x` : <span className="text-[var(--fg-muted)] italic">default</span>}
                     </td>
-                    <td className="py-3 px-2 text-[#0b0f1c]">
-                      {override.securityMode || <span className="text-[#5b6476] italic">default</span>}
+                    <td className="py-3 px-2 text-[var(--fg)]">
+                      {override.securityMode || <span className="text-[var(--fg-muted)] italic">default</span>}
                     </td>
-                    <td className="py-3 px-2 text-[#0b0f1c]">
-                      {override.priority != null ? override.priority : <span className="text-[#5b6476] italic">-</span>}
+                    <td className="py-3 px-2 text-[var(--fg)]">
+                      {override.priority != null ? override.priority : <span className="text-[var(--fg-muted)] italic">-</span>}
                     </td>
                     <td className="py-3 px-2">
                       {override.maintenance ? (
@@ -356,13 +356,13 @@ export function PoolSettingsSection() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-2 text-[#5b6476] max-w-[200px] truncate">
+                    <td className="py-3 px-2 text-[var(--fg-muted)] max-w-[200px] truncate">
                       {override.notes || "-"}
                     </td>
                     <td className="py-3 px-2 text-right">
                       <button
                         onClick={() => openOverrideModal(override)}
-                        className="text-[#1a4fff] hover:text-[#1238c9] mr-3"
+                        className="text-[var(--acid)] hover:text-[var(--acid-deep)] mr-3"
                       >
                         Edit
                       </button>
@@ -379,7 +379,7 @@ export function PoolSettingsSection() {
             </table>
           </div>
         ) : (
-          <div className="text-center py-8 text-[#5b6476]">
+          <div className="text-center py-8 text-[var(--fg-muted)]">
             <p>No pool-specific overrides configured.</p>
             <p className="text-sm mt-1">All pools will use the default settings above.</p>
           </div>
@@ -390,19 +390,19 @@ export function PoolSettingsSection() {
       {showOverrideModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4 text-[#0b0f1c]">
+            <h3 className="text-lg font-semibold mb-4 text-[var(--fg)]">
               {editingOverride ? "Edit Pool Override" : "Add Pool Override"}
             </h3>
 
             <form onSubmit={handleSaveOverride} className="space-y-4">
               {!editingOverride && (
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Pool</label>
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Pool</label>
                   <select
                     value={overrideForm.gpuaasPoolId}
                     onChange={(e) => setOverrideForm({ ...overrideForm, gpuaasPoolId: e.target.value })}
                     required
-                    className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                    className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                   >
                     <option value="">Select a pool...</option>
                     {data?.availablePools
@@ -417,19 +417,19 @@ export function PoolSettingsSection() {
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Display Name (optional)</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Display Name (optional)</label>
                 <input
                   type="text"
                   value={overrideForm.poolName}
                   onChange={(e) => setOverrideForm({ ...overrideForm, poolName: e.target.value })}
                   placeholder="Custom pool name"
-                  className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Time Quantum</label>
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Time Quantum</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -439,14 +439,14 @@ export function PoolSettingsSection() {
                       value={overrideForm.timeQuantumSec}
                       onChange={(e) => setOverrideForm({ ...overrideForm, timeQuantumSec: e.target.value })}
                       placeholder="Use default"
-                      className="w-full pl-4 pr-12 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                      className="w-full pl-4 pr-12 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b6476] text-xs">sec</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] text-xs">sec</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Overcommit</label>
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Overcommit</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -456,19 +456,19 @@ export function PoolSettingsSection() {
                       value={overrideForm.overcommitRatio}
                       onChange={(e) => setOverrideForm({ ...overrideForm, overcommitRatio: e.target.value })}
                       placeholder="Use default"
-                      className="w-full pl-4 pr-8 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                      className="w-full pl-4 pr-8 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b6476] text-xs">x</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] text-xs">x</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Security Mode</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Security Mode</label>
                 <select
                   value={overrideForm.securityMode}
                   onChange={(e) => setOverrideForm({ ...overrideForm, securityMode: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 >
                   <option value="">Use default</option>
                   <option value="low">Low (Basic isolation)</option>
@@ -478,7 +478,7 @@ export function PoolSettingsSection() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Priority</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Priority</label>
                 <input
                   type="number"
                   min="0"
@@ -486,9 +486,9 @@ export function PoolSettingsSection() {
                   value={overrideForm.priority}
                   onChange={(e) => setOverrideForm({ ...overrideForm, priority: e.target.value })}
                   placeholder="0"
-                  className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
-                <p className="text-xs text-[#5b6476] mt-1">Higher = fill first. 0 = no preference.</p>
+                <p className="text-xs text-[var(--fg-muted)] mt-1">Higher = fill first. 0 = no preference.</p>
               </div>
 
               <div>
@@ -504,20 +504,20 @@ export function PoolSettingsSection() {
                     <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-[#0b0f1c]">Maintenance Mode</span>
-                    <p className="text-xs text-[#5b6476]">No new pods will be placed on this pool. Existing pods stay active.</p>
+                    <span className="text-sm font-medium text-[var(--fg)]">Maintenance Mode</span>
+                    <p className="text-xs text-[var(--fg-muted)]">No new pods will be placed on this pool. Existing pods stay active.</p>
                   </div>
                 </label>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Notes</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Notes</label>
                 <textarea
                   value={overrideForm.notes}
                   onChange={(e) => setOverrideForm({ ...overrideForm, notes: e.target.value })}
                   placeholder="Optional notes about this override"
                   rows={2}
-                  className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
 
@@ -525,14 +525,14 @@ export function PoolSettingsSection() {
                 <button
                   type="button"
                   onClick={() => setShowOverrideModal(false)}
-                  className="px-4 py-2 border border-[#e4e7ef] text-[#5b6476] rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-[var(--line)] text-[var(--fg-muted)] rounded-lg hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg font-medium disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
                 >
                   {saving ? "Saving..." : editingOverride ? "Update Override" : "Create Override"}
                 </button>

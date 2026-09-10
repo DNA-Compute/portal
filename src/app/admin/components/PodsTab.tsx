@@ -365,8 +365,8 @@ export function PodsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <RefreshCw className="w-8 h-8 animate-spin text-[#1a4fff]" />
-        <span className="ml-3 text-[#5b6476]">Loading pods...</span>
+        <RefreshCw className="w-8 h-8 animate-spin text-[var(--acid)]" />
+        <span className="ml-3 text-[var(--fg-muted)]">Loading pods...</span>
       </div>
     );
   }
@@ -394,13 +394,13 @@ export function PodsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[#5b6476] text-sm mt-1">
+          <p className="text-[var(--fg-muted)] text-sm mt-1">
             All pods running on the HostedAI infrastructure
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastMetricsUpdate && (
-            <span className="text-xs text-[#9ca3af]">
+            <span className="text-xs text-[var(--fg-muted)]">
               Metrics updated {lastMetricsUpdate.toLocaleTimeString()}
             </span>
           )}
@@ -425,7 +425,7 @@ export function PodsTab() {
           </button>
           <button
             onClick={loadPods}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1a4fff] hover:bg-[#1a4fff]/90 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
@@ -436,58 +436,58 @@ export function PodsTab() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-8 gap-4">
-          <div className="bg-white border border-[#e4e7ef] rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-[var(--line)] rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Server className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0b0f1c]">{summary.totalPods}</p>
-                <p className="text-xs text-[#5b6476]">Total Pods</p>
+                <p className="text-2xl font-bold text-[var(--fg)]">{summary.totalPods}</p>
+                <p className="text-xs text-[var(--fg-muted)]">Total Pods</p>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-[var(--line)] rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Zap className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0b0f1c]">{summary.activePods}</p>
-                <p className="text-xs text-[#5b6476]">Active</p>
+                <p className="text-2xl font-bold text-[var(--fg)]">{summary.activePods}</p>
+                <p className="text-xs text-[var(--fg-muted)]">Active</p>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-[var(--line)] rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Cpu className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0b0f1c]">{summary.totalVGPUs}</p>
-                <p className="text-xs text-[#5b6476]">Total vGPUs</p>
+                <p className="text-2xl font-bold text-[var(--fg)]">{summary.totalVGPUs}</p>
+                <p className="text-xs text-[var(--fg-muted)]">Total vGPUs</p>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-[var(--line)] rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-teal-100 rounded-lg">
                 <User className="w-5 h-5 text-teal-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0b0f1c]">{summary.ownedPods}</p>
-                <p className="text-xs text-[#5b6476]">With Owner</p>
+                <p className="text-2xl font-bold text-[var(--fg)]">{summary.ownedPods}</p>
+                <p className="text-xs text-[var(--fg-muted)]">With Owner</p>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-[var(--line)] rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0b0f1c]">{summary.unownedPods}</p>
-                <p className="text-xs text-[#5b6476]">Unowned</p>
+                <p className="text-2xl font-bold text-[var(--fg)]">{summary.unownedPods}</p>
+                <p className="text-xs text-[var(--fg-muted)]">Unowned</p>
               </div>
             </div>
           </div>
@@ -495,7 +495,7 @@ export function PodsTab() {
             className={`bg-white border rounded-xl p-4 shadow-sm cursor-pointer transition-colors ${
               summary.deadPods > 0
                 ? "border-red-300 bg-red-50 hover:bg-red-100"
-                : "border-[#e4e7ef] hover:bg-[#f7f8fb]"
+                : "border-[var(--line)] hover:bg-[var(--ink)]"
             }`}
             onClick={() => summary.deadPods > 0 && setFilter("dead")}
           >
@@ -504,8 +504,8 @@ export function PodsTab() {
                 <Skull className={`w-5 h-5 ${summary.deadPods > 0 ? "text-red-600" : "text-gray-400"}`} />
               </div>
               <div>
-                <p className={`text-2xl font-bold ${summary.deadPods > 0 ? "text-red-600" : "text-[#0b0f1c]"}`}>{summary.deadPods}</p>
-                <p className="text-xs text-[#5b6476]">Dead Pods</p>
+                <p className={`text-2xl font-bold ${summary.deadPods > 0 ? "text-red-600" : "text-[var(--fg)]"}`}>{summary.deadPods}</p>
+                <p className="text-xs text-[var(--fg-muted)]">Dead Pods</p>
               </div>
             </div>
           </div>
@@ -513,7 +513,7 @@ export function PodsTab() {
             className={`bg-white border rounded-xl p-4 shadow-sm cursor-pointer transition-colors ${
               summary.unbilledPods > 0
                 ? "border-amber-300 bg-amber-50 hover:bg-amber-100"
-                : "border-[#e4e7ef] hover:bg-[#f7f8fb]"
+                : "border-[var(--line)] hover:bg-[var(--ink)]"
             }`}
             onClick={() => summary.unbilledPods > 0 && setFilter("unbilled")}
           >
@@ -522,21 +522,21 @@ export function PodsTab() {
                 <DollarSign className={`w-5 h-5 ${summary.unbilledPods > 0 ? "text-amber-600" : "text-gray-400"}`} />
               </div>
               <div>
-                <p className={`text-2xl font-bold ${summary.unbilledPods > 0 ? "text-amber-600" : "text-[#0b0f1c]"}`}>{summary.unbilledPods}</p>
-                <p className="text-xs text-[#5b6476]">Unbilled</p>
+                <p className={`text-2xl font-bold ${summary.unbilledPods > 0 ? "text-amber-600" : "text-[var(--fg)]"}`}>{summary.unbilledPods}</p>
+                <p className="text-xs text-[var(--fg-muted)]">Unbilled</p>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-[var(--line)] rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-100 rounded-lg">
                 <Activity className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0b0f1c]">
+                <p className="text-2xl font-bold text-[var(--fg)]">
                   {avgGpuUtil !== null ? `${avgGpuUtil.toFixed(0)}%` : "-"}
                 </p>
-                <p className="text-xs text-[#5b6476]">Avg GPU Util</p>
+                <p className="text-xs text-[var(--fg-muted)]">Avg GPU Util</p>
               </div>
             </div>
           </div>
@@ -562,15 +562,15 @@ export function PodsTab() {
             placeholder="Search pods..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#9ca3af] focus:outline-none focus:border-[#1a4fff] focus:ring-1 focus:ring-[#1a4fff] w-64"
+            className="px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#9ca3af] focus:outline-none focus:border-[var(--acid)] focus:ring-1 focus:ring-[var(--acid)] w-64"
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-[#5b6476]">Owner:</span>
+          <span className="text-sm text-[var(--fg-muted)]">Owner:</span>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as "all" | "owned" | "unowned" | "dead" | "unbilled")}
-            className="px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] focus:outline-none focus:border-[#1a4fff]"
+            className="px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] focus:outline-none focus:border-[var(--acid)]"
           >
             <option value="all">All</option>
             <option value="owned">With Owner</option>
@@ -580,11 +580,11 @@ export function PodsTab() {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-[#5b6476]">Status:</span>
+          <span className="text-sm text-[var(--fg-muted)]">Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] focus:outline-none focus:border-[#1a4fff]"
+            className="px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] focus:outline-none focus:border-[var(--acid)]"
           >
             <option value="all">All</option>
             {uniqueStatuses.map((status) => (
@@ -594,20 +594,20 @@ export function PodsTab() {
             ))}
           </select>
         </div>
-        <div className="text-sm text-[#5b6476] ml-auto">
+        <div className="text-sm text-[var(--fg-muted)] ml-auto">
           Showing {sortedPods.length} of {pods.length} pods
         </div>
       </div>
 
       {/* Pods Table */}
-      <div className="bg-white border border-[#e4e7ef] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-[var(--line)] rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#e4e7ef] bg-[#f7f8fb] text-left text-sm text-[#5b6476]">
+              <tr className="border-b border-[var(--line)] bg-[var(--ink)] text-left text-sm text-[var(--fg-muted)]">
                 <th className="px-4 py-3 font-medium">Pod</th>
                 <th
-                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[#e4e7ef] transition-colors"
+                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[var(--ink-raise)] transition-colors"
                   onClick={() => handleSort("owner")}
                 >
                   <div className="flex items-center gap-1">
@@ -615,7 +615,7 @@ export function PodsTab() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[#e4e7ef] transition-colors"
+                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[var(--ink-raise)] transition-colors"
                   onClick={() => handleSort("status")}
                 >
                   <div className="flex items-center gap-1">
@@ -628,7 +628,7 @@ export function PodsTab() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[#e4e7ef] transition-colors"
+                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[var(--ink-raise)] transition-colors"
                   onClick={() => handleSort("vgpus")}
                 >
                   <div className="flex items-center gap-1">
@@ -636,7 +636,7 @@ export function PodsTab() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[#e4e7ef] transition-colors"
+                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[var(--ink-raise)] transition-colors"
                   onClick={() => handleSort("metrics")}
                 >
                   <div className="flex items-center gap-1">
@@ -644,7 +644,7 @@ export function PodsTab() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[#e4e7ef] transition-colors"
+                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[var(--ink-raise)] transition-colors"
                   onClick={() => handleSort("ssh")}
                 >
                   <div className="flex items-center gap-1">
@@ -652,7 +652,7 @@ export function PodsTab() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[#e4e7ef] transition-colors"
+                  className="px-4 py-3 font-medium cursor-pointer hover:bg-[var(--ink-raise)] transition-colors"
                   onClick={() => handleSort("created")}
                 >
                   <div className="flex items-center gap-1">
@@ -662,10 +662,10 @@ export function PodsTab() {
                 <th className="px-4 py-3 font-medium w-10"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e4e7ef]">
+            <tbody className="divide-y divide-[var(--line)]">
               {sortedPods.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-[#5b6476]">
+                  <td colSpan={9} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                     No pods found matching your filters
                   </td>
                 </tr>
@@ -677,18 +677,18 @@ export function PodsTab() {
                     className={`transition-colors cursor-pointer ${
                       pod.isDead
                         ? "bg-red-50 hover:bg-red-100"
-                        : "hover:bg-[#f7f8fb]"
+                        : "hover:bg-[var(--ink)]"
                     }`}
                   >
                     <td className="px-4 py-3">
                       <div>
-                        <div className="font-medium text-[#0b0f1c]">
+                        <div className="font-medium text-[var(--fg)]">
                           {pod.metadata?.displayName || pod.podName || `Pod ${pod.subscriptionId}`}
                         </div>
-                        <div className="text-xs text-[#5b6476] font-mono">
+                        <div className="text-xs text-[var(--fg-muted)] font-mono">
                           {pod.poolName}
                         </div>
-                        <div className="text-xs text-[#9ca3af] font-mono">
+                        <div className="text-xs text-[var(--fg-muted)] font-mono">
                           ID: {pod.subscriptionId}
                         </div>
                       </div>
@@ -696,8 +696,8 @@ export function PodsTab() {
                     <td className="px-4 py-3">
                       {pod.owner ? (
                         <div>
-                          <div className="text-sm text-[#0b0f1c]">{pod.owner.name}</div>
-                          <div className="text-xs text-[#5b6476]">{pod.owner.email}</div>
+                          <div className="text-sm text-[var(--fg)]">{pod.owner.name}</div>
+                          <div className="text-xs text-[var(--fg-muted)]">{pod.owner.email}</div>
                         </div>
                       ) : (
                         <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded">
@@ -711,7 +711,7 @@ export function PodsTab() {
                           {pod.isDead ? `DEAD` : pod.status}
                         </span>
                         {pod.podStatus && pod.podStatus !== "Running" && (
-                          <span className="text-[10px] text-[#9ca3af] font-mono">
+                          <span className="text-[10px] text-[var(--fg-muted)] font-mono">
                             {pod.podStatus}
                           </span>
                         )}
@@ -722,7 +722,7 @@ export function PodsTab() {
                         const activeStatuses = ["running", "pending", "starting", "restarting", "subscribed", "active"];
                         const isActive = activeStatuses.includes(pod.status) && !pod.isDead;
                         if (!isActive) {
-                          return <span className="text-xs text-[#9ca3af]">-</span>;
+                          return <span className="text-xs text-[var(--fg-muted)]">-</span>;
                         }
                         if (pod.billing && pod.billing.hourlyRateCents && pod.billing.hourlyRateCents > 0) {
                           return (
@@ -746,7 +746,7 @@ export function PodsTab() {
                       })()}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-[#0b0f1c]">
+                      <div className="flex items-center gap-1 text-[var(--fg)]">
                         <Cpu className="w-4 h-4 text-purple-600" />
                         <span>{pod.vgpuCount}</span>
                       </div>
@@ -755,34 +755,34 @@ export function PodsTab() {
                       {pod.gpuMetrics ? (
                         <div className="text-xs space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-[#5b6476]">GPU:</span>
+                            <span className="text-[var(--fg-muted)]">GPU:</span>
                             <span className={`font-medium ${
                               pod.gpuMetrics.utilization > 80 ? "text-green-600" :
                               pod.gpuMetrics.utilization > 20 ? "text-yellow-600" :
-                              "text-[#0b0f1c]"
+                              "text-[var(--fg)]"
                             }`}>
                               {pod.gpuMetrics.utilization.toFixed(0)}%
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[#5b6476]">VRAM:</span>
-                            <span className="text-[#0b0f1c]">
+                            <span className="text-[var(--fg-muted)]">VRAM:</span>
+                            <span className="text-[var(--fg)]">
                               {(pod.gpuMetrics.memoryUsed / 1024).toFixed(1)}/{(pod.gpuMetrics.memoryTotal / 1024).toFixed(0)} GB
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[#5b6476]">Temp:</span>
+                            <span className="text-[var(--fg-muted)]">Temp:</span>
                             <span className={`${
                               pod.gpuMetrics.temperature > 80 ? "text-red-600" :
                               pod.gpuMetrics.temperature > 60 ? "text-yellow-600" :
-                              "text-[#0b0f1c]"
+                              "text-[var(--fg)]"
                             }`}>
                               {pod.gpuMetrics.temperature}°C
                             </span>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-[#9ca3af]">
+                        <span className="text-xs text-[var(--fg-muted)]">
                           {metricsLoading ? "Loading..." : "-"}
                         </span>
                       )}
@@ -794,7 +794,7 @@ export function PodsTab() {
                             e.stopPropagation();
                             copyToClipboard(getSSHCommand(pod) || "", pod.subscriptionId);
                           }}
-                          className="flex items-center gap-1 text-xs px-2 py-1 bg-[#f7f8fb] hover:bg-[#e4e7ef] border border-[#e4e7ef] rounded transition-colors text-[#0b0f1c]"
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-[var(--ink)] hover:bg-[var(--ink-raise)] border border-[var(--line)] rounded transition-colors text-[var(--fg)]"
                           title={getSSHCommand(pod) || ""}
                         >
                           {copiedId === pod.subscriptionId ? (
@@ -810,14 +810,14 @@ export function PodsTab() {
                           )}
                         </button>
                       ) : (
-                        <span className="text-xs text-[#9ca3af]">-</span>
+                        <span className="text-xs text-[var(--fg-muted)]">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-[#5b6476]">
+                    <td className="px-4 py-3 text-xs text-[var(--fg-muted)]">
                       {formatDate(pod.createdAt || pod.metadata?.deployTime)}
                     </td>
                     <td className="px-4 py-3">
-                      <ChevronRight className="w-4 h-4 text-[#9ca3af]" />
+                      <ChevronRight className="w-4 h-4 text-[var(--fg-muted)]" />
                     </td>
                   </tr>
                 ))

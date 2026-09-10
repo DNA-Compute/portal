@@ -47,7 +47,7 @@ export function GPUCardSSHInfo({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-zinc-400 w-10 shrink-0">SSH</span>
-                  <code className="flex-1 text-xs bg-zinc-900 px-3 py-2 rounded-lg font-mono text-green-400 truncate select-all" title={sshInfo.cmd}>
+                  <code className="flex-1 text-xs bg-zinc-50 px-3 py-2 rounded-lg font-mono text-green-400 truncate select-all" title={sshInfo.cmd}>
                     {sshInfo.cmd}
                   </code>
                   <button
@@ -61,7 +61,7 @@ export function GPUCardSSHInfo({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-zinc-400 w-10 shrink-0">Pass</span>
-                  <code className="flex-1 text-xs bg-zinc-900 px-3 py-2 rounded-lg font-mono text-green-400 select-all">
+                  <code className="flex-1 text-xs bg-zinc-50 px-3 py-2 rounded-lg font-mono text-green-400 select-all">
                     {showPassword[pod.pod_name] ? sshInfo.pass : "••••••••••••"}
                   </code>
                   <button
@@ -91,7 +91,7 @@ export function GPUCardSSHInfo({
                 {internalIP && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-400 w-10 shrink-0">Int IP</span>
-                    <code className="flex-1 text-xs bg-zinc-900 px-3 py-2 rounded-lg font-mono text-green-400 select-all">
+                    <code className="flex-1 text-xs bg-zinc-50 px-3 py-2 rounded-lg font-mono text-green-400 select-all">
                       {internalIP}
                     </code>
                     <button
@@ -138,7 +138,7 @@ export function GPUCardSSHInfo({
                     className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-colors ${
                       isJupyter
                         ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                        : 'bg-zinc-700 hover:bg-zinc-800 text-white'
+                        : 'bg-zinc-200 hover:bg-zinc-100 text-white'
                     }`}
                   >
                     {isJupyter && (

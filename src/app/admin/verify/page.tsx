@@ -271,10 +271,10 @@ function AdminVerifyContent() {
     const isConfirm = isSetupConfirm;
 
     return (
-      <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
         <div className="w-full max-w-md px-6">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-[#9b51e0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -315,7 +315,7 @@ function AdminVerifyContent() {
                 onPaste={(e) => handlePinPaste(e, isConfirm)}
                 disabled={isVerifying}
                 autoFocus={index === 0}
-                className="w-12 h-14 text-center text-2xl font-mono bg-zinc-800 border border-zinc-700 rounded-lg focus:border-[#9b51e0] focus:ring-1 focus:ring-[#9b51e0] outline-none disabled:opacity-50"
+                className="w-12 h-14 text-center text-2xl font-mono bg-zinc-100 border border-zinc-300 rounded-lg focus:border-[#9b51e0] focus:ring-1 focus:ring-[#9b51e0] outline-none disabled:opacity-50"
               />
             ))}
           </div>
@@ -336,7 +336,7 @@ function AdminVerifyContent() {
                 setError("");
                 setTimeout(() => pinInputRefs.current[0]?.focus(), 50);
               }}
-              className="block mx-auto text-zinc-500 text-sm hover:text-zinc-300 mt-4"
+              className="block mx-auto text-zinc-500 text-sm hover:text-zinc-600 mt-4"
             >
               Start over
             </button>
@@ -354,10 +354,10 @@ function AdminVerifyContent() {
 
   if (requiresTwoFactor) {
     return (
-      <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
         <div className="w-full max-w-md px-6">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-[#9b51e0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -390,7 +390,7 @@ function AdminVerifyContent() {
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
                 disabled={isVerifying}
-                className="w-12 h-14 text-center text-2xl font-mono bg-zinc-800 border border-zinc-700 rounded-lg focus:border-[#9b51e0] focus:ring-1 focus:ring-[#9b51e0] outline-none disabled:opacity-50"
+                className="w-12 h-14 text-center text-2xl font-mono bg-zinc-100 border border-zinc-300 rounded-lg focus:border-[#9b51e0] focus:ring-1 focus:ring-[#9b51e0] outline-none disabled:opacity-50"
               />
             ))}
           </div>
@@ -412,7 +412,7 @@ function AdminVerifyContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -430,7 +430,7 @@ function AdminVerifyContent() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
       <div className="text-center">
         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-zinc-400">Verifying login...</p>
@@ -443,7 +443,7 @@ export default function AdminVerifyPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-zinc-900 text-white flex items-center justify-center">
+        <div className="min-h-screen bg-zinc-50 text-white flex items-center justify-center">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-zinc-400">Loading...</p>

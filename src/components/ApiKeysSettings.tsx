@@ -369,7 +369,7 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
                     />
                     <button
                       onClick={() => copyToClipboard(newKey.key)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[var(--ink)] text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[var(--ink)] text-white text-xs font-medium rounded-lg hover:bg-zinc-100 transition-colors"
                     >
                       {copied ? "Copied!" : "Copy"}
                     </button>

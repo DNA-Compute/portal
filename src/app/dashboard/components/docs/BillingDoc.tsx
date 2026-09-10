@@ -9,8 +9,8 @@ export function BillingDoc() {
       </p>
 
       {/* Table of Contents */}
-      <nav className="not-prose my-8 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3">On this page</h4>
+      <nav className="not-prose my-8 p-4 bg-zinc-50 dark:bg-zinc-50 rounded-lg border border-zinc-200 dark:border-zinc-200">
+        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-800 mb-3">On this page</h4>
         <ul className="space-y-1.5 text-sm">
           <li><a href="#two-billing-models" className="text-blue-600 dark:text-blue-400 hover:underline">Two Ways to Rent a GPU</a></li>
           <li><a href="#hourly-wallet" className="text-blue-600 dark:text-blue-400 hover:underline">Hourly (Pay-as-you-go)</a></li>
@@ -32,9 +32,9 @@ export function BillingDoc() {
       </p>
 
       <div className="not-prose grid gap-4 sm:grid-cols-2 my-6">
-        <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+        <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-200 bg-zinc-50 dark:bg-zinc-50">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Option 1</p>
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">Hourly (Wallet)</h3>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-800 mb-2">Hourly (Wallet)</h3>
           <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 list-disc list-inside">
             <li>Top up your wallet, deploy GPUs on demand</li>
             <li>Pay only for what you use</li>
@@ -45,7 +45,7 @@ export function BillingDoc() {
         </div>
         <div className="p-5 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/20">
           <p className="text-xs font-semibold uppercase tracking-wider text-teal-600 mb-2">Option 2</p>
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">Monthly Subscription</h3>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-800 mb-2">Monthly Subscription</h3>
           <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 list-disc list-inside">
             <li>$299/mo flat rate for one dedicated GPU</li>
             <li>Paid via credit card (Stripe subscription)</li>

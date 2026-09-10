@@ -134,7 +134,7 @@ export function ReferralsTab() {
   };
 
   if (loading) {
-    return <div className="text-[#5b6476]">Loading referrals...</div>;
+    return <div className="text-[var(--fg-muted)]">Loading referrals...</div>;
   }
 
   return (
@@ -142,36 +142,36 @@ export function ReferralsTab() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-5 gap-4">
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Total Codes</p>
-            <p className="text-2xl font-bold text-[#0b0f1c]">{stats.totalCodes}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Total Codes</p>
+            <p className="text-2xl font-bold text-[var(--fg)]">{stats.totalCodes}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Total Claims</p>
-            <p className="text-2xl font-bold text-[#0b0f1c]">{stats.totalClaims}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Total Claims</p>
+            <p className="text-2xl font-bold text-[var(--fg)]">{stats.totalClaims}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Pending</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Pending</p>
             <p className="text-2xl font-bold text-amber-600">{stats.pendingClaims}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Credited</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Credited</p>
             <p className="text-2xl font-bold text-green-600">{stats.creditedClaims}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Total Rewards</p>
-            <p className="text-2xl font-bold text-[#1a4fff]">${(stats.totalRewardsIssuedCents / 100).toFixed(0)}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Total Rewards</p>
+            <p className="text-2xl font-bold text-[var(--acid)]">${(stats.totalRewardsIssuedCents / 100).toFixed(0)}</p>
           </div>
         </div>
       )}
 
       {/* Settings */}
       {settings && (
-        <div className="bg-white border border-[#e4e7ef] rounded-lg p-6">
+        <div className="bg-white border border-[var(--line)] rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">Referral Program Settings</h3>
-              <p className="text-sm text-[#5b6476]">Configure the referral program parameters</p>
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Referral Program Settings</h3>
+              <p className="text-sm text-[var(--fg-muted)]">Configure the referral program parameters</p>
             </div>
             <button
               onClick={handleToggleEnabled}
@@ -190,55 +190,55 @@ export function ReferralsTab() {
 
           <div className="grid grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Reward Amount</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Reward Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5b6476]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">$</span>
                 <input
                   type="number"
                   value={settings.rewardAmountCents / 100}
                   onChange={(e) => handleUpdateSettings({ rewardAmountCents: parseFloat(e.target.value) * 100 })}
-                  className="w-full pl-7 pr-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c]"
+                  className="w-full pl-7 pr-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)]"
                 />
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">Reward for both parties</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">Reward for both parties</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Min Top-up Required</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Min Top-up Required</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5b6476]">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">$</span>
                 <input
                   type="number"
                   value={settings.minTopupCents / 100}
                   onChange={(e) => handleUpdateSettings({ minTopupCents: parseFloat(e.target.value) * 100 })}
-                  className="w-full pl-7 pr-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c]"
+                  className="w-full pl-7 pr-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)]"
                 />
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">Min amount to qualify</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">Min amount to qualify</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">Max Referrals per Customer</label>
+              <label className="block text-sm font-medium mb-1 text-[var(--fg)]">Max Referrals per Customer</label>
               <input
                 type="number"
                 value={settings.maxReferralsPerCustomer}
                 onChange={(e) => handleUpdateSettings({ maxReferralsPerCustomer: parseInt(e.target.value) })}
-                className="w-full px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c]"
+                className="w-full px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)]"
               />
-              <p className="text-xs text-[#5b6476] mt-1">0 = unlimited</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">0 = unlimited</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Claims Table */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-[#e4e7ef] flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-[#0b0f1c]">Referral Claims</h3>
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
+        <div className="p-4 border-b border-[var(--line)] flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[var(--fg)]">Referral Claims</h3>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 bg-white border border-[#e4e7ef] rounded-lg text-sm"
+            className="px-3 py-1.5 bg-white border border-[var(--line)] rounded-lg text-sm"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -248,36 +248,36 @@ export function ReferralsTab() {
         </div>
 
         {claims.length === 0 ? (
-          <div className="p-8 text-center text-[#5b6476]">
+          <div className="p-8 text-center text-[var(--fg-muted)]">
             No referral claims found
           </div>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Code</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Referrer</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Referee</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Created</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-[#5b6476] uppercase">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Code</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Referrer</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Referee</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Created</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--fg-muted)] uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e4e7ef]">
+            <tbody className="divide-y divide-[var(--line)]">
               {claims.map((claim) => (
                 <tr key={claim.id}>
                   <td className="px-4 py-3">
-                    <span className="font-mono text-sm text-[#1a4fff]">{claim.code}</span>
+                    <span className="font-mono text-sm text-[var(--acid)]">{claim.code}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-[#0b0f1c]">{claim.referrerEmail}</div>
-                    <div className="text-xs text-[#5b6476]">
+                    <div className="text-sm text-[var(--fg)]">{claim.referrerEmail}</div>
+                    <div className="text-xs text-[var(--fg-muted)]">
                       {claim.referrerCredited ? "Credited" : "Pending credit"}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-[#0b0f1c]">{claim.refereeEmail}</div>
-                    <div className="text-xs text-[#5b6476]">
+                    <div className="text-sm text-[var(--fg)]">{claim.refereeEmail}</div>
+                    <div className="text-xs text-[var(--fg-muted)]">
                       {claim.refereeCredited ? "Credited" : "Pending credit"}
                     </div>
                   </td>
@@ -296,7 +296,7 @@ export function ReferralsTab() {
                       {claim.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                     {formatDate(claim.createdAt)}
                   </td>
                   <td className="px-4 py-3 text-right">

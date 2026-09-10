@@ -118,7 +118,7 @@ export function AccountSwitcher({ token }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900/5 hover:bg-zinc-900/10 rounded-lg text-left text-sm"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-50/5 hover:bg-zinc-50/10 rounded-lg text-left text-sm"
       >
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">

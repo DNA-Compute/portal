@@ -493,33 +493,33 @@ function EmailSettingsSection() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-[#e4e7ef] mb-8">
+    <div className="bg-white rounded-xl border border-[var(--line)] mb-8">
       <button
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
         className="w-full p-5 flex items-center justify-between text-left"
       >
         <div>
-          <h3 className="font-semibold text-[#0b0f1c]">Email Settings</h3>
-          <p className="text-xs text-[#5b6476] mt-0.5">
+          <h3 className="font-semibold text-[var(--fg)]">Email Settings</h3>
+          <p className="text-xs text-[var(--fg-muted)] mt-0.5">
             Sender name, address, company info, and footer text for all outgoing emails.
           </p>
         </div>
         {expanded
-          ? <ChevronDown className="w-5 h-5 text-[#5b6476]" aria-hidden="true" />
-          : <ChevronRight className="w-5 h-5 text-[#5b6476]" aria-hidden="true" />
+          ? <ChevronDown className="w-5 h-5 text-[var(--fg-muted)]" aria-hidden="true" />
+          : <ChevronRight className="w-5 h-5 text-[var(--fg-muted)]" aria-hidden="true" />
         }
       </button>
 
       {expanded && (
-        <div className="border-t border-[#e4e7ef] p-5 space-y-4 bg-zinc-50/50">
+        <div className="border-t border-[var(--line)] p-5 space-y-4 bg-zinc-50/50">
           {loading ? (
-            <p className="text-sm text-[#5b6476]">Loading...</p>
+            <p className="text-sm text-[var(--fg-muted)]">Loading...</p>
           ) : (
             <>
               {EMAIL_SETTING_FIELDS.map(({ key, label, placeholder, helper }) => (
                 <div key={key}>
-                  <label htmlFor={`email-setting-${key}`} className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                  <label htmlFor={`email-setting-${key}`} className="block text-sm font-medium text-[var(--fg)] mb-1">
                     {label}
                   </label>
                   <input
@@ -532,13 +532,13 @@ function EmailSettingsSection() {
                     }}
                     onBlur={() => { if (key === "EMAIL_FROM_ADDRESS") validateEmail(); }}
                     placeholder={placeholder}
-                    className="w-full px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                    className="w-full px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                   />
                   {key === "EMAIL_FROM_ADDRESS" && emailError && (
                     <p className="text-xs text-red-500 mt-1">{emailError}</p>
                   )}
                   {helper && (
-                    <p className="text-xs text-[#5b6476] mt-1">{helper}</p>
+                    <p className="text-xs text-[var(--fg-muted)] mt-1">{helper}</p>
                   )}
                 </div>
               ))}
@@ -560,14 +560,14 @@ function EmailSettingsSection() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1a4fff]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={handleSendTest}
                   disabled={sendingTest}
-                  className="px-4 py-2 bg-white border border-[#e4e7ef] hover:bg-zinc-50 text-[#0b0f1c] rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-white border border-[var(--line)] hover:bg-zinc-50 text-[var(--fg)] rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" aria-hidden="true" />
                   {sendingTest ? "Sending..." : "Send Test Email"}
@@ -886,7 +886,7 @@ export function EmailTemplatesTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a4fff]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--acid)]" />
       </div>
     );
   }
@@ -896,7 +896,7 @@ export function EmailTemplatesTab() {
     return (
       <div className="max-w-4xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-[#0b0f1c]">
+          <h2 className="text-xl font-semibold text-[var(--fg)]">
             {editingTemplate ? `Edit: ${editingTemplate.name}` : `Create: ${formData.name}`}
           </h2>
           <button
@@ -913,7 +913,7 @@ export function EmailTemplatesTab() {
                 active: true,
               });
             }}
-            className="text-[#5b6476] hover:text-[#0b0f1c]"
+            className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -933,21 +933,21 @@ export function EmailTemplatesTab() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-[#e4e7ef] p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-[var(--line)] p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                 Template Name
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                 Slug (ID)
               </label>
               <input
@@ -955,45 +955,45 @@ export function EmailTemplatesTab() {
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 disabled={!!editingTemplate}
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] disabled:bg-gray-100"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] disabled:bg-gray-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Description
             </label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Subject Line
             </label>
             <input
               type="text"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
               placeholder="Use {{variables}} for dynamic content"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Available Variables
             </label>
             <div className="flex flex-wrap gap-2">
               {formData.variables.map((v) => (
                 <span
                   key={v}
-                  className="px-2 py-1 bg-[#f7f8fb] text-[#5b6476] text-sm rounded-lg font-mono"
+                  className="px-2 py-1 bg-[var(--ink)] text-[var(--fg-muted)] text-sm rounded-lg font-mono"
                 >
                   {`{{${v}}}`}
                 </span>
@@ -1003,12 +1003,12 @@ export function EmailTemplatesTab() {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-[#0b0f1c]">
+              <label className="block text-sm font-medium text-[var(--fg)]">
                 HTML Content
               </label>
               <button
                 onClick={handlePreview}
-                className="text-sm text-[#1a4fff] hover:underline flex items-center gap-1"
+                className="text-sm text-[var(--acid)] hover:underline flex items-center gap-1"
               >
                 <Eye className="w-4 h-4" />
                 Preview
@@ -1018,19 +1018,19 @@ export function EmailTemplatesTab() {
               value={formData.htmlContent}
               onChange={(e) => setFormData({ ...formData, htmlContent: e.target.value })}
               rows={20}
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] font-mono text-sm"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] font-mono text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Plain Text Content (optional)
             </label>
             <textarea
               value={formData.textContent}
               onChange={(e) => setFormData({ ...formData, textContent: e.target.value })}
               rows={6}
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] font-mono text-sm"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] font-mono text-sm"
               placeholder="Auto-generated from HTML if left empty"
             />
           </div>
@@ -1041,9 +1041,9 @@ export function EmailTemplatesTab() {
               id="active"
               checked={formData.active}
               onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-              className="w-4 h-4 text-[#1a4fff] rounded"
+              className="w-4 h-4 text-[var(--acid)] rounded"
             />
-            <label htmlFor="active" className="text-sm text-[#0b0f1c]">
+            <label htmlFor="active" className="text-sm text-[var(--fg)]">
               Active (use database template instead of code)
             </label>
           </div>
@@ -1063,14 +1063,14 @@ export function EmailTemplatesTab() {
                   active: true,
                 });
               }}
-              className="px-4 py-2 text-[#5b6476] hover:text-[#0b0f1c]"
+              className="px-4 py-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1a4fff]/90 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50 flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving..." : "Save Template"}
@@ -1085,7 +1085,7 @@ export function EmailTemplatesTab() {
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="font-semibold">Email Preview</h3>
                 <button onClick={() => setPreviewHtml(null)}>
-                  <X className="w-5 h-5 text-[#5b6476]" />
+                  <X className="w-5 h-5 text-[var(--fg-muted)]" />
                 </button>
               </div>
               <div className="flex-1 overflow-auto p-4">
@@ -1107,7 +1107,7 @@ export function EmailTemplatesTab() {
   // Template list
   return (
     <div>
-      <p className="text-[#5b6476] mb-6">
+      <p className="text-[var(--fg-muted)] mb-6">
         Configure email sender settings and customize templates. Changes take effect immediately.
       </p>
 
@@ -1116,17 +1116,17 @@ export function EmailTemplatesTab() {
       {/* Existing templates */}
       {templates.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-[#0b0f1c] mb-4">Active Templates ({templates.length})</h3>
+          <h3 className="text-lg font-semibold text-[var(--fg)] mb-4">Active Templates ({templates.length})</h3>
           <div className="grid gap-4">
             {templates.map((template) => (
               <div
                 key={template.id}
-                className="bg-white rounded-xl border border-[#e4e7ef] p-4 flex items-center justify-between"
+                className="bg-white rounded-xl border border-[var(--line)] p-4 flex items-center justify-between"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-[#0b0f1c]">{template.name}</h4>
-                    <span className="text-xs px-2 py-0.5 bg-[#f7f8fb] text-[#5b6476] rounded">
+                    <h4 className="font-medium text-[var(--fg)]">{template.name}</h4>
+                    <span className="text-xs px-2 py-0.5 bg-[var(--ink)] text-[var(--fg-muted)] rounded">
                       {template.slug}
                     </span>
                     {template.active ? (
@@ -1140,23 +1140,23 @@ export function EmailTemplatesTab() {
                     )}
                   </div>
                   {template.description && (
-                    <p className="text-sm text-[#5b6476] mt-1">{template.description}</p>
+                    <p className="text-sm text-[var(--fg-muted)] mt-1">{template.description}</p>
                   )}
-                  <p className="text-xs text-[#5b6476] mt-1">
+                  <p className="text-xs text-[var(--fg-muted)] mt-1">
                     Subject: {template.subject}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleEdit(template)}
-                    className="p-2 text-[#5b6476] hover:text-[#1a4fff] hover:bg-[#f7f8fb] rounded-lg"
+                    className="p-2 text-[var(--fg-muted)] hover:text-[var(--acid)] hover:bg-[var(--ink)] rounded-lg"
                     title="Edit"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(template)}
-                    className="p-2 text-[#5b6476] hover:text-red-600 hover:bg-red-50 rounded-lg"
+                    className="p-2 text-[var(--fg-muted)] hover:text-red-600 hover:bg-red-50 rounded-lg"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1171,38 +1171,38 @@ export function EmailTemplatesTab() {
       {/* Available templates to create */}
       {missingTemplates.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-[#0b0f1c] mb-4">
+          <h3 className="text-lg font-semibold text-[var(--fg)] mb-4">
             Available Templates
           </h3>
-          <p className="text-sm text-[#5b6476] mb-4">
+          <p className="text-sm text-[var(--fg-muted)] mb-4">
             These templates are currently using code-based defaults. Click to customize.
           </p>
           <div className="grid gap-4">
             {missingTemplates.map((template) => (
               <div
                 key={template.slug}
-                className="bg-white rounded-xl border border-[#e4e7ef] border-dashed p-4 flex items-center justify-between"
+                className="bg-white rounded-xl border border-[var(--line)] border-dashed p-4 flex items-center justify-between"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-[#0b0f1c]">{template.name}</h4>
-                    <span className="text-xs px-2 py-0.5 bg-[#f7f8fb] text-[#5b6476] rounded">
+                    <h4 className="font-medium text-[var(--fg)]">{template.name}</h4>
+                    <span className="text-xs px-2 py-0.5 bg-[var(--ink)] text-[var(--fg-muted)] rounded">
                       {template.slug}
                     </span>
                     <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
                       Using code default
                     </span>
                   </div>
-                  <p className="text-sm text-[#5b6476] mt-1">{template.description}</p>
+                  <p className="text-sm text-[var(--fg-muted)] mt-1">{template.description}</p>
                 </div>
                 <button
                   onClick={() => handleCreateFromDefault(template)}
                   disabled={loadingDefault}
-                  className="flex items-center gap-2 px-3 py-1.5 text-[#1a4fff] hover:bg-[#1a4fff]/5 rounded-lg text-sm disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 text-[var(--acid)] hover:bg-[var(--acid)]/5 rounded-lg text-sm disabled:opacity-50"
                 >
                   {loadingDefault && formData.slug === template.slug ? (
                     <>
-                      <span className="w-4 h-4 border-2 border-[#1a4fff]/30 border-t-[#1a4fff] rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-[var(--acid)]/30 border-t-[#1a4fff] rounded-full animate-spin" />
                       Loading...
                     </>
                   ) : (

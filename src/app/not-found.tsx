@@ -111,7 +111,7 @@ export default function NotFound() {
 
         {/* Error message box */}
         <div className="bg-[#111] border border-[#222] rounded-lg p-6 mb-8 font-mono text-sm">
-          <div className="flex items-center gap-2 mb-3 text-[#666]">
+          <div className="flex items-center gap-2 mb-3 text-[var(--fg-muted)]">
             <span className="w-3 h-3 rounded-full bg-red-500" />
             <span className="w-3 h-3 rounded-full bg-yellow-500" />
             <span className="w-3 h-3 rounded-full bg-green-500" />
@@ -119,14 +119,14 @@ export default function NotFound() {
           </div>
           <div className="text-left">
             <p className="text-red-400">
-              <span className="text-[#666]">[ERROR]</span> PageNotFoundException
+              <span className="text-[var(--fg-muted)]">[ERROR]</span> PageNotFoundException
             </p>
             <p className="text-[#888] mt-2">
-              <span className="text-[#666]">[INFO]</span>{" "}
+              <span className="text-[var(--fg-muted)]">[INFO]</span>{" "}
               <span className={glitching ? "animate-pulse" : ""}>{joke}</span>
             </p>
             <p className="text-green-400 mt-2">
-              <span className="text-[#666]">[HINT]</span> Try the homepage, it actually exists.
+              <span className="text-[var(--fg-muted)]">[HINT]</span> Try the homepage, it actually exists.
             </p>
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/"
-            className="px-8 py-3 bg-[#1a4fff] hover:bg-[#1238c9] text-white font-medium rounded-lg transition-all hover:scale-105"
+            className="px-8 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white font-medium rounded-lg transition-all hover:scale-105"
           >
             Return to Homepage
           </Link>
@@ -150,16 +150,16 @@ export default function NotFound() {
         {/* Fun stats */}
         <div className="mt-12 grid grid-cols-3 gap-6 text-center opacity-50">
           <div>
-            <p className="text-2xl font-bold text-[#1a4fff]">0</p>
-            <p className="text-xs text-[#666]">Pages found</p>
+            <p className="text-2xl font-bold text-[var(--acid)]">0</p>
+            <p className="text-xs text-[var(--fg-muted)]">Pages found</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#1a4fff]">∞</p>
-            <p className="text-xs text-[#666]">GPUs still working</p>
+            <p className="text-2xl font-bold text-[var(--acid)]">∞</p>
+            <p className="text-xs text-[var(--fg-muted)]">GPUs still working</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-[#1a4fff]">1</p>
-            <p className="text-xs text-[#666]">Lost user (you)</p>
+            <p className="text-2xl font-bold text-[var(--acid)]">1</p>
+            <p className="text-xs text-[var(--fg-muted)]">Lost user (you)</p>
           </div>
         </div>
       </div>

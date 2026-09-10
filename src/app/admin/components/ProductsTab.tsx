@@ -619,7 +619,7 @@ export function ProductsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1a4fff]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--acid)]" />
       </div>
     );
   }
@@ -629,8 +629,8 @@ export function ProductsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[#0b0f1c]">GPU Products</h2>
-          <p className="text-sm text-[#5b6476]">
+          <h2 className="text-lg font-semibold text-[var(--fg)]">GPU Products</h2>
+          <p className="text-sm text-[var(--fg-muted)]">
             Create pricing categories and assign pools to products
           </p>
         </div>
@@ -644,8 +644,8 @@ export function ProductsTab() {
                 copyState === "copied"
                   ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                   : exportMenuOpen
-                  ? "bg-[#eef2ff] border-[#c7d2fe] text-[#1a4fff]"
-                  : "bg-white border-[#e4e7ef] text-[#0b0f1c] hover:bg-[#f7f8fb] hover:border-[#c7d2fe]"
+                  ? "bg-[#eef2ff] border-[var(--line)] text-[var(--acid)]"
+                  : "bg-white border-[var(--line)] text-[var(--fg)] hover:bg-[var(--ink)] hover:border-[var(--line)]"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {copyState === "copied" ? (
@@ -662,76 +662,76 @@ export function ProductsTab() {
               )}
             </button>
             {exportMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-[22rem] bg-white rounded-xl border border-[#e4e7ef] shadow-xl z-20 overflow-hidden">
-                <div className="px-4 py-2.5 bg-gradient-to-r from-[#eef2ff] to-[#f7f8fb] border-b border-[#e4e7ef]">
-                  <p className="text-xs font-semibold text-[#0b0f1c] uppercase tracking-wide">Export {products.length} products</p>
-                  <p className="text-[11px] text-[#5b6476] mt-0.5">Paste straight into Google Sheets</p>
+              <div className="absolute right-0 top-full mt-2 w-[22rem] bg-white rounded-xl border border-[var(--line)] shadow-xl z-20 overflow-hidden">
+                <div className="px-4 py-2.5 bg-gradient-to-r from-[#eef2ff] to-[var(--ink)] border-b border-[var(--line)]">
+                  <p className="text-xs font-semibold text-[var(--fg)] uppercase tracking-wide">Export {products.length} products</p>
+                  <p className="text-[11px] text-[var(--fg-muted)] mt-0.5">Paste straight into Google Sheets</p>
                 </div>
 
                 <button
                   onClick={() => handleCopyHtml("marketing")}
-                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#f7f8fb] text-left transition-colors border-b border-[#f1f3f8]"
+                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[var(--ink)] text-left transition-colors border-b border-[var(--line)]"
                 >
                   <div className="p-2 bg-gradient-to-br from-emerald-100 to-emerald-50 ring-1 ring-emerald-200 rounded-lg shrink-0">
                     <Sheet className="w-4 h-4 text-emerald-700" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-[#0b0f1c]">Copy for marketing</p>
+                      <p className="text-sm font-semibold text-[var(--fg)]">Copy for marketing</p>
                       <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded">colored</span>
                     </div>
-                    <p className="text-xs text-[#5b6476] leading-snug mt-0.5">Pricing-focused, colored cells per GPU family</p>
+                    <p className="text-xs text-[var(--fg-muted)] leading-snug mt-0.5">Pricing-focused, colored cells per GPU family</p>
                   </div>
                 </button>
 
                 <button
                   onClick={() => handleCopyHtml("full")}
-                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#f7f8fb] text-left transition-colors border-b border-[#f1f3f8]"
+                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[var(--ink)] text-left transition-colors border-b border-[var(--line)]"
                 >
                   <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-50 ring-1 ring-blue-200 rounded-lg shrink-0">
-                    <ClipboardCopy className="w-4 h-4 text-[#1a4fff]" />
+                    <ClipboardCopy className="w-4 h-4 text-[var(--acid)]" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-[#0b0f1c]">Copy full (all fields)</p>
+                      <p className="text-sm font-semibold text-[var(--fg)]">Copy full (all fields)</p>
                       <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 rounded">colored</span>
                     </div>
-                    <p className="text-xs text-[#5b6476] leading-snug mt-0.5">Includes Stripe IDs, HAI service, pools</p>
+                    <p className="text-xs text-[var(--fg-muted)] leading-snug mt-0.5">Includes Stripe IDs, HAI service, pools</p>
                   </div>
                 </button>
 
-                <div className="px-4 pt-2.5 pb-1 bg-[#f7f8fb]/50 border-t border-[#f1f3f8]">
-                  <p className="text-[10px] font-semibold text-[#5b6476] uppercase tracking-wide">Plain formats</p>
+                <div className="px-4 pt-2.5 pb-1 bg-[var(--ink)]/50 border-t border-[var(--line)]">
+                  <p className="text-[10px] font-semibold text-[var(--fg-muted)] uppercase tracking-wide">Plain formats</p>
                 </div>
 
                 <button
                   onClick={() => handleCopyTsv("marketing")}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#f7f8fb] text-left transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--ink)] text-left transition-colors"
                 >
                   <div className="p-1.5 bg-slate-100 rounded-md shrink-0">
                     <ClipboardCopy className="w-3.5 h-3.5 text-slate-600" />
                   </div>
-                  <p className="text-xs text-[#0b0f1c]">Copy as plain TSV (marketing)</p>
+                  <p className="text-xs text-[var(--fg)]">Copy as plain TSV (marketing)</p>
                 </button>
 
                 <button
                   onClick={() => handleCopyTsv("full")}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#f7f8fb] text-left transition-colors border-t border-[#f1f3f8]"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--ink)] text-left transition-colors border-t border-[var(--line)]"
                 >
                   <div className="p-1.5 bg-slate-100 rounded-md shrink-0">
                     <ClipboardCopy className="w-3.5 h-3.5 text-slate-600" />
                   </div>
-                  <p className="text-xs text-[#0b0f1c]">Copy as plain TSV (full)</p>
+                  <p className="text-xs text-[var(--fg)]">Copy as plain TSV (full)</p>
                 </button>
 
                 <button
                   onClick={handleDownloadCsv}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#f7f8fb] text-left transition-colors border-t border-[#f1f3f8]"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--ink)] text-left transition-colors border-t border-[var(--line)]"
                 >
                   <div className="p-1.5 bg-amber-100 rounded-md shrink-0">
                     <FileSpreadsheet className="w-3.5 h-3.5 text-amber-700" />
                   </div>
-                  <p className="text-xs text-[#0b0f1c]">Download CSV file</p>
+                  <p className="text-xs text-[var(--fg)]">Download CSV file</p>
                 </button>
               </div>
             )}
@@ -742,7 +742,7 @@ export function ProductsTab() {
               setEditingId(null);
               setShowCreateModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1a4fff]/90 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm font-medium">Add Product</span>
@@ -751,21 +751,21 @@ export function ProductsTab() {
       </div>
 
       {/* Storage Pricing Section */}
-      <div className="bg-white rounded-xl border border-[#e4e7ef] p-6">
+      <div className="bg-white rounded-xl border border-[var(--line)] p-6">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#f7f8fb] rounded-lg">
-            <HardDrive className="w-6 h-6 text-[#1a4fff]" />
+          <div className="p-3 bg-[var(--ink)] rounded-lg">
+            <HardDrive className="w-6 h-6 text-[var(--acid)]" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-[#0b0f1c] mb-1">
+            <h3 className="text-base font-semibold text-[var(--fg)] mb-1">
               Storage Pricing
             </h3>
-            <p className="text-sm text-[#5b6476] mb-4">
+            <p className="text-sm text-[var(--fg-muted)] mb-4">
               Universal storage rate applied to all pods. Set to 0 for free storage.
             </p>
             <div className="flex items-end gap-4">
               <div className="flex-1 max-w-xs">
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   Price per GB per Hour ($)
                 </label>
                 <input
@@ -775,16 +775,16 @@ export function ProductsTab() {
                   value={storagePriceInput}
                   onChange={(e) => setStoragePriceInput(e.target.value)}
                   placeholder="e.g., 0.00010000"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] font-mono text-sm"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] font-mono text-sm"
                 />
-                <p className="text-xs text-[#5b6476] mt-1">
+                <p className="text-xs text-[var(--fg-muted)] mt-1">
                   Supports up to 8 decimal places (e.g., $0.00000001)
                 </p>
               </div>
               <button
                 onClick={handleSaveStoragePricing}
                 disabled={savingStorage}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1a4fff]/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors disabled:opacity-50"
               >
                 {savingStorage ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -795,7 +795,7 @@ export function ProductsTab() {
               </button>
             </div>
             {storagePricing?.updatedAt && (
-              <p className="text-xs text-[#5b6476] mt-3">
+              <p className="text-xs text-[var(--fg-muted)] mt-3">
                 Last updated: {new Date(storagePricing.updatedAt).toLocaleString()}
                 {storagePricing.updatedBy && ` by ${storagePricing.updatedBy}`}
               </p>
@@ -805,15 +805,15 @@ export function ProductsTab() {
       </div>
 
       {/* GPU Categories */}
-      <div className="bg-white rounded-xl border border-[#e4e7ef] p-6">
+      <div className="bg-white rounded-xl border border-[var(--line)] p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#f7f8fb] rounded-lg">
-              <FolderOpen className="w-5 h-5 text-[#1a4fff]" />
+            <div className="p-2 bg-[var(--ink)] rounded-lg">
+              <FolderOpen className="w-5 h-5 text-[var(--acid)]" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-[#0b0f1c]">GPU Categories</h3>
-              <p className="text-xs text-[#5b6476]">Organize products by GPU type. Each category maps to an HAI scenario.</p>
+              <h3 className="text-base font-semibold text-[var(--fg)]">GPU Categories</h3>
+              <p className="text-xs text-[var(--fg-muted)]">Organize products by GPU type. Each category maps to an HAI scenario.</p>
             </div>
           </div>
           <button
@@ -822,20 +822,20 @@ export function ProductsTab() {
               setEditingCategoryId(null);
               setShowCategoryModal(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#1a4fff] text-white rounded-lg hover:bg-[#1a4fff]/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Category
           </button>
         </div>
         {categories.length === 0 ? (
-          <p className="text-sm text-[#5b6476] py-4 text-center">No categories yet. Create one to organize your GPU products.</p>
+          <p className="text-sm text-[var(--fg-muted)] py-4 text-center">No categories yet. Create one to organize your GPU products.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {categories.map(cat => (
-              <div key={cat.id} className={`rounded-lg border p-3 ${cat.active ? "border-[#e4e7ef]" : "border-dashed border-gray-300 opacity-60"}`}>
+              <div key={cat.id} className={`rounded-lg border p-3 ${cat.active ? "border-[var(--line)]" : "border-dashed border-gray-300 opacity-60"}`}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm text-[#0b0f1c]">{cat.name}</span>
+                  <span className="font-medium text-sm text-[var(--fg)]">{cat.name}</span>
                   <div className="flex items-center gap-1">
                     {(() => {
                       // One copy button per plan type the category actually offers
@@ -861,7 +861,7 @@ export function ProductsTab() {
                                 window.prompt("Copy this deep link:", url);
                               }
                             }}
-                            className="flex items-center gap-0.5 p-1 text-[#5b6476] hover:text-[#1a4fff] rounded"
+                            className="flex items-center gap-0.5 p-1 text-[var(--fg-muted)] hover:text-[var(--acid)] rounded"
                             title={`Copy ${plan} deeplink → /account?gpu=${cat.slug}&plan=${plan}`}
                           >
                             {copiedKey === key
@@ -876,15 +876,15 @@ export function ProductsTab() {
                       setCategoryForm({ name: cat.name, slug: cat.slug, description: cat.description || "", displayOrder: cat.displayOrder, active: cat.active });
                       setEditingCategoryId(cat.id);
                       setShowCategoryModal(true);
-                    }} className="p-1 text-[#5b6476] hover:text-[#1a4fff] rounded" title="Edit">
+                    }} className="p-1 text-[var(--fg-muted)] hover:text-[var(--acid)] rounded" title="Edit">
                       <Pencil className="w-3 h-3" />
                     </button>
-                    <button onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-[#5b6476] hover:text-red-600 rounded" title="Delete">
+                    <button onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-[var(--fg-muted)] hover:text-red-600 rounded" title="Delete">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#5b6476]">
+                <div className="flex items-center gap-2 text-xs text-[var(--fg-muted)]">
                   <span>{products.filter(p => p.categoryIds?.includes(cat.id)).length} products</span>
                   {!cat.scenarioId && (
                     <span className="flex items-center gap-0.5 text-amber-600" title="HAI scenario not configured">
@@ -902,40 +902,40 @@ export function ProductsTab() {
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-[#e4e7ef]">
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">
+            <div className="p-6 border-b border-[var(--line)]">
+              <h3 className="text-lg font-semibold text-[var(--fg)]">
                 {editingCategoryId ? "Edit Category" : "Create Category"}
               </h3>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Name *</label>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">Name *</label>
                 <input
                   type="text"
                   value={categoryForm.name}
                   onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") })}
                   placeholder="e.g., H100"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Slug</label>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">Slug</label>
                 <input
                   type="text"
                   value={categoryForm.slug}
                   onChange={e => setCategoryForm({ ...categoryForm, slug: e.target.value })}
                   placeholder="auto-generated"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] font-mono text-sm"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] font-mono text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Description</label>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">Description</label>
                 <input
                   type="text"
                   value={categoryForm.description}
                   onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
                   placeholder="Optional"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -943,14 +943,14 @@ export function ProductsTab() {
                   type="checkbox"
                   checked={categoryForm.active}
                   onChange={e => setCategoryForm({ ...categoryForm, active: e.target.checked })}
-                  className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                  className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                 />
-                <span className="text-sm text-[#0b0f1c]">Active</span>
+                <span className="text-sm text-[var(--fg)]">Active</span>
               </label>
             </div>
-            <div className="p-6 border-t border-[#e4e7ef] flex justify-end gap-3">
-              <button onClick={() => { setShowCategoryModal(false); setEditingCategoryId(null); }} className="px-4 py-2 text-[#5b6476] hover:bg-[#f7f8fb] rounded-lg transition-colors">Cancel</button>
-              <button onClick={handleSaveCategory} disabled={savingCategory} className="flex items-center gap-2 px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1a4fff]/90 disabled:opacity-50">
+            <div className="p-6 border-t border-[var(--line)] flex justify-end gap-3">
+              <button onClick={() => { setShowCategoryModal(false); setEditingCategoryId(null); }} className="px-4 py-2 text-[var(--fg-muted)] hover:bg-[var(--ink)] rounded-lg transition-colors">Cancel</button>
+              <button onClick={handleSaveCategory} disabled={savingCategory} className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50">
                 {savingCategory && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingCategoryId ? "Save" : "Create"}
               </button>
@@ -960,49 +960,49 @@ export function ProductsTab() {
       )}
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl border border-[#e4e7ef] overflow-hidden">
+      <div className="bg-white rounded-xl border border-[var(--line)] overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#f7f8fb] border-b border-[#e4e7ef]">
+          <thead className="bg-[var(--ink)] border-b border-[var(--line)]">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase tracking-wider w-8">
+              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider w-8">
                 #
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                 Product Name
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                 Pricing
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                 Assigned Pools
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-[#5b6476] uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e4e7ef]">
+          <tbody className="divide-y divide-[var(--line)]">
             {products.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-[#5b6476]">
+                <td colSpan={7} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                   No products yet. Click &quot;Add Product&quot; to create one.
                 </td>
               </tr>
             ) : (
               products.map((product, index) => (
-                <tr key={product.id} className="hover:bg-[#f7f8fb]/50">
+                <tr key={product.id} className="hover:bg-[var(--ink)]/50">
                   <td className="px-4 py-3">
-                    <GripVertical className="w-4 h-4 text-[#5b6476]/50" />
+                    <GripVertical className="w-4 h-4 text-[var(--fg-muted)]/50" />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-[#0b0f1c]">
+                      <span className="font-medium text-[var(--fg)]">
                         {product.name}
                       </span>
                       {product.featured && (
@@ -1017,13 +1017,13 @@ export function ProductsTab() {
                       )}
                     </div>
                     {product.description && (
-                      <p className="text-xs text-[#5b6476] mt-0.5">
+                      <p className="text-xs text-[var(--fg-muted)] mt-0.5">
                         {product.description}
                       </p>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 text-xs bg-[#f7f8fb] text-[#5b6476] rounded">
+                    <span className="px-2 py-0.5 text-xs bg-[var(--ink)] text-[var(--fg-muted)] rounded">
                       {getCategoryNames(product.categoryIds)}
                     </span>
                   </td>
@@ -1036,7 +1036,7 @@ export function ProductsTab() {
                       }`}>
                         {product.billingType === "monthly" ? "Monthly" : "Hourly"}
                       </span>
-                      <span className="font-mono text-[#0b0f1c]">
+                      <span className="font-mono text-[var(--fg)]">
                         {product.billingType === "monthly" && product.pricePerMonthCents
                           ? `$${(product.pricePerMonthCents / 100).toFixed(2)}/mo`
                           : `$${(product.pricePerHourCents / 100).toFixed(2)}/hr`}
@@ -1045,19 +1045,19 @@ export function ProductsTab() {
                   </td>
                   <td className="px-4 py-3">
                     {product.poolIds.length === 0 ? (
-                      <span className="text-[#5b6476] text-sm">No pools assigned</span>
+                      <span className="text-[var(--fg-muted)] text-sm">No pools assigned</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {product.poolIds.slice(0, 3).map((poolId) => (
                           <span
                             key={poolId}
-                            className="px-2 py-0.5 text-xs bg-[#f7f8fb] text-[#5b6476] rounded"
+                            className="px-2 py-0.5 text-xs bg-[var(--ink)] text-[var(--fg-muted)] rounded"
                           >
                             {getPoolName(poolId)}
                           </span>
                         ))}
                         {product.poolIds.length > 3 && (
-                          <span className="px-2 py-0.5 text-xs bg-[#f7f8fb] text-[#5b6476] rounded">
+                          <span className="px-2 py-0.5 text-xs bg-[var(--ink)] text-[var(--fg-muted)] rounded">
                             +{product.poolIds.length - 3} more
                           </span>
                         )}
@@ -1087,14 +1087,14 @@ export function ProductsTab() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => openEditModal(product)}
-                        className="p-1.5 text-[#5b6476] hover:text-[#1a4fff] hover:bg-[#1a4fff]/10 rounded transition-colors"
+                        className="p-1.5 text-[var(--fg-muted)] hover:text-[var(--acid)] hover:bg-[var(--acid)]/10 rounded transition-colors"
                         title="Edit"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(product.id)}
-                        className="p-1.5 text-[#5b6476] hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        className="p-1.5 text-[var(--fg-muted)] hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1122,10 +1122,10 @@ export function ProductsTab() {
             <div className={`p-6 border-b ${
               formData.billingType === "monthly"
                 ? "border-indigo-200"
-                : "border-[#e4e7ef]"
+                : "border-[var(--line)]"
             }`}>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#0b0f1c]">
+                <h3 className="text-lg font-semibold text-[var(--fg)]">
                   {editingId ? "Edit Product" : "Create Product"}
                 </h3>
                 {formData.billingType === "monthly" && (
@@ -1139,17 +1139,17 @@ export function ProductsTab() {
             <div className="p-6 space-y-6">
               {/* Billing Type Toggle */}
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-2">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                   Billing Type
                 </label>
-                <div className="flex rounded-lg border border-[#e4e7ef] overflow-hidden">
+                <div className="flex rounded-lg border border-[var(--line)] overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, billingType: "hourly" })}
                     className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
                       formData.billingType === "hourly"
                         ? "bg-sky-600 text-white"
-                        : "bg-white text-[#5b6476] hover:bg-[#f7f8fb]"
+                        : "bg-white text-[var(--fg-muted)] hover:bg-[var(--ink)]"
                     }`}
                   >
                     Hourly (Wallet)
@@ -1163,13 +1163,13 @@ export function ProductsTab() {
                     className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
                       formData.billingType === "monthly"
                         ? "bg-indigo-600 text-white"
-                        : "bg-white text-[#5b6476] hover:bg-[#f7f8fb]"
+                        : "bg-white text-[var(--fg-muted)] hover:bg-[var(--ink)]"
                     }`}
                   >
                     Monthly (Stripe)
                   </button>
                 </div>
-                <p className="text-xs text-[#5b6476] mt-1.5">
+                <p className="text-xs text-[var(--fg-muted)] mt-1.5">
                   {formData.billingType === "hourly"
                     ? "Hourly products are billed from the user's wallet balance."
                     : "Monthly products use a Stripe recurring subscription."}
@@ -1179,7 +1179,7 @@ export function ProductsTab() {
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                     Product Name *
                   </label>
                   <input
@@ -1189,13 +1189,13 @@ export function ProductsTab() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder="e.g., RTX 6000 Ada"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] bg-white"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] bg-white"
                   />
                 </div>
                 <div>
                   {formData.billingType === "hourly" ? (
                     <>
-                      <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                      <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                         Price per Hour ($) *
                       </label>
                       <input
@@ -1207,12 +1207,12 @@ export function ProductsTab() {
                           setFormData({ ...formData, pricePerHour: e.target.value })
                         }
                         placeholder="e.g., 2.00"
-                        className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] bg-white"
+                        className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] bg-white"
                       />
                     </>
                   ) : (
                     <>
-                      <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                      <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                         Price per Month ($) *
                       </label>
                       <input
@@ -1224,7 +1224,7 @@ export function ProductsTab() {
                           setFormData({ ...formData, pricePerMonth: e.target.value })
                         }
                         placeholder="e.g., 199.00"
-                        className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                        className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                       />
                     </>
                   )}
@@ -1235,7 +1235,7 @@ export function ProductsTab() {
               {formData.billingType === "monthly" && (
                 <div className="bg-white rounded-lg border border-indigo-200 p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-[#0b0f1c]">
+                    <label className="block text-sm font-medium text-[var(--fg)]">
                       Link Stripe Product
                     </label>
                     <button
@@ -1248,7 +1248,7 @@ export function ProductsTab() {
                       Refresh
                     </button>
                   </div>
-                  <p className="text-xs text-[#5b6476] mb-3">
+                  <p className="text-xs text-[var(--fg-muted)] mb-3">
                     Select a Stripe product with a recurring price to link to this product.
                   </p>
                   {loadingStripeProducts ? (
@@ -1256,7 +1256,7 @@ export function ProductsTab() {
                       <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
                     </div>
                   ) : stripeProducts.length === 0 ? (
-                    <p className="text-sm text-[#5b6476] py-2">
+                    <p className="text-sm text-[var(--fg-muted)] py-2">
                       No Stripe products with recurring prices found.
                     </p>
                   ) : (
@@ -1269,7 +1269,7 @@ export function ProductsTab() {
                               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
                                 formData.stripeProductId === sp.id && formData.stripePriceId === price.id
                                   ? "border-indigo-500 bg-indigo-50"
-                                  : "border-[#e4e7ef] hover:border-indigo-300 hover:bg-indigo-50/50"
+                                  : "border-[var(--line)] hover:border-indigo-300 hover:bg-indigo-50/50"
                               }`}
                             >
                               <input
@@ -1287,12 +1287,12 @@ export function ProductsTab() {
                                 className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
                               />
                               <div className="flex-1">
-                                <span className="text-sm font-medium text-[#0b0f1c]">{sp.name}</span>
-                                <span className="text-xs text-[#5b6476] ml-2">
+                                <span className="text-sm font-medium text-[var(--fg)]">{sp.name}</span>
+                                <span className="text-xs text-[var(--fg-muted)] ml-2">
                                   ${price.unitAmount ? (price.unitAmount / 100).toFixed(2) : "0.00"}/{price.interval}
                                 </span>
                               </div>
-                              <span className="text-[10px] font-mono text-[#5b6476]">{price.id.slice(0, 20)}...</span>
+                              <span className="text-[10px] font-mono text-[var(--fg-muted)]">{price.id.slice(0, 20)}...</span>
                             </label>
                           ))}
                         </div>
@@ -1303,7 +1303,7 @@ export function ProductsTab() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   Description
                 </label>
                 <input
@@ -1313,14 +1313,14 @@ export function ProductsTab() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   placeholder="Optional description"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff] bg-white"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)] bg-white"
                 />
               </div>
 
               {/* GPU Specs */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                     VRAM (GB)
                   </label>
                   <input
@@ -1331,11 +1331,11 @@ export function ProductsTab() {
                       setFormData({ ...formData, vramGb: e.target.value })
                     }
                     placeholder="e.g., 48"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                     Badge Text
                   </label>
                   <input
@@ -1345,14 +1345,14 @@ export function ProductsTab() {
                       setFormData({ ...formData, badgeText: e.target.value })
                     }
                     placeholder="e.g., Popular, Best Value"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                   />
                 </div>
               </div>
 
               {/* GPU Family — auto-derived from pool gpu_model_type, overridable */}
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   GPU Family
                 </label>
                 <input
@@ -1362,27 +1362,27 @@ export function ProductsTab() {
                     setFormData({ ...formData, gpuFamily: e.target.value })
                   }
                   placeholder="Auto-set from pool (e.g. H100, A100, B200)"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
-                <p className="text-xs text-[#5b6476] mt-1">
+                <p className="text-xs text-[var(--fg-muted)] mt-1">
                   Groups products in the launch modal filter. Auto-derived from the first assigned pool&apos;s GPU model — override only if needed.
                 </p>
               </div>
 
               {/* Category Assignment (multi-select) */}
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   Categories
                 </label>
-                <p className="text-xs text-[#5b6476] mb-2">
+                <p className="text-xs text-[var(--fg-muted)] mb-2">
                   Assign to one or more GPU categories. Product appears in each selected category in the launch modal.
                 </p>
                 {categories.length === 0 ? (
-                  <p className="text-sm text-[#5b6476] py-2">No categories yet. Create one above first.</p>
+                  <p className="text-sm text-[var(--fg-muted)] py-2">No categories yet. Create one above first.</p>
                 ) : (
-                  <div className="border border-[#e4e7ef] rounded-lg max-h-36 overflow-y-auto divide-y divide-[#e4e7ef]">
+                  <div className="border border-[var(--line)] rounded-lg max-h-36 overflow-y-auto divide-y divide-[var(--line)]">
                     {categories.map(cat => (
-                      <label key={cat.id} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[#f7f8fb]">
+                      <label key={cat.id} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[var(--ink)]">
                         <input
                           type="checkbox"
                           checked={formData.categoryIds.includes(cat.id)}
@@ -1394,9 +1394,9 @@ export function ProductsTab() {
                                 : [...prev.categoryIds, cat.id],
                             }));
                           }}
-                          className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                          className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                         />
-                        <span className="text-sm font-medium text-[#0b0f1c]">{cat.name}</span>
+                        <span className="text-sm font-medium text-[var(--fg)]">{cat.name}</span>
                         {!cat.scenarioId && (
                           <span className="text-xs text-amber-600">(scenario pending)</span>
                         )}
@@ -1415,9 +1415,9 @@ export function ProductsTab() {
                     onChange={(e) =>
                       setFormData({ ...formData, active: e.target.checked })
                     }
-                    className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                    className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                   />
-                  <span className="text-sm text-[#0b0f1c]">Active</span>
+                  <span className="text-sm text-[var(--fg)]">Active</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1426,27 +1426,27 @@ export function ProductsTab() {
                     onChange={(e) =>
                       setFormData({ ...formData, featured: e.target.checked })
                     }
-                    className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                    className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                   />
-                  <span className="text-sm text-[#0b0f1c]">Featured</span>
+                  <span className="text-sm text-[var(--fg)]">Featured</span>
                 </label>
               </div>
 
               {/* Pool Assignment */}
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-2">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                   Assign Pools
                 </label>
-                <p className="text-xs text-[#5b6476] mb-3">
+                <p className="text-xs text-[var(--fg-muted)] mb-3">
                   Select pools to include in this product. Pools can be shared across multiple products.
                 </p>
-                <div className="border border-[#e4e7ef] rounded-lg max-h-48 overflow-y-auto">
+                <div className="border border-[var(--line)] rounded-lg max-h-48 overflow-y-auto">
                   {pools.length === 0 ? (
-                    <div className="p-4 text-center text-[#5b6476] text-sm">
+                    <div className="p-4 text-center text-[var(--fg-muted)] text-sm">
                       No pools available
                     </div>
                   ) : (
-                    <div className="divide-y divide-[#e4e7ef]">
+                    <div className="divide-y divide-[var(--line)]">
                       {pools.map((pool) => {
                         const otherProducts = getOtherProductsForPool(pool.id, editingId || undefined);
                         const isSelected = formData.poolIds.includes(pool.id);
@@ -1454,25 +1454,25 @@ export function ProductsTab() {
                         return (
                           <label
                             key={pool.id}
-                            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[#f7f8fb]"
+                            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[var(--ink)]"
                           >
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => togglePoolAssignment(pool.id)}
-                              className="w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+                              className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
                             />
                             <div className="flex-1">
-                              <span className="text-sm font-medium text-[#0b0f1c]">
+                              <span className="text-sm font-medium text-[var(--fg)]">
                                 {pool.name}
                               </span>
                               {pool.gpuModel && (
-                                <span className="text-xs text-[#5b6476] ml-2">
+                                <span className="text-xs text-[var(--fg-muted)] ml-2">
                                   ({pool.gpuModel})
                                 </span>
                               )}
                               {otherProducts.length > 0 && (
-                                <span className="text-xs text-[#5b6476] ml-2">
+                                <span className="text-xs text-[var(--fg-muted)] ml-2">
                                   · also in {otherProducts.map((p) => p.name).join(", ")}
                                 </span>
                               )}
@@ -1487,10 +1487,10 @@ export function ProductsTab() {
 
               {/* HAI Service (unified instance) */}
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-2">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                   HAI Service *
                 </label>
-                <p className="text-xs text-[#5b6476] mb-3">
+                <p className="text-xs text-[var(--fg-muted)] mb-3">
                   Link to a HAI 2.2 service for unified instance creation. Products with a service use the new deployment path.
                 </p>
                 <div className="flex items-center gap-2">
@@ -1514,7 +1514,7 @@ export function ProductsTab() {
 
             {/* Footer */}
             <div className={`p-6 border-t flex justify-end gap-3 ${
-              formData.billingType === "monthly" ? "border-indigo-200" : "border-[#e4e7ef]"
+              formData.billingType === "monthly" ? "border-indigo-200" : "border-[var(--line)]"
             }`}>
               <button
                 onClick={() => {
@@ -1522,14 +1522,14 @@ export function ProductsTab() {
                   setEditingId(null);
                   resetForm();
                 }}
-                className="px-4 py-2 text-[#5b6476] hover:bg-[#f7f8fb] rounded-lg transition-colors"
+                className="px-4 py-2 text-[var(--fg-muted)] hover:bg-[var(--ink)] rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1a4fff]/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors disabled:opacity-50"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingId ? "Save Changes" : "Create Product"}

@@ -139,9 +139,9 @@ export function ProviderDetailsModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#e4e7ef] px-6 py-4 flex justify-between items-center">
+        <div className="sticky top-0 bg-white border-b border-[var(--line)] px-6 py-4 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-bold text-[#0b0f1c]">
+            <h2 className="text-xl font-bold text-[var(--fg)]">
               {isEditing ? "Edit Provider" : provider.companyName}
             </h2>
             <div className="flex items-center gap-2 mt-1">
@@ -157,12 +157,12 @@ export function ProviderDetailsModal({
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-[#0b0f1c] rounded-lg"
+                className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-[var(--fg)] rounded-lg"
               >
                 Edit
               </button>
             )}
-            <button onClick={onClose} className="text-[#5b6476] hover:text-[#0b0f1c]">
+            <button onClick={onClose} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -175,54 +175,54 @@ export function ProviderDetailsModal({
             /* Edit Form */
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Company Information</h3>
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Company Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Company Name *</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Company Name *</label>
                     <input
                       type="text"
                       value={editForm.companyName}
                       onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Contact Name *</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Contact Name *</label>
                     <input
                       type="text"
                       value={editForm.contactName}
                       onChange={(e) => setEditForm({ ...editForm, contactName: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Email *</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Email *</label>
                     <input
                       type="email"
                       value={editForm.email}
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Phone</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Phone</label>
                     <input
                       type="text"
                       value={editForm.phone}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs text-[#5b6476] mb-1">Website</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Website</label>
                     <input
                       type="url"
                       value={editForm.website}
                       onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       placeholder="https://example.com"
                     />
                   </div>
@@ -230,86 +230,86 @@ export function ProviderDetailsModal({
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Contact Points</h3>
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Contact Points</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Support Email</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Support Email</label>
                     <input
                       type="email"
                       value={editForm.supportEmail}
                       onChange={(e) => setEditForm({ ...editForm, supportEmail: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Support Phone</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Support Phone</label>
                     <input
                       type="text"
                       value={editForm.supportPhone}
                       onChange={(e) => setEditForm({ ...editForm, supportPhone: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Commercial Email</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Commercial Email</label>
                     <input
                       type="email"
                       value={editForm.commercialEmail}
                       onChange={(e) => setEditForm({ ...editForm, commercialEmail: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Commercial Phone</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Commercial Phone</label>
                     <input
                       type="text"
                       value={editForm.commercialPhone}
                       onChange={(e) => setEditForm({ ...editForm, commercialPhone: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs text-[#5b6476] mb-1">General Email</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">General Email</label>
                     <input
                       type="email"
                       value={editForm.generalEmail}
                       onChange={(e) => setEditForm({ ...editForm, generalEmail: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Infrastructure Details</h3>
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Infrastructure Details</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">Estimated GPU Count</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Estimated GPU Count</label>
                     <input
                       type="number"
                       value={editForm.estimatedGpuCount}
                       onChange={(e) => setEditForm({ ...editForm, estimatedGpuCount: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       min="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">GPU Types (comma-separated)</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">GPU Types (comma-separated)</label>
                     <input
                       type="text"
                       value={editForm.gpuTypes}
                       onChange={(e) => setEditForm({ ...editForm, gpuTypes: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       placeholder="H100, A100"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs text-[#5b6476] mb-1">Regions (comma-separated)</label>
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">Regions (comma-separated)</label>
                     <input
                       type="text"
                       value={editForm.regions}
                       onChange={(e) => setEditForm({ ...editForm, regions: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       placeholder="US, EU, APAC"
                     />
                   </div>
@@ -317,23 +317,23 @@ export function ProviderDetailsModal({
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Token Factory Revenue</h3>
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Token Factory Revenue</h3>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div>
-                    <label className="block text-xs text-[#5b6476] mb-1">
+                    <label className="block text-xs text-[var(--fg-muted)] mb-1">
                       Revenue Share % (leave empty for default: {provider.tokenRevenueShareDefault}%)
                     </label>
                     <input
                       type="number"
                       value={editForm.tokenRevenueSharePercent}
                       onChange={(e) => setEditForm({ ...editForm, tokenRevenueSharePercent: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm"
                       min="0"
                       max="100"
                       step="0.1"
                       placeholder={`Default: ${provider.tokenRevenueShareDefault}%`}
                     />
-                    <p className="text-xs text-[#5b6476] mt-1">
+                    <p className="text-xs text-[var(--fg-muted)] mt-1">
                       The percentage of Token Factory token revenue this provider receives.
                     </p>
                   </div>
@@ -345,58 +345,58 @@ export function ProviderDetailsModal({
             <>
               {/* Stats Row */}
               <div className="grid grid-cols-4 gap-4">
-                <div className="bg-[#f7f8fb] rounded-lg p-3">
-                  <p className="text-xs text-[#5b6476]">Total Nodes</p>
-                  <p className="text-xl font-bold text-[#0b0f1c]">{provider.stats.totalNodes}</p>
+                <div className="bg-[var(--ink)] rounded-lg p-3">
+                  <p className="text-xs text-[var(--fg-muted)]">Total Nodes</p>
+                  <p className="text-xl font-bold text-[var(--fg)]">{provider.stats.totalNodes}</p>
                 </div>
-                <div className="bg-[#f7f8fb] rounded-lg p-3">
-                  <p className="text-xs text-[#5b6476]">Active Nodes</p>
-                  <p className="text-xl font-bold text-[#0b0f1c]">{provider.stats.activeNodes}</p>
+                <div className="bg-[var(--ink)] rounded-lg p-3">
+                  <p className="text-xs text-[var(--fg-muted)]">Active Nodes</p>
+                  <p className="text-xl font-bold text-[var(--fg)]">{provider.stats.activeNodes}</p>
                 </div>
-                <div className="bg-[#f7f8fb] rounded-lg p-3">
-                  <p className="text-xs text-[#5b6476]">Total GPUs</p>
-                  <p className="text-xl font-bold text-[#0b0f1c]">{provider.stats.totalGpus}</p>
+                <div className="bg-[var(--ink)] rounded-lg p-3">
+                  <p className="text-xs text-[var(--fg-muted)]">Total GPUs</p>
+                  <p className="text-xl font-bold text-[var(--fg)]">{provider.stats.totalGpus}</p>
                 </div>
-                <div className="bg-[#f7f8fb] rounded-lg p-3">
-                  <p className="text-xs text-[#5b6476]">Total Paid</p>
-                  <p className="text-xl font-bold text-[#0b0f1c]">${provider.stats.totalPaid.toFixed(2)}</p>
+                <div className="bg-[var(--ink)] rounded-lg p-3">
+                  <p className="text-xs text-[var(--fg-muted)]">Total Paid</p>
+                  <p className="text-xl font-bold text-[var(--fg)]">${provider.stats.totalPaid.toFixed(2)}</p>
                 </div>
               </div>
 
               {/* Company Details */}
               <div>
-                <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Company Information</h3>
-                <div className="grid grid-cols-2 gap-4 bg-[#f7f8fb] rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Company Information</h3>
+                <div className="grid grid-cols-2 gap-4 bg-[var(--ink)] rounded-lg p-4">
                   <div>
-                    <p className="text-xs text-[#5b6476]">Contact Name</p>
-                    <p className="text-sm text-[#0b0f1c]">{provider.contactName}</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Contact Name</p>
+                    <p className="text-sm text-[var(--fg)]">{provider.contactName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#5b6476]">Email</p>
-                    <p className="text-sm text-[#0b0f1c]">{provider.email}</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Email</p>
+                    <p className="text-sm text-[var(--fg)]">{provider.email}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#5b6476]">Phone</p>
-                    <p className="text-sm text-[#0b0f1c]">{provider.phone || "—"}</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Phone</p>
+                    <p className="text-sm text-[var(--fg)]">{provider.phone || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#5b6476]">Website</p>
-                    <p className="text-sm text-[#0b0f1c]">
+                    <p className="text-xs text-[var(--fg-muted)]">Website</p>
+                    <p className="text-sm text-[var(--fg)]">
                       {provider.website ? (
-                        <a href={provider.website} target="_blank" rel="noopener noreferrer" className="text-[#1a4fff] hover:underline">
+                        <a href={provider.website} target="_blank" rel="noopener noreferrer" className="text-[var(--acid)] hover:underline">
                           {provider.website}
                         </a>
                       ) : "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#5b6476]">Applied</p>
-                    <p className="text-sm text-[#0b0f1c]">{new Date(provider.createdAt).toLocaleString()}</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Applied</p>
+                    <p className="text-sm text-[var(--fg)]">{new Date(provider.createdAt).toLocaleString()}</p>
                   </div>
                   {provider.verifiedAt && (
                     <div>
-                      <p className="text-xs text-[#5b6476]">Verified</p>
-                      <p className="text-sm text-[#0b0f1c]">
+                      <p className="text-xs text-[var(--fg-muted)]">Verified</p>
+                      <p className="text-sm text-[var(--fg)]">
                         {new Date(provider.verifiedAt).toLocaleString()} by {provider.verifiedBy}
                       </p>
                     </div>
@@ -407,21 +407,21 @@ export function ProviderDetailsModal({
               {/* Contact Points */}
               {(provider.supportEmail || provider.commercialEmail || provider.generalEmail) && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Contact Points</h3>
-                  <div className="grid grid-cols-3 gap-4 bg-[#f7f8fb] rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Contact Points</h3>
+                  <div className="grid grid-cols-3 gap-4 bg-[var(--ink)] rounded-lg p-4">
                     <div>
-                      <p className="text-xs text-[#5b6476]">Support</p>
-                      <p className="text-sm text-[#0b0f1c]">{provider.supportEmail || "—"}</p>
-                      <p className="text-xs text-[#5b6476]">{provider.supportPhone || ""}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">Support</p>
+                      <p className="text-sm text-[var(--fg)]">{provider.supportEmail || "—"}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">{provider.supportPhone || ""}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#5b6476]">Commercial/Billing</p>
-                      <p className="text-sm text-[#0b0f1c]">{provider.commercialEmail || "—"}</p>
-                      <p className="text-xs text-[#5b6476]">{provider.commercialPhone || ""}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">Commercial/Billing</p>
+                      <p className="text-sm text-[var(--fg)]">{provider.commercialEmail || "—"}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">{provider.commercialPhone || ""}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#5b6476]">General</p>
-                      <p className="text-sm text-[#0b0f1c]">{provider.generalEmail || "—"}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">General</p>
+                      <p className="text-sm text-[var(--fg)]">{provider.generalEmail || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -429,15 +429,15 @@ export function ProviderDetailsModal({
 
               {/* Infrastructure Details */}
               <div>
-                <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Infrastructure Details</h3>
-                <div className="bg-[#f7f8fb] rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Infrastructure Details</h3>
+                <div className="bg-[var(--ink)] rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-[#5b6476]">Estimated GPU Count</p>
-                      <p className="text-sm text-[#0b0f1c]">{provider.estimatedGpuCount || "Not specified"}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">Estimated GPU Count</p>
+                      <p className="text-sm text-[var(--fg)]">{provider.estimatedGpuCount || "Not specified"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#5b6476]">GPU Types</p>
+                      <p className="text-xs text-[var(--fg-muted)]">GPU Types</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {provider.gpuTypes.length > 0 ? (
                           provider.gpuTypes.map((gpu, i) => (
@@ -446,13 +446,13 @@ export function ProviderDetailsModal({
                             </span>
                           ))
                         ) : (
-                          <span className="text-sm text-[#5b6476]">Not specified</span>
+                          <span className="text-sm text-[var(--fg-muted)]">Not specified</span>
                         )}
                       </div>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-[#5b6476]">Regions</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Regions</p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {provider.regions.length > 0 ? (
                         provider.regions.map((region, i) => (
@@ -461,14 +461,14 @@ export function ProviderDetailsModal({
                           </span>
                         ))
                       ) : (
-                        <span className="text-sm text-[#5b6476]">Not specified</span>
+                        <span className="text-sm text-[var(--fg-muted)]">Not specified</span>
                       )}
                     </div>
                   </div>
                   {provider.additionalInfo && (
                     <div>
-                      <p className="text-xs text-[#5b6476]">Additional Information</p>
-                      <p className="text-sm text-[#0b0f1c] whitespace-pre-wrap">{provider.additionalInfo}</p>
+                      <p className="text-xs text-[var(--fg-muted)]">Additional Information</p>
+                      <p className="text-sm text-[var(--fg)] whitespace-pre-wrap">{provider.additionalInfo}</p>
                     </div>
                   )}
                 </div>
@@ -477,23 +477,23 @@ export function ProviderDetailsModal({
               {/* Nodes List */}
               {provider.nodes.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[#0b0f1c] mb-3">Nodes ({provider.nodes.length})</h3>
-                  <div className="border border-[#e4e7ef] rounded-lg overflow-hidden">
+                  <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Nodes ({provider.nodes.length})</h3>
+                  <div className="border border-[var(--line)] rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
-                      <thead className="bg-[#f7f8fb]">
+                      <thead className="bg-[var(--ink)]">
                         <tr>
-                          <th className="text-left px-3 py-2 text-xs text-[#5b6476]">Server</th>
-                          <th className="text-left px-3 py-2 text-xs text-[#5b6476]">GPU</th>
-                          <th className="text-left px-3 py-2 text-xs text-[#5b6476]">Status</th>
+                          <th className="text-left px-3 py-2 text-xs text-[var(--fg-muted)]">Server</th>
+                          <th className="text-left px-3 py-2 text-xs text-[var(--fg-muted)]">GPU</th>
+                          <th className="text-left px-3 py-2 text-xs text-[var(--fg-muted)]">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#e4e7ef]">
+                      <tbody className="divide-y divide-[var(--line)]">
                         {provider.nodes.map((node) => (
                           <tr key={node.id}>
                             <td className="px-3 py-2">
-                              <div className="text-[#0b0f1c]">{node.hostname || node.ipAddress}</div>
+                              <div className="text-[var(--fg)]">{node.hostname || node.ipAddress}</div>
                             </td>
-                            <td className="px-3 py-2 text-[#5b6476]">
+                            <td className="px-3 py-2 text-[var(--fg-muted)]">
                               {node.gpuModel ? `${node.gpuCount}x ${node.gpuModel}` : "—"}
                             </td>
                             <td className="px-3 py-2">
@@ -513,20 +513,20 @@ export function ProviderDetailsModal({
         </div>
 
         {/* Actions Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-[#e4e7ef] px-6 py-4 flex justify-between">
+        <div className="sticky bottom-0 bg-white border-t border-[var(--line)] px-6 py-4 flex justify-between">
           {isEditing ? (
             <>
               <button
                 onClick={() => setIsEditing(false)}
                 disabled={saving}
-                className="px-4 py-2 border border-[#e4e7ef] rounded-lg text-[#5b6476] hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 border border-[var(--line)] rounded-lg text-[var(--fg-muted)] hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !editForm.companyName || !editForm.contactName || !editForm.email}
-                className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -535,7 +535,7 @@ export function ProviderDetailsModal({
             <>
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-[#e4e7ef] rounded-lg text-[#5b6476] hover:bg-gray-50"
+                className="px-4 py-2 border border-[var(--line)] rounded-lg text-[var(--fg-muted)] hover:bg-gray-50"
               >
                 Close
               </button>
@@ -563,7 +563,7 @@ export function ProviderDetailsModal({
                   <>
                     <button
                       onClick={onLoginAs}
-                      className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg"
+                      className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg"
                     >
                       Login As Provider
                     </button>

@@ -189,7 +189,7 @@ export function GPUCardHfDeployment({
               </button>
             </div>
             {hfLogsExpanded && (
-              <pre className="mt-2 p-3 bg-zinc-900 text-zinc-100 text-xs rounded-lg overflow-x-auto max-h-48 overflow-y-auto font-mono">
+              <pre className="mt-2 p-3 bg-zinc-50 text-zinc-800 text-xs rounded-lg overflow-x-auto max-h-48 overflow-y-auto font-mono">
                 {hfStatus.logs}
               </pre>
             )}
@@ -199,21 +199,21 @@ export function GPUCardHfDeployment({
         {/* Full Logs Modal */}
         {showFullLogsModal && hfStatus?.logs && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setShowFullLogsModal(false)}>
-            <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+            <div className="bg-zinc-50 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-100 border-b border-zinc-300">
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1.5">
                     <button onClick={() => setShowFullLogsModal(false)} className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-colors" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500" />
                     <div className="w-3 h-3 rounded-full bg-green-500" />
                   </div>
-                  <span className="text-zinc-300 text-sm font-medium">Deployment Logs - {hfDeployment?.hfItemName}</span>
+                  <span className="text-zinc-600 text-sm font-medium">Deployment Logs - {hfDeployment?.hfItemName}</span>
                 </div>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(hfStatus.logs || "");
                   }}
-                  className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-700 transition-colors"
+                  className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-200 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -222,7 +222,7 @@ export function GPUCardHfDeployment({
                 </button>
               </div>
               <div className="flex-1 overflow-auto p-4">
-                <pre className="text-zinc-100 text-xs font-mono whitespace-pre-wrap break-words">
+                <pre className="text-zinc-800 text-xs font-mono whitespace-pre-wrap break-words">
                   {hfStatus.logs}
                 </pre>
               </div>

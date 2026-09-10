@@ -40,11 +40,11 @@ export function HistoryChart({
   loadHistory,
 }: HistoryChartProps) {
   return (
-    <div className="bg-white border border-[#e4e7ef] rounded-xl p-6 shadow-sm">
+    <div className="bg-white border border-[var(--line)] rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-indigo-600" />
-          <h3 className="font-semibold text-[#0b0f1c]">GPU Usage History</h3>
+          <h3 className="font-semibold text-[var(--fg)]">GPU Usage History</h3>
         </div>
         <div className="flex items-center gap-2">
           {/* Time range selector */}
@@ -55,7 +55,7 @@ export function HistoryChart({
               className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                 historyHours === hours
                   ? "bg-indigo-600 text-white"
-                  : "bg-[#f7f8fb] hover:bg-[#e4e7ef] text-[#5b6476]"
+                  : "bg-[var(--ink)] hover:bg-[var(--ink-raise)] text-[var(--fg-muted)]"
               }`}
             >
               {hours === 1 ? "1h" : hours === 6 ? "6h" : hours === 24 ? "24h" : "7d"}
@@ -64,9 +64,9 @@ export function HistoryChart({
           <button
             onClick={loadHistory}
             disabled={historyLoading}
-            className="ml-2 p-1 hover:bg-[#f7f8fb] rounded transition-colors"
+            className="ml-2 p-1 hover:bg-[var(--ink)] rounded transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 text-[#5b6476] ${historyLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 text-[var(--fg-muted)] ${historyLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
@@ -74,10 +74,10 @@ export function HistoryChart({
       {historyLoading ? (
         <div className="flex items-center justify-center py-12">
           <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
-          <span className="ml-2 text-[#5b6476]">Loading history...</span>
+          <span className="ml-2 text-[var(--fg-muted)]">Loading history...</span>
         </div>
       ) : historyData.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-[#5b6476]">
+        <div className="flex flex-col items-center justify-center py-12 text-[var(--fg-muted)]">
           <Clock className="w-8 h-8 mb-2 opacity-50" />
           <p>No historical data available yet</p>
           <p className="text-xs mt-1">Metrics are collected every 3 minutes</p>
@@ -87,10 +87,10 @@ export function HistoryChart({
           {/* Aggregate Chart - All Pods */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-[#0b0f1c]">
+              <span className="text-sm font-medium text-[var(--fg)]">
                 Average GPU Utilization (All Pods)
               </span>
-              <span className="text-xs text-[#5b6476]">
+              <span className="text-xs text-[var(--fg-muted)]">
                 {historyData.length} pod{historyData.length !== 1 ? "s" : ""} tracked
               </span>
             </div>
@@ -160,7 +160,7 @@ export function HistoryChart({
               </svg>
 
               {/* Time labels */}
-              <div className="absolute bottom-0 left-10 right-0 flex justify-between text-[10px] text-[#5b6476] -mb-4">
+              <div className="absolute bottom-0 left-10 right-0 flex justify-between text-[10px] text-[var(--fg-muted)] -mb-4">
                 {historyData[0]?.dataPoints?.length > 0 && (
                   <>
                     <span>{new Date(historyData[0].dataPoints[0]?.timestamp || "").toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
@@ -173,7 +173,7 @@ export function HistoryChart({
           </div>
 
           {/* Summary stats */}
-          <div className="grid grid-cols-4 gap-4 pt-4 border-t border-[#e4e7ef]">
+          <div className="grid grid-cols-4 gap-4 pt-4 border-t border-[var(--line)]">
             {(() => {
               const allSummaries = historyData.map((h) => h.summary);
               const avgUtil = allSummaries.reduce((s, sum) => s + sum.avgUtilization, 0) / allSummaries.length;
@@ -185,19 +185,19 @@ export function HistoryChart({
                 <>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-indigo-600">{avgUtil.toFixed(1)}%</p>
-                    <p className="text-xs text-[#5b6476]">Avg Utilization</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Avg Utilization</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">{maxUtil.toFixed(1)}%</p>
-                    <p className="text-xs text-[#5b6476]">Peak Utilization</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Peak Utilization</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-teal-600">{avgMem.toFixed(1)}%</p>
-                    <p className="text-xs text-[#5b6476]">Avg VRAM Usage</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Avg VRAM Usage</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-orange-600">{avgTemp.toFixed(0)}°C</p>
-                    <p className="text-xs text-[#5b6476]">Avg Temperature</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Avg Temperature</p>
                   </div>
                 </>
               );
@@ -206,39 +206,39 @@ export function HistoryChart({
 
           {/* Per-pod breakdown (collapsible) */}
           {historyData.length > 0 && (
-            <details className="pt-4 border-t border-[#e4e7ef]">
-              <summary className="cursor-pointer text-sm font-medium text-[#5b6476] hover:text-[#0b0f1c]">
+            <details className="pt-4 border-t border-[var(--line)]">
+              <summary className="cursor-pointer text-sm font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]">
                 Per-Pod Breakdown ({historyData.length} pods)
               </summary>
               <div className="mt-4 space-y-3">
                 {historyData.slice(0, 10).map((pod) => (
-                  <div key={pod.subscriptionId} className="flex items-center gap-4 p-3 bg-[#f7f8fb] rounded-lg">
+                  <div key={pod.subscriptionId} className="flex items-center gap-4 p-3 bg-[var(--ink)] rounded-lg">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#0b0f1c] truncate">
+                      <p className="text-sm font-medium text-[var(--fg)] truncate">
                         {pod.poolName || `Pod ${pod.subscriptionId}`}
                       </p>
-                      <p className="text-xs text-[#5b6476]">
+                      <p className="text-xs text-[var(--fg-muted)]">
                         {pod.summary.totalDataPoints} data points
                       </p>
                     </div>
                     <div className="flex items-center gap-6 text-sm">
                       <div className="text-center">
                         <span className="font-medium text-indigo-600">{pod.summary.avgUtilization.toFixed(1)}%</span>
-                        <span className="text-xs text-[#5b6476] ml-1">avg</span>
+                        <span className="text-xs text-[var(--fg-muted)] ml-1">avg</span>
                       </div>
                       <div className="text-center">
                         <span className="font-medium text-purple-600">{pod.summary.maxUtilization.toFixed(1)}%</span>
-                        <span className="text-xs text-[#5b6476] ml-1">peak</span>
+                        <span className="text-xs text-[var(--fg-muted)] ml-1">peak</span>
                       </div>
                       <div className="text-center">
                         <span className="font-medium text-teal-600">{pod.summary.avgMemoryPercent.toFixed(1)}%</span>
-                        <span className="text-xs text-[#5b6476] ml-1">mem</span>
+                        <span className="text-xs text-[var(--fg-muted)] ml-1">mem</span>
                       </div>
                     </div>
                   </div>
                 ))}
                 {historyData.length > 10 && (
-                  <p className="text-xs text-[#5b6476] text-center">
+                  <p className="text-xs text-[var(--fg-muted)] text-center">
                     ... and {historyData.length - 10} more pods
                   </p>
                 )}

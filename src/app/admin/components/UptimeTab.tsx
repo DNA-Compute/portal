@@ -181,47 +181,47 @@ export function UptimeTab() {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-          <div className="text-sm text-[#5b6476]">Total Pods</div>
-          <div className="text-2xl font-bold text-[#0b0f1c] mt-1">{summary.totalPods}</div>
-          <div className="text-xs text-[#5b6476] mt-1">
+        <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+          <div className="text-sm text-[var(--fg-muted)]">Total Pods</div>
+          <div className="text-2xl font-bold text-[var(--fg)] mt-1">{summary.totalPods}</div>
+          <div className="text-xs text-[var(--fg-muted)] mt-1">
             {summary.activePods} active, {summary.terminatedPods} terminated
           </div>
         </div>
-        <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-          <div className="text-sm text-[#5b6476]">Avg Uptime (24h)</div>
+        <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+          <div className="text-sm text-[var(--fg-muted)]">Avg Uptime (24h)</div>
           <div className={`text-2xl font-bold mt-1 ${uptimeTextColor(summary.avgUptime1d)}`}>
             {formatUptime(summary.avgUptime1d)}
           </div>
-          <div className="text-xs text-[#5b6476] mt-1">Active pods only</div>
+          <div className="text-xs text-[var(--fg-muted)] mt-1">Active pods only</div>
         </div>
-        <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-          <div className="text-sm text-[#5b6476]">Avg Uptime (7d)</div>
+        <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+          <div className="text-sm text-[var(--fg-muted)]">Avg Uptime (7d)</div>
           <div className={`text-2xl font-bold mt-1 ${uptimeTextColor(summary.avgUptime7d)}`}>
             {formatUptime(summary.avgUptime7d)}
           </div>
-          <div className="text-xs text-[#5b6476] mt-1">Active pods only</div>
+          <div className="text-xs text-[var(--fg-muted)] mt-1">Active pods only</div>
         </div>
-        <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-          <div className="text-sm text-[#5b6476]">Avg Uptime (30d)</div>
+        <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+          <div className="text-sm text-[var(--fg-muted)]">Avg Uptime (30d)</div>
           <div className={`text-2xl font-bold mt-1 ${uptimeTextColor(summary.avgUptime30d)}`}>
             {formatUptime(summary.avgUptime30d)}
           </div>
-          <div className="text-xs text-[#5b6476] mt-1">Active pods only</div>
+          <div className="text-xs text-[var(--fg-muted)] mt-1">Active pods only</div>
         </div>
       </div>
 
       {/* Filter Bar */}
       <div className="flex items-center gap-4">
-        <div className="flex bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+        <div className="flex bg-white border border-[var(--line)] rounded-lg overflow-hidden">
           {(["all", "active", "terminated"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
                 filter === f
-                  ? "bg-[#0b0f1c] text-white"
-                  : "text-[#5b6476] hover:bg-gray-50"
+                  ? "bg-[var(--fg)] text-white"
+                  : "text-[var(--fg-muted)] hover:bg-gray-50"
               }`}
             >
               {f} {f === "all" ? `(${pods.length})` : f === "active" ? `(${summary.activePods})` : `(${summary.terminatedPods})`}
@@ -230,46 +230,46 @@ export function UptimeTab() {
         </div>
         <button
           onClick={fetchData}
-          className="ml-auto px-3 py-2 text-sm text-[#5b6476] hover:text-[#0b0f1c] border border-[#e4e7ef] rounded-lg hover:bg-gray-50"
+          className="ml-auto px-3 py-2 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] border border-[var(--line)] rounded-lg hover:bg-gray-50"
         >
           Refresh
         </button>
       </div>
 
       {/* Pods Table */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#e4e7ef] bg-gray-50/50">
+            <tr className="border-b border-[var(--line)] bg-gray-50/50">
               <th
-                className="text-left py-3 px-4 text-[#5b6476] font-medium cursor-pointer select-none hover:text-[#0b0f1c]"
+                className="text-left py-3 px-4 text-[var(--fg-muted)] font-medium cursor-pointer select-none hover:text-[var(--fg)]"
                 onClick={() => handleSort("name")}
               >
                 Pod <SortIcon col="name" />
               </th>
-              <th className="text-left py-3 px-4 text-[#5b6476] font-medium">GPU</th>
-              <th className="text-left py-3 px-4 text-[#5b6476] font-medium">Status</th>
-              <th className="text-left py-3 px-4 text-[#5b6476] font-medium">Last Seen</th>
+              <th className="text-left py-3 px-4 text-[var(--fg-muted)] font-medium">GPU</th>
+              <th className="text-left py-3 px-4 text-[var(--fg-muted)] font-medium">Status</th>
+              <th className="text-left py-3 px-4 text-[var(--fg-muted)] font-medium">Last Seen</th>
               <th
-                className="text-right py-3 px-4 text-[#5b6476] font-medium cursor-pointer select-none hover:text-[#0b0f1c]"
+                className="text-right py-3 px-4 text-[var(--fg-muted)] font-medium cursor-pointer select-none hover:text-[var(--fg)]"
                 onClick={() => handleSort("1d")}
               >
                 24h <SortIcon col="1d" />
               </th>
               <th
-                className="text-right py-3 px-4 text-[#5b6476] font-medium cursor-pointer select-none hover:text-[#0b0f1c]"
+                className="text-right py-3 px-4 text-[var(--fg-muted)] font-medium cursor-pointer select-none hover:text-[var(--fg)]"
                 onClick={() => handleSort("7d")}
               >
                 7d <SortIcon col="7d" />
               </th>
               <th
-                className="text-right py-3 px-4 text-[#5b6476] font-medium cursor-pointer select-none hover:text-[#0b0f1c]"
+                className="text-right py-3 px-4 text-[var(--fg-muted)] font-medium cursor-pointer select-none hover:text-[var(--fg)]"
                 onClick={() => handleSort("30d")}
               >
                 30d <SortIcon col="30d" />
               </th>
               <th
-                className="text-right py-3 px-4 text-[#5b6476] font-medium cursor-pointer select-none hover:text-[#0b0f1c]"
+                className="text-right py-3 px-4 text-[var(--fg-muted)] font-medium cursor-pointer select-none hover:text-[var(--fg)]"
                 onClick={() => handleSort("lifetime")}
               >
                 Lifetime <SortIcon col="lifetime" />
@@ -279,7 +279,7 @@ export function UptimeTab() {
           <tbody>
             {sortedPods.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-12 text-[#5b6476]">
+                <td colSpan={8} className="text-center py-12 text-[var(--fg-muted)]">
                   No pods with uptime data yet. Data will appear once pods start sending heartbeats.
                 </td>
               </tr>
@@ -324,14 +324,14 @@ function PodRow({
   return (
     <>
       <tr
-        className="border-b border-[#e4e7ef] hover:bg-gray-50/50 cursor-pointer transition-colors"
+        className="border-b border-[var(--line)] hover:bg-gray-50/50 cursor-pointer transition-colors"
         onClick={onToggle}
       >
         <td className="py-3 px-4">
-          <div className="font-medium text-[#0b0f1c]">{pod.displayName}</div>
-          <div className="text-xs text-[#5b6476] font-mono">{pod.subscriptionId.slice(0, 12)}...</div>
+          <div className="font-medium text-[var(--fg)]">{pod.displayName}</div>
+          <div className="text-xs text-[var(--fg-muted)] font-mono">{pod.subscriptionId.slice(0, 12)}...</div>
         </td>
-        <td className="py-3 px-4 text-[#5b6476]">{pod.poolName}</td>
+        <td className="py-3 px-4 text-[var(--fg-muted)]">{pod.poolName}</td>
         <td className="py-3 px-4">
           {pod.isActive ? (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
@@ -344,7 +344,7 @@ function PodRow({
             </span>
           )}
         </td>
-        <td className="py-3 px-4 text-[#5b6476] text-sm">{relativeTime(pod.lastSeen)}</td>
+        <td className="py-3 px-4 text-[var(--fg-muted)] text-sm">{relativeTime(pod.lastSeen)}</td>
         <td className={`py-3 px-4 text-right font-mono font-medium ${uptimeTextColor(pod.uptime.oneDay)}`}>
           {formatUptime(pod.uptime.oneDay)}
         </td>
@@ -361,20 +361,20 @@ function PodRow({
 
       {/* Expanded Detail */}
       {isExpanded && (
-        <tr className="border-b border-[#e4e7ef]">
+        <tr className="border-b border-[var(--line)]">
           <td colSpan={8} className="p-0">
             <div className="bg-gray-50/80 px-6 py-4">
               {/* Period selector */}
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-medium text-[#0b0f1c]">
+                <div className="text-sm font-medium text-[var(--fg)]">
                   Daily Uptime — {pod.displayName}
                   {pod.stripeCustomerId && (
-                    <span className="ml-2 text-[#5b6476] font-normal">
+                    <span className="ml-2 text-[var(--fg-muted)] font-normal">
                       ({pod.stripeCustomerId.slice(0, 18)})
                     </span>
                   )}
                 </div>
-                <div className="flex gap-1 bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+                <div className="flex gap-1 bg-white border border-[var(--line)] rounded-lg overflow-hidden">
                   {([7, 30, 90] as const).map((p) => (
                     <button
                       key={p}
@@ -384,8 +384,8 @@ function PodRow({
                       }}
                       className={`px-3 py-1 text-xs font-medium transition-colors ${
                         graphPeriod === p
-                          ? "bg-[#0b0f1c] text-white"
-                          : "text-[#5b6476] hover:bg-gray-50"
+                          ? "bg-[var(--fg)] text-white"
+                          : "text-[var(--fg-muted)] hover:bg-gray-50"
                       }`}
                     >
                       {p}d
@@ -398,7 +398,7 @@ function PodRow({
               <UptimeGraph daily={pod.daily} period={graphPeriod} />
 
               {/* Stats row */}
-              <div className="flex gap-6 mt-3 text-xs text-[#5b6476]">
+              <div className="flex gap-6 mt-3 text-xs text-[var(--fg-muted)]">
                 <span>Tracking since: {pod.firstDate}</span>
                 <span>Total days tracked: {pod.totalDays}</span>
                 <span>Created: {pod.createdAt ? new Date(pod.createdAt).toLocaleDateString() : "-"}</span>
@@ -459,7 +459,7 @@ function UptimeGraph({ daily, period }: { daily: DailyUptime[]; period: number }
       </div>
 
       {/* Date labels */}
-      <div className="flex justify-between mt-1 text-[10px] text-[#5b6476]">
+      <div className="flex justify-between mt-1 text-[10px] text-[var(--fg-muted)]">
         <span>{dates[0]}</span>
         {period > 14 && <span>{dates[Math.floor(dates.length / 2)]}</span>}
         <span>{dates[dates.length - 1]}</span>
@@ -468,7 +468,7 @@ function UptimeGraph({ daily, period }: { daily: DailyUptime[]; period: number }
       {/* Tooltip */}
       {hoveredIdx !== null && (
         <div
-          className="absolute z-10 bg-[#0b0f1c] text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none"
+          className="absolute z-10 bg-[var(--fg)] text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none"
           style={{
             bottom: 56,
             left: `${(hoveredIdx / dates.length) * 100}%`,

@@ -557,7 +557,7 @@ export function PoolSubscriptionCard({
                 <p className={`text-sm truncate ${isTerminating ? "text-amber-600" : "text-[var(--muted)]"}`}>
                   {isTerminating ? "Terminating..." : runningQuip || subscription.region?.city || subscription.region?.region_name || "GPU Instance"}
                 </p>
-                <span className="text-[10px] text-zinc-300 font-mono shrink-0">#{subscription.id}</span>
+                <span className="text-[10px] text-zinc-600 font-mono shrink-0">#{subscription.id}</span>
                 {isMonthly && (
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-50 text-teal-700 border border-teal-200 whitespace-nowrap">
                     Monthly
@@ -612,7 +612,7 @@ export function PoolSubscriptionCard({
             <button
               onClick={() => setShowTerminal(true)}
               disabled={!!loading || !connectionInfo?.pods?.some((p: any) => p.ssh_info)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

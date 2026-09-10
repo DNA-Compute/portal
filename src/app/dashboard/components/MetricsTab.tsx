@@ -353,7 +353,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
         {/* Empty State */}
         <div className="bg-white rounded-2xl border border-[var(--line)] p-12 text-center">
           <svg
-            className="w-16 h-16 mx-auto text-zinc-200 mb-4"
+            className="w-16 h-16 mx-auto text-zinc-700 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -660,7 +660,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
                           )}
                         </div>
                         <svg
-                          className="w-4 h-4 text-zinc-300 ml-auto flex-shrink-0"
+                          className="w-4 h-4 text-zinc-600 ml-auto flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -724,7 +724,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
         ) : (
           <div className="px-6 py-12 text-center text-[var(--muted)]">
             <svg
-              className="w-12 h-12 mx-auto text-zinc-200 mb-3"
+              className="w-12 h-12 mx-auto text-zinc-700 mb-3"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

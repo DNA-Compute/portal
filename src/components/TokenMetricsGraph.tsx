@@ -256,13 +256,13 @@ export default function TokenMetricsGraph({
       ) : (
         <div className="h-32 flex items-center justify-center bg-zinc-50 rounded-lg border border-zinc-100">
           <div className="text-center">
-            <svg className="w-8 h-8 text-zinc-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-8 h-8 text-zinc-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
             </svg>
             <p className="text-xs text-zinc-400">
               Collecting data...
               <br />
-              <span className="text-zinc-300">Chart shows after 2+ data points</span>
+              <span className="text-zinc-600">Chart shows after 2+ data points</span>
             </p>
           </div>
         </div>

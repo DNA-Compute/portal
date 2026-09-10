@@ -63,21 +63,21 @@ export function TerminalModal({ isOpen, onClose, subscriptionId, token }: Termin
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+      <div className="bg-zinc-50 rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 bg-zinc-100 border-b border-zinc-300">
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
               <button onClick={onClose} className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-colors" />
               <div className="w-3 h-3 rounded-full bg-yellow-500" />
               <div className="w-3 h-3 rounded-full bg-green-500" />
             </div>
-            <span className="text-zinc-300 text-sm font-medium">Terminal</span>
+            <span className="text-zinc-600 text-sm font-medium">Terminal</span>
           </div>
           <div className="flex items-center gap-2">
             {credentials && (
               <button
                 onClick={() => setShowCredentials(!showCredentials)}
-                className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-zinc-700"
+                className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-zinc-200"
               >
                 {showCredentials ? "Hide" : "Show"} Credentials
               </button>
@@ -91,7 +91,7 @@ export function TerminalModal({ isOpen, onClose, subscriptionId, token }: Termin
         </div>
 
         {credentials && showCredentials && (
-          <div className="px-4 py-2 bg-zinc-800/50 border-b border-zinc-700 flex items-center gap-4 text-xs">
+          <div className="px-4 py-2 bg-zinc-100/50 border-b border-zinc-300 flex items-center gap-4 text-xs">
             <span className="text-zinc-400">Host:</span>
             <code className="text-emerald-400 font-mono">{credentials.host}:{credentials.port}</code>
             <span className="text-zinc-400">User:</span>
@@ -111,7 +111,7 @@ export function TerminalModal({ isOpen, onClose, subscriptionId, token }: Termin
 
         <div className="flex-1 relative">
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 z-10">
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 z-10">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-3"></div>
                 <p className="text-zinc-400 text-sm">Loading terminal...</p>
@@ -119,7 +119,7 @@ export function TerminalModal({ isOpen, onClose, subscriptionId, token }: Termin
             </div>
           )}
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 z-10">
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 z-10">
               <div className="text-center max-w-md px-4">
                 <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-3">
                   <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +128,7 @@ export function TerminalModal({ isOpen, onClose, subscriptionId, token }: Termin
                 </div>
                 <p className="text-red-400 font-medium mb-1">Connection Failed</p>
                 <p className="text-zinc-400 text-sm mb-4">{error}</p>
-                <button onClick={onClose} className="px-4 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-600 transition-colors text-sm">
+                <button onClick={onClose} className="px-4 py-2 bg-zinc-200 text-white rounded-lg hover:bg-zinc-300 transition-colors text-sm">
                   Close
                 </button>
               </div>

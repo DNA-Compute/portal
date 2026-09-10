@@ -129,7 +129,7 @@ export function InvitationAcceptModal({ token, jwt, userEmail }: Props) {
   if (!info && !loading && !error) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-50/40 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-lg font-semibold text-zinc-900 mb-2">
           {emailMismatch ? "Invitation not for you" : "Accept invitation"}

@@ -211,7 +211,7 @@ export function AddStorageModal({
             </div>
           ) : loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-zinc-900"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-zinc-100"></div>
             </div>
           ) : (
             <>

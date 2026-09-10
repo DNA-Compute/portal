@@ -91,7 +91,7 @@ function SubscribedContent() {
               </p>
               <Link
                 href="/account"
-                className="inline-block px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm font-medium transition-colors"
+                className="inline-block px-6 py-3 bg-zinc-50 hover:bg-zinc-100 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Sign in
               </Link>
@@ -107,7 +107,7 @@ function SubscribedContent() {
             </>
           ) : (
             <>
-              <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-8">
+              <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-8">
                 <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>

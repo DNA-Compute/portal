@@ -296,7 +296,7 @@ export function VouchersTab() {
   };
 
   if (loading) {
-    return <div className="text-[#5b6476]">Loading vouchers...</div>;
+    return <div className="text-[var(--fg-muted)]">Loading vouchers...</div>;
   }
 
   return (
@@ -304,72 +304,72 @@ export function VouchersTab() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-6 gap-4">
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Total Vouchers</p>
-            <p className="text-2xl font-bold text-[#0b0f1c]">{stats.totalVouchers}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Total Vouchers</p>
+            <p className="text-2xl font-bold text-[var(--fg)]">{stats.totalVouchers}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Active</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Active</p>
             <p className="text-2xl font-bold text-green-600">{stats.activeVouchers}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Total Redemptions</p>
-            <p className="text-2xl font-bold text-[#0b0f1c]">{stats.totalRedemptions}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Total Redemptions</p>
+            <p className="text-2xl font-bold text-[var(--fg)]">{stats.totalRedemptions}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Total Credited</p>
-            <p className="text-2xl font-bold text-[#1a4fff]">${(stats.totalCreditedCents / 100).toFixed(0)}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Total Credited</p>
+            <p className="text-2xl font-bold text-[var(--acid)]">${(stats.totalCreditedCents / 100).toFixed(0)}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">This Month</p>
-            <p className="text-2xl font-bold text-[#0b0f1c]">{stats.redemptionsThisMonth}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">This Month</p>
+            <p className="text-2xl font-bold text-[var(--fg)]">{stats.redemptionsThisMonth}</p>
           </div>
-          <div className="bg-white border border-[#e4e7ef] rounded-lg p-4">
-            <p className="text-[#5b6476] text-sm">Credited This Month</p>
-            <p className="text-2xl font-bold text-[#1a4fff]">${(stats.creditedThisMonthCents / 100).toFixed(0)}</p>
+          <div className="bg-white border border-[var(--line)] rounded-lg p-4">
+            <p className="text-[var(--fg-muted)] text-sm">Credited This Month</p>
+            <p className="text-2xl font-bold text-[var(--acid)]">${(stats.creditedThisMonthCents / 100).toFixed(0)}</p>
           </div>
         </div>
       )}
 
       {/* Vouchers Table */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-[#e4e7ef] flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-[#0b0f1c]">Voucher Codes</h3>
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
+        <div className="p-4 border-b border-[var(--line)] flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[var(--fg)]">Voucher Codes</h3>
           <button
             onClick={handleCreateClick}
-            className="px-4 py-2 bg-[#1a4fff] hover:bg-[#153acc] text-white text-sm font-medium rounded-lg"
+            className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white text-sm font-medium rounded-lg"
           >
             + Create Voucher
           </button>
         </div>
 
         {vouchers.length === 0 ? (
-          <div className="p-8 text-center text-[#5b6476]">
+          <div className="p-8 text-center text-[var(--fg-muted)]">
             No vouchers created yet
           </div>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Code</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Credit</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Redemptions</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">Expires</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-[#5b6476] uppercase">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Code</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Credit</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Redemptions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">Expires</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--fg-muted)] uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e4e7ef]">
+            <tbody className="divide-y divide-[var(--line)]">
               {vouchers.map((voucher) => (
                 <tr key={voucher.id} className={!voucher.active ? "opacity-60" : ""}>
                   <td className="px-4 py-3">
-                    <span className="font-mono text-sm font-bold text-[#1a4fff]">{voucher.code}</span>
+                    <span className="font-mono text-sm font-bold text-[var(--acid)]">{voucher.code}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-[#0b0f1c]">{voucher.name}</div>
+                    <div className="text-sm text-[var(--fg)]">{voucher.name}</div>
                     {voucher.description && (
-                      <div className="text-xs text-[#5b6476]">{voucher.description}</div>
+                      <div className="text-xs text-[var(--fg-muted)]">{voucher.description}</div>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -377,7 +377,7 @@ export function VouchersTab() {
                       +${(voucher.creditCents / 100).toFixed(0)}
                     </span>
                     {voucher.minTopupCents && (
-                      <div className="text-xs text-[#5b6476]">
+                      <div className="text-xs text-[var(--fg-muted)]">
                         Min ${(voucher.minTopupCents / 100).toFixed(0)}
                       </div>
                     )}
@@ -385,7 +385,7 @@ export function VouchersTab() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleViewRedemptions(voucher)}
-                      className="text-sm text-[#0b0f1c] hover:text-[#1a4fff]"
+                      className="text-sm text-[var(--fg)] hover:text-[var(--acid)]"
                     >
                       {voucher.redemptionCount}
                       {voucher.maxRedemptions && `/${voucher.maxRedemptions}`}
@@ -403,14 +403,14 @@ export function VouchersTab() {
                       {voucher.active ? "Active" : "Inactive"}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                     {voucher.expiresAt ? formatDate(voucher.expiresAt) : "Never"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleEditClick(voucher)}
-                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-[#0b0f1c] text-xs rounded"
+                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-[var(--fg)] text-xs rounded"
                       >
                         Edit
                       </button>
@@ -436,7 +436,7 @@ export function VouchersTab() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">
+              <h3 className="text-lg font-semibold text-[var(--fg)]">
                 {editingVoucher ? "Edit Voucher" : "Create Voucher"}
               </h3>
               <button
@@ -450,7 +450,7 @@ export function VouchersTab() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Code *
                   </label>
                   <input
@@ -462,12 +462,12 @@ export function VouchersTab() {
                     maxLength={CODE_MAX}
                     pattern="[A-Za-z0-9_-]+"
                     title={`Up to ${CODE_MAX} characters; letters, numbers, hyphens, and underscores only`}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg uppercase disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg uppercase disabled:bg-gray-100"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Name *
                   </label>
                   <input
@@ -476,14 +476,14 @@ export function VouchersTab() {
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Launch Promotion"
                     maxLength={NAME_MAX}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                   Description
                 </label>
                 <input
@@ -492,13 +492,13 @@ export function VouchersTab() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Optional description"
                   maxLength={DESCRIPTION_MAX}
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Credit Amount ($) *
                   </label>
                   <input
@@ -508,12 +508,12 @@ export function VouchersTab() {
                     min="1"
                     max="21474836"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Min Top-up ($)
                   </label>
                   <input
@@ -524,14 +524,14 @@ export function VouchersTab() {
                     min="0"
                     max="21474836"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Max Redemptions
                   </label>
                   <input
@@ -539,11 +539,11 @@ export function VouchersTab() {
                     value={form.maxRedemptions || ""}
                     onChange={(e) => setForm({ ...form, maxRedemptions: e.target.value ? parseInt(e.target.value) : null })}
                     placeholder="Unlimited"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Max Per Customer
                   </label>
                   <input
@@ -551,14 +551,14 @@ export function VouchersTab() {
                     value={form.maxPerCustomer}
                     onChange={(e) => setForm({ ...form, maxPerCustomer: parseInt(e.target.value) || 1 })}
                     min="1"
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Starts At
                   </label>
                   <input
@@ -567,11 +567,11 @@ export function VouchersTab() {
                     onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
                     min={DATE_MIN}
                     max={DATE_MAX}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-[#0b0f1c]">
+                  <label className="block text-sm font-medium mb-1 text-[var(--fg)]">
                     Expires At
                   </label>
                   <input
@@ -580,7 +580,7 @@ export function VouchersTab() {
                     onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
                     min={DATE_MIN}
                     max={DATE_MAX}
-                    className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                   />
                 </div>
               </div>
@@ -593,7 +593,7 @@ export function VouchersTab() {
                   onChange={(e) => setForm({ ...form, active: e.target.checked })}
                   className="h-4 w-4 rounded border-gray-300"
                 />
-                <label htmlFor="active" className="text-sm text-[#0b0f1c]">
+                <label htmlFor="active" className="text-sm text-[var(--fg)]">
                   Active (can be redeemed)
                 </label>
               </div>
@@ -602,14 +602,14 @@ export function VouchersTab() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-[#5b6476] hover:text-[#0b0f1c]"
+                  className="px-4 py-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 bg-[#1a4fff] hover:bg-[#153acc] text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg disabled:opacity-50"
                 >
                   {saving ? "Saving..." : editingVoucher ? "Update Voucher" : "Create Voucher"}
                 </button>
@@ -625,10 +625,10 @@ export function VouchersTab() {
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-[#0b0f1c]">
+                <h3 className="text-lg font-semibold text-[var(--fg)]">
                   Redemptions for {selectedVoucher.code}
                 </h3>
-                <p className="text-sm text-[#5b6476]">{selectedVoucher.name}</p>
+                <p className="text-sm text-[var(--fg-muted)]">{selectedVoucher.name}</p>
               </div>
               <button
                 onClick={() => setSelectedVoucher(null)}
@@ -639,40 +639,40 @@ export function VouchersTab() {
             </div>
 
             {redemptionsLoading ? (
-              <div className="text-center py-8 text-[#5b6476]">Loading...</div>
+              <div className="text-center py-8 text-[var(--fg-muted)]">Loading...</div>
             ) : redemptions.length === 0 ? (
-              <div className="text-center py-8 text-[#5b6476]">No redemptions yet</div>
+              <div className="text-center py-8 text-[var(--fg-muted)]">No redemptions yet</div>
             ) : (
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                       Customer
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                       Top-up Amount
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                       Credit Given
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#5b6476] uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                       Date
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e4e7ef]">
+                <tbody className="divide-y divide-[var(--line)]">
                   {redemptions.map((redemption) => (
                     <tr key={redemption.id}>
-                      <td className="px-4 py-3 text-sm text-[#0b0f1c]">
+                      <td className="px-4 py-3 text-sm text-[var(--fg)]">
                         {redemption.customerEmail}
                       </td>
-                      <td className="px-4 py-3 text-sm text-[#0b0f1c]">
+                      <td className="px-4 py-3 text-sm text-[var(--fg)]">
                         ${(redemption.topupCents / 100).toFixed(2)}
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-green-600">
                         +${(redemption.creditCents / 100).toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-[#5b6476]">
+                      <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                         {formatDate(redemption.createdAt)}
                       </td>
                     </tr>

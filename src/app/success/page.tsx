@@ -138,23 +138,23 @@ function SuccessContent() {
         <div className="mx-auto max-w-xl px-6 py-4">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-zinc-50 text-white flex items-center justify-center">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
-            <div className="flex-1 h-px bg-zinc-900 mx-3" />
+            <div className="flex-1 h-px bg-zinc-50 mx-3" />
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-zinc-50 text-white flex items-center justify-center">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
-            <div className="flex-1 h-px bg-zinc-900 mx-3" />
+            <div className="flex-1 h-px bg-zinc-50 mx-3" />
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-zinc-50 text-white flex items-center justify-center">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -168,7 +168,7 @@ function SuccessContent() {
       <div className="flex-grow flex items-center justify-center py-16">
         <div className="max-w-md text-center px-6">
           {/* Success Icon */}
-          <div className={`w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-500 ${mounted ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
+          <div className={`w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-500 ${mounted ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -297,7 +297,7 @@ function SuccessContent() {
           <div className="flex flex-col items-center gap-4">
             <Link
               href="/account"
-              className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm font-medium transition-colors"
+              className="px-6 py-3 bg-zinc-50 hover:bg-zinc-100 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Resend Login Link
             </Link>

@@ -137,7 +137,7 @@ export function HelpTooltip({
       {isOpen && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 max-w-xs bg-zinc-900 text-white text-sm rounded-lg shadow-xl p-3 animate-in fade-in zoom-in-95 duration-150"
+          className="fixed z-50 max-w-xs bg-zinc-50 text-white text-sm rounded-lg shadow-xl p-3 animate-in fade-in zoom-in-95 duration-150"
           style={{
             top: tooltipPosition.top,
             left: tooltipPosition.left,
@@ -150,7 +150,7 @@ export function HelpTooltip({
               {title}
             </div>
           )}
-          <div className="text-zinc-300 leading-relaxed">{content}</div>
+          <div className="text-zinc-600 leading-relaxed">{content}</div>
         </div>
       )}
     </>
@@ -278,7 +278,7 @@ export const HELP_CONTENT = {
       <>
         Data stored here survives instance restarts and termination.
         <br /><br />
-        <span className="text-zinc-400">Accessible at:</span> <code className="bg-zinc-800 px-1 rounded">/workspace</code>
+        <span className="text-zinc-400">Accessible at:</span> <code className="bg-zinc-100 px-1 rounded">/workspace</code>
         <br />
         <span className="text-zinc-400 text-xs">NFS volume mounted at /data/share*, symlinked to /workspace for convenience.</span>
         <br /><br />

@@ -644,7 +644,7 @@ export function DashboardContent() {
           </div>
           <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">Access Denied</h2>
           <p className="text-sm text-[var(--muted)] mb-6">{error || "Unable to load account"}</p>
-          <Link href="/account" className="inline-block px-6 py-3 bg-zinc-900 text-white rounded-xl text-sm font-medium hover:bg-zinc-800 transition-colors">
+          <Link href="/account" className="inline-block px-6 py-3 bg-zinc-50 text-white rounded-xl text-sm font-medium hover:bg-zinc-100 transition-colors">
             Request New Access Link
           </Link>
         </div>
@@ -822,7 +822,7 @@ export function DashboardContent() {
             {totalRunning > 0 && isHourly && data.wallet && totalHourlyRate > 0 && (
               <>
                 {/* Progress bar showing time remaining */}
-                <div className="h-1.5 bg-zinc-700/50 rounded-full mb-2 overflow-hidden">
+                <div className="h-1.5 bg-zinc-200/50 rounded-full mb-2 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-1000 ${
                       liveCostTicker.status === "critical" ? "bg-rose-500" :

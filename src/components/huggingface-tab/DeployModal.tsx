@@ -434,7 +434,7 @@ export function DeployModal({
                   Copy
                 </button>
               </div>
-              <pre className="p-3 bg-zinc-900 text-zinc-100 rounded-lg text-xs overflow-x-auto max-h-64 overflow-y-auto font-mono">
+              <pre className="p-3 bg-zinc-50 text-zinc-800 rounded-lg text-xs overflow-x-auto max-h-64 overflow-y-auto font-mono">
                 {deployLogs}
               </pre>
             </div>

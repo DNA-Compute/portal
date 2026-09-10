@@ -347,7 +347,7 @@ export function WelcomeModal({
                     <button
                       onClick={() => validateVoucherCode(voucherCode)}
                       disabled={!voucherCode.trim() || voucherValidating}
-                      className="px-3 py-1.5 bg-zinc-800 text-white text-xs rounded hover:bg-zinc-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+                      className="px-3 py-1.5 bg-zinc-100 text-white text-xs rounded hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
                     >
                       {voucherValidating ? "..." : "Apply"}
                     </button>

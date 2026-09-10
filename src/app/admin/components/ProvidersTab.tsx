@@ -205,7 +205,7 @@ export function ProvidersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a4fff]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--acid)]"></div>
       </div>
     );
   }
@@ -213,7 +213,7 @@ export function ProvidersTab() {
   return (
     <div className="space-y-6">
       {/* Sub-tabs */}
-      <div className="flex gap-4 border-b border-[#e4e7ef]">
+      <div className="flex gap-4 border-b border-[var(--line)]">
         {[
           { id: "providers" as const, label: "Providers", count: providers.length },
           { id: "nodes" as const, label: "Nodes", count: nodes.length },
@@ -224,8 +224,8 @@ export function ProvidersTab() {
             onClick={() => setSubTab(tab.id)}
             className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
               subTab === tab.id
-                ? "text-[#1a4fff] border-[#1a4fff]"
-                : "text-[#5b6476] border-transparent hover:text-[#0b0f1c]"
+                ? "text-[var(--acid)] border-[var(--acid)]"
+                : "text-[var(--fg-muted)] border-transparent hover:text-[var(--fg)]"
             }`}
           >
             {tab.label} ({tab.count})
@@ -317,24 +317,24 @@ function ProvidersSubTab({
 
   return (
     <div>
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#f7f8fb] border-b border-[#e4e7ef]">
+          <thead className="bg-[var(--ink)] border-b border-[var(--line)]">
             <tr>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Company</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Type</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Contact</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Status</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Nodes</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">GPUs</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Applied</th>
-              <th className="text-right px-4 py-3 text-sm font-medium text-[#5b6476]">Actions</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Company</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Type</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Contact</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Status</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Nodes</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">GPUs</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Applied</th>
+              <th className="text-right px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e4e7ef]">
+          <tbody className="divide-y divide-[var(--line)]">
             {providers.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-[#5b6476]">
+                <td colSpan={8} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                   No providers yet
                 </td>
               </tr>
@@ -342,8 +342,8 @@ function ProvidersSubTab({
               providers.map((provider) => (
                 <tr key={provider.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-[#0b0f1c]">{provider.companyName}</div>
-                    <div className="text-xs text-[#5b6476]">{provider.email}</div>
+                    <div className="font-medium text-[var(--fg)]">{provider.companyName}</div>
+                    <div className="text-xs text-[var(--fg-muted)]">{provider.email}</div>
                   </td>
                   <td className="px-4 py-3">
                     {provider.applicationType === "white_label" ? (
@@ -352,24 +352,24 @@ function ProvidersSubTab({
                       <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">GPU Provider</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">{provider.contactName}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">{provider.contactName}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(provider.status)}`}>
                       {provider.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#0b0f1c]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg)]">
                     {provider.activeNodes} / {provider.totalNodes}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#0b0f1c]">{provider.totalGpus}</td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg)]">{provider.totalGpus}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                     {new Date(provider.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right space-x-2">
                     <button
                       onClick={() => viewDetails(provider.id)}
                       disabled={loadingDetails}
-                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-[#0b0f1c] rounded disabled:opacity-50"
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-[var(--fg)] rounded disabled:opacity-50"
                     >
                       View
                     </button>
@@ -399,7 +399,7 @@ function ProvidersSubTab({
                         <button
                           onClick={() => onLoginAs(provider.id)}
                           disabled={actionLoading === provider.id}
-                          className="text-xs px-2 py-1 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded disabled:opacity-50"
                         >
                           Login As
                         </button>

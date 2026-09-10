@@ -154,12 +154,12 @@ function LogoUploadField({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+      <label className="block text-sm font-medium text-[var(--fg)] mb-1">
         Logo
       </label>
       {/* Preview */}
       {value && (
-        <div className="mb-2 p-3 bg-white border border-[#e4e7ef] rounded-lg inline-block">
+        <div className="mb-2 p-3 bg-white border border-[var(--line)] rounded-lg inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
@@ -174,7 +174,7 @@ function LogoUploadField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="/logo.png or https://..."
-          className="flex-1 px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+          className="flex-1 px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
         />
         <input
           ref={fileRef}
@@ -190,7 +190,7 @@ function LogoUploadField({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          className="px-3 py-2 bg-white border border-[#e4e7ef] hover:bg-zinc-50 text-[#0b0f1c] rounded-lg text-sm whitespace-nowrap disabled:opacity-50"
+          className="px-3 py-2 bg-white border border-[var(--line)] hover:bg-zinc-50 text-[var(--fg)] rounded-lg text-sm whitespace-nowrap disabled:opacity-50"
         >
           {uploading ? "Uploading..." : "Upload"}
         </button>
@@ -237,11 +237,11 @@ function FaviconUploadField({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+      <label className="block text-sm font-medium text-[var(--fg)] mb-1">
         Favicon
       </label>
       {value && (
-        <div className="mb-2 p-3 bg-white border border-[#e4e7ef] rounded-lg inline-block">
+        <div className="mb-2 p-3 bg-white border border-[var(--line)] rounded-lg inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
@@ -256,7 +256,7 @@ function FaviconUploadField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="/favicon.ico or https://..."
-          className="flex-1 px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+          className="flex-1 px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
         />
         <input
           ref={fileRef}
@@ -272,7 +272,7 @@ function FaviconUploadField({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          className="px-3 py-2 bg-white border border-[#e4e7ef] hover:bg-zinc-50 text-[#0b0f1c] rounded-lg text-sm whitespace-nowrap disabled:opacity-50"
+          className="px-3 py-2 bg-white border border-[var(--line)] hover:bg-zinc-50 text-[var(--fg)] rounded-lg text-sm whitespace-nowrap disabled:opacity-50"
         >
           {uploading ? "Uploading..." : "Upload"}
         </button>
@@ -293,7 +293,7 @@ function ColorField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+      <label className="block text-sm font-medium text-[var(--fg)] mb-1">
         {label}
       </label>
       <div className="flex gap-2 items-center">
@@ -301,14 +301,14 @@ function ColorField({
           type="color"
           value={value || "#000000"}
           onChange={(e) => onChange(e.target.value)}
-          className="w-10 h-10 p-0.5 bg-white border border-[#e4e7ef] rounded-lg cursor-pointer"
+          className="w-10 h-10 p-0.5 bg-white border border-[var(--line)] rounded-lg cursor-pointer"
         />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#000000"
-          className="flex-1 px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff] font-mono"
+          className="flex-1 px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)] font-mono"
         />
       </div>
     </div>
@@ -322,10 +322,10 @@ function ThemePresetPicker({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#0b0f1c] mb-2">
+      <label className="block text-sm font-medium text-[var(--fg)] mb-2">
         Theme Presets
       </label>
-      <p className="text-xs text-[#5b6476] mb-3">
+      <p className="text-xs text-[var(--fg-muted)] mb-3">
         Pick a preset to auto-fill colors, then customise individual values below.
       </p>
       <div className="grid grid-cols-5 gap-2">
@@ -334,7 +334,7 @@ function ThemePresetPicker({
             key={preset.name}
             type="button"
             onClick={() => onSelect(preset)}
-            className="group flex flex-col items-center gap-1.5 p-2 rounded-lg border border-[#e4e7ef] hover:border-[#1a4fff] hover:bg-white transition-colors"
+            className="group flex flex-col items-center gap-1.5 p-2 rounded-lg border border-[var(--line)] hover:border-[var(--acid)] hover:bg-white transition-colors"
             title={preset.name}
           >
             <div className="flex gap-0.5">
@@ -351,7 +351,7 @@ function ThemePresetPicker({
               className="w-full h-3 rounded-sm border border-black/5"
               style={{ backgroundColor: preset.background }}
             />
-            <span className="text-[10px] font-medium text-[#5b6476] group-hover:text-[#0b0f1c] leading-none">
+            <span className="text-[10px] font-medium text-[var(--fg-muted)] group-hover:text-[var(--fg)] leading-none">
               {preset.name}
             </span>
           </button>
@@ -369,8 +369,8 @@ function BrandingPreview({ values }: { values: Record<string, string> }) {
   const brand = values.NEXT_PUBLIC_BRAND_NAME || "Your Brand";
 
   return (
-    <div className="mt-4 p-4 border border-[#e4e7ef] rounded-lg" style={{ backgroundColor: bg }}>
-      <p className="text-xs text-[#5b6476] mb-2 font-medium">Preview</p>
+    <div className="mt-4 p-4 border border-[var(--line)] rounded-lg" style={{ backgroundColor: bg }}>
+      <p className="text-xs text-[var(--fg-muted)] mb-2 font-medium">Preview</p>
       <div className="flex items-center gap-3">
         <span className="text-lg font-bold" style={{ color: text }}>{brand}</span>
         <button
@@ -448,13 +448,13 @@ function ConfirmDialog({ title, message, confirmLabel, confirmColor, onConfirm, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onCancel}>
       <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-5" onClick={e => e.stopPropagation()}>
-        <h4 className="font-semibold text-[#0b0f1c] text-sm mb-2">{title}</h4>
-        <p className="text-sm text-[#5b6476] mb-4">{message}</p>
+        <h4 className="font-semibold text-[var(--fg)] text-sm mb-2">{title}</h4>
+        <p className="text-sm text-[var(--fg-muted)] mb-4">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-3 py-1.5 text-sm text-[#5b6476] hover:text-[#0b0f1c] rounded-lg border border-[#e4e7ef] hover:bg-zinc-50">
+          <button onClick={onCancel} className="px-3 py-1.5 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] rounded-lg border border-[var(--line)] hover:bg-zinc-50">
             Cancel
           </button>
-          <button onClick={onConfirm} className={`px-3 py-1.5 text-sm text-white rounded-lg font-medium ${confirmColor || "bg-[#1a4fff] hover:bg-[#1a4fff]/90"}`}>
+          <button onClick={onConfirm} className={`px-3 py-1.5 text-sm text-white rounded-lg font-medium ${confirmColor || "bg-[var(--acid)] hover:bg-[var(--acid)]/90"}`}>
             {confirmLabel}
           </button>
         </div>
@@ -551,21 +551,21 @@ function EmbargoScreeningSection({ enabled, countries, defaultCountries, message
         />
       )}
 
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <div className="p-5">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
               <div className={`w-2.5 h-2.5 rounded-full ${enabled ? "bg-green-500" : "bg-zinc-300"}`} />
               <div>
-                <h3 className="font-semibold text-[#0b0f1c]">Embargo Country Screening</h3>
-                <p className="text-xs text-[#5b6476] mt-0.5">
+                <h3 className="font-semibold text-[var(--fg)]">Embargo Country Screening</h3>
+                <p className="text-xs text-[var(--fg-muted)] mt-0.5">
                   Block signups, checkout, and API access from sanctioned countries (OFAC)
                 </p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" checked={enabled} onChange={e => onToggle(e.target.checked)} className="sr-only peer" disabled={saving} />
-              <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1a4fff]" />
+              <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--acid)]" />
             </label>
           </div>
 
@@ -576,7 +576,7 @@ function EmbargoScreeningSection({ enabled, countries, defaultCountries, message
           )}
 
           {enabled && (
-            <div className="mt-4 border-t border-[#e4e7ef] pt-4">
+            <div className="mt-4 border-t border-[var(--line)] pt-4">
               {/* Search + add country */}
               <div className="relative" ref={dropdownRef}>
                 <input
@@ -586,10 +586,10 @@ function EmbargoScreeningSection({ enabled, countries, defaultCountries, message
                   onChange={e => { setSearch(e.target.value); setShowDropdown(true); }}
                   onFocus={() => setShowDropdown(true)}
                   placeholder="Search by country name or code..."
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a4fff]/20 focus:border-[#1a4fff]"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--acid)]/20 focus:border-[var(--acid)]"
                 />
                 {showDropdown && filteredCountries.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-[#e4e7ef] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-[var(--line)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {filteredCountries.map((code: string) => (
                       <button
                         key={code}
@@ -597,14 +597,14 @@ function EmbargoScreeningSection({ enabled, countries, defaultCountries, message
                         className="w-full text-left px-3 py-2 text-sm hover:bg-[#f0f4ff] flex items-center justify-between"
                       >
                         <span>
-                          <span className="text-[#0b0f1c]">{getCountryName(code)}</span>
-                          <span className="text-[#5b6476] ml-2 font-mono text-xs">{code}</span>
+                          <span className="text-[var(--fg)]">{getCountryName(code)}</span>
+                          <span className="text-[var(--fg-muted)] ml-2 font-mono text-xs">{code}</span>
                         </span>
-                        <span className="text-xs text-[#1a4fff] font-medium">+ Add</span>
+                        <span className="text-xs text-[var(--acid)] font-medium">+ Add</span>
                       </button>
                     ))}
                     {search.trim() && filteredCountries.length === 0 && (
-                      <div className="px-3 py-2 text-sm text-[#5b6476]">No matching countries found</div>
+                      <div className="px-3 py-2 text-sm text-[var(--fg-muted)]">No matching countries found</div>
                     )}
                   </div>
                 )}
@@ -612,26 +612,26 @@ function EmbargoScreeningSection({ enabled, countries, defaultCountries, message
 
               {/* Country list */}
               <div className="flex items-center justify-between mt-4 mb-2">
-                <div className="text-xs text-[#5b6476]">
+                <div className="text-xs text-[var(--fg-muted)]">
                   {countries.length} countr{countries.length !== 1 ? "ies" : "y"} blocked
                 </div>
                 {countries.length > 0 && (
-                  <button onClick={handleReset} className="text-xs text-[#5b6476] hover:text-[#0b0f1c] underline">
+                  <button onClick={handleReset} className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] underline">
                     Reset to OFAC defaults ({defaultCountries.length})
                   </button>
                 )}
               </div>
-              <div className="max-h-72 overflow-y-auto border border-[#e4e7ef] rounded-lg divide-y divide-[#e4e7ef]">
+              <div className="max-h-72 overflow-y-auto border border-[var(--line)] rounded-lg divide-y divide-[var(--line)]">
                 {countries.length === 0 ? (
-                  <div className="p-4 text-sm text-[#5b6476] text-center">
+                  <div className="p-4 text-sm text-[var(--fg-muted)] text-center">
                     No countries blocked. Search above to add countries, or the default OFAC list will be loaded when you enable screening.
                   </div>
                 ) : (
                   countries.map(code => (
                     <div key={code} className="flex items-center justify-between px-3 py-2 hover:bg-zinc-50 group">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center w-8 h-5 bg-zinc-100 rounded text-xs font-mono font-medium text-[#0b0f1c]">{code}</span>
-                        <span className="text-sm text-[#0b0f1c]">{getCountryName(code)}</span>
+                        <span className="inline-flex items-center justify-center w-8 h-5 bg-zinc-100 rounded text-xs font-mono font-medium text-[var(--fg)]">{code}</span>
+                        <span className="text-sm text-[var(--fg)]">{getCountryName(code)}</span>
                       </div>
                       <button
                         onClick={() => handleRemove(code)}
@@ -777,7 +777,7 @@ export function PlatformSettingsTab() {
 
     return (
       <div key={key}>
-        <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+        <label className="block text-sm font-medium text-[var(--fg)] mb-1">
           {SERVICE_KEY_LABELS[key] || key}
         </label>
         <input
@@ -785,7 +785,7 @@ export function PlatformSettingsTab() {
           value={formValues[key] || ""}
           onChange={(e) => updateFormValue(key, e.target.value)}
           placeholder={key}
-          className="w-full px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+          className="w-full px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
         />
       </div>
     );
@@ -809,7 +809,7 @@ export function PlatformSettingsTab() {
           if (sectionKeys.length === 0) return null;
           return (
             <div key={section.label}>
-              <h4 className="text-sm font-semibold text-[#0b0f1c] mb-3 border-b border-[#e4e7ef] pb-1">
+              <h4 className="text-sm font-semibold text-[var(--fg)] mb-3 border-b border-[var(--line)] pb-1">
                 {section.label}
               </h4>
               {section.label === "Appearance" && (
@@ -824,8 +824,8 @@ export function PlatformSettingsTab() {
           );
         })}
         <BrandingPreview values={formValues} />
-        <p className="text-xs text-[#5b6476] flex items-center gap-1 pt-2">
-          <span className="inline-block w-3.5 h-3.5 text-[#5b6476]">&#9432;</span>
+        <p className="text-xs text-[var(--fg-muted)] flex items-center gap-1 pt-2">
+          <span className="inline-block w-3.5 h-3.5 text-[var(--fg-muted)]">&#9432;</span>
           Email sender settings have moved to the Email Templates tab.
         </p>
       </div>
@@ -863,10 +863,10 @@ export function PlatformSettingsTab() {
       <div className="space-y-6">
         {/* SMTP Settings */}
         <div>
-          <h4 className="text-sm font-semibold text-[#0b0f1c] mb-1 border-b border-[#e4e7ef] pb-1">
+          <h4 className="text-sm font-semibold text-[var(--fg)] mb-1 border-b border-[var(--line)] pb-1">
             SMTP Settings
           </h4>
-          <p className="text-xs text-[#5b6476] mb-3">
+          <p className="text-xs text-[var(--fg-muted)] mb-3">
             Connect to any SMTP server — Gmail, AWS SES, Postfix, Mailgun, etc.
           </p>
           <div className="space-y-4">
@@ -888,7 +888,7 @@ export function PlatformSettingsTab() {
               type="button"
               onClick={handleSmtpTest}
               disabled={smtpTesting || !formValues["SMTP_HOST"]}
-              className="px-3 py-1.5 text-sm border border-[#e4e7ef] rounded-lg hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm border border-[var(--line)] rounded-lg hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {smtpTesting ? "Testing..." : "Test Connection"}
             </button>
@@ -902,7 +902,7 @@ export function PlatformSettingsTab() {
 
         {/* General */}
         <div>
-          <h4 className="text-sm font-semibold text-[#0b0f1c] mb-1 border-b border-[#e4e7ef] pb-1">
+          <h4 className="text-sm font-semibold text-[var(--fg)] mb-1 border-b border-[var(--line)] pb-1">
             General
           </h4>
           <div className="space-y-4">
@@ -922,7 +922,7 @@ export function PlatformSettingsTab() {
   }
 
   if (loading) {
-    return <div className="text-[#5b6476]">Loading settings...</div>;
+    return <div className="text-[var(--fg-muted)]">Loading settings...</div>;
   }
 
   if (!data) {
@@ -932,8 +932,8 @@ export function PlatformSettingsTab() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-[#0b0f1c] mb-1">Platform Settings</h2>
-        <p className="text-sm text-[#5b6476]">
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-1">Platform Settings</h2>
+        <p className="text-sm text-[var(--fg-muted)]">
           Configure your platform&apos;s integrations and API keys. Settings are stored encrypted in the database.
         </p>
       </div>
@@ -949,14 +949,14 @@ export function PlatformSettingsTab() {
       )}
 
       {/* ── Email Domain Blocklist ── */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <div className="p-5">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
               <div className={`w-2.5 h-2.5 rounded-full ${blocklistEnabled ? "bg-green-500" : "bg-zinc-300"}`} />
               <div>
-                <h3 className="font-semibold text-[#0b0f1c]">Email Domain Blocklist</h3>
-                <p className="text-xs text-[#5b6476] mt-0.5">
+                <h3 className="font-semibold text-[var(--fg)]">Email Domain Blocklist</h3>
+                <p className="text-xs text-[var(--fg-muted)] mt-0.5">
                   Block signups from disposable/temporary email domains
                 </p>
               </div>
@@ -1003,7 +1003,7 @@ export function PlatformSettingsTab() {
                 }}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-[#1a4fff]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1a4fff]" />
+              <div className="w-9 h-5 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-[var(--acid)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--acid)]" />
             </label>
           </div>
 
@@ -1016,7 +1016,7 @@ export function PlatformSettingsTab() {
           )}
 
           {blocklistEnabled && (
-            <div className="mt-4 border-t border-[#e4e7ef] pt-4">
+            <div className="mt-4 border-t border-[var(--line)] pt-4">
               {/* Add domain input */}
               <div className="flex gap-2 mb-3">
                 <input
@@ -1041,7 +1041,7 @@ export function PlatformSettingsTab() {
                     }
                   }}
                   placeholder="Add domain (e.g., tempmail.com)"
-                  className="flex-1 px-3 py-1.5 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="flex-1 px-3 py-1.5 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
                 <button
                   onClick={() => {
@@ -1058,25 +1058,25 @@ export function PlatformSettingsTab() {
                     }
                   }}
                   disabled={!blocklistNewDomain.trim() || !blocklistNewDomain.includes(".")}
-                  className="px-3 py-1.5 bg-[#1a4fff] hover:bg-[#1a4fff]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add
                 </button>
               </div>
 
               {/* Domain list */}
-              <div className="text-xs text-[#5b6476] mb-2">
+              <div className="text-xs text-[var(--fg-muted)] mb-2">
                 {blocklistDomains.length} domain{blocklistDomains.length !== 1 ? "s" : ""} blocked
               </div>
-              <div className="max-h-60 overflow-y-auto border border-[#e4e7ef] rounded-lg divide-y divide-[#e4e7ef]">
+              <div className="max-h-60 overflow-y-auto border border-[var(--line)] rounded-lg divide-y divide-[var(--line)]">
                 {blocklistDomains.length === 0 ? (
-                  <div className="p-3 text-sm text-[#5b6476] text-center">
+                  <div className="p-3 text-sm text-[var(--fg-muted)] text-center">
                     No domains blocked. Add one above or the default list will be loaded when you enable the blocklist.
                   </div>
                 ) : (
                   blocklistDomains.map((domain) => (
                     <div key={domain} className="flex items-center justify-between px-3 py-1.5 hover:bg-zinc-50">
-                      <span className="text-sm text-[#0b0f1c] font-mono">{domain}</span>
+                      <span className="text-sm text-[var(--fg)] font-mono">{domain}</span>
                       <button
                         onClick={() => {
                           const updated = blocklistDomains.filter(d => d !== domain);
@@ -1110,7 +1110,7 @@ export function PlatformSettingsTab() {
                     setTimeout(() => setBlocklistMessage(null), 3000);
                   }).catch(() => {});
                 }}
-                className="mt-2 text-xs text-[#5b6476] hover:text-[#0b0f1c] underline"
+                className="mt-2 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] underline"
               >
                 Reset to default list ({data?.emailBlocklist?.defaultDomains?.length || 0} domains)
               </button>
@@ -1176,13 +1176,13 @@ export function PlatformSettingsTab() {
         const description = SERVICE_DESCRIPTIONS[serviceName] || "";
 
         return (
-          <div key={serviceName} className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+          <div key={serviceName} className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
             <div className="p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${service.configured ? "bg-green-500" : "bg-zinc-300"}`} />
                 <div>
-                  <h3 className="font-semibold text-[#0b0f1c]">{service.label}</h3>
-                  <p className="text-xs text-[#5b6476] mt-0.5">{description}</p>
+                  <h3 className="font-semibold text-[var(--fg)]">{service.label}</h3>
+                  <p className="text-xs text-[var(--fg-muted)] mt-0.5">{description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1196,7 +1196,7 @@ export function PlatformSettingsTab() {
                 {!isEditing && (
                   <button
                     onClick={() => startEditing(serviceName)}
-                    className="text-sm text-[#1a4fff] hover:text-[#1a4fff]/80 font-medium"
+                    className="text-sm text-[var(--acid)] hover:text-[var(--acid)]/80 font-medium"
                   >
                     {service.configured ? "Edit" : "Configure"}
                   </button>
@@ -1205,20 +1205,20 @@ export function PlatformSettingsTab() {
             </div>
 
             {isEditing && (
-              <div className="border-t border-[#e4e7ef] p-5 bg-zinc-50/50">
+              <div className="border-t border-[var(--line)] p-5 bg-zinc-50/50">
                 {serviceName === "branding" ? renderBrandingForm() : serviceName === "smtp" ? renderSmtpForm() : renderDefaultForm()}
 
-                <div className="flex gap-2 pt-4 mt-4 border-t border-[#e4e7ef]">
+                <div className="flex gap-2 pt-4 mt-4 border-t border-[var(--line)]">
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1a4fff]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
                   <button
                     onClick={() => { setEditingService(null); setSaveMessage(null); }}
-                    className="px-4 py-2 bg-white border border-[#e4e7ef] hover:bg-zinc-50 text-[#0b0f1c] rounded-lg text-sm"
+                    className="px-4 py-2 bg-white border border-[var(--line)] hover:bg-zinc-50 text-[var(--fg)] rounded-lg text-sm"
                   >
                     Cancel
                   </button>

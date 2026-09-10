@@ -259,24 +259,24 @@ export function PodDetailModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="border-b border-[#e4e7ef] px-6 py-4">
+        <div className="border-b border-[var(--line)] px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Server className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-[#0b0f1c]">
+                <h2 className="text-lg font-semibold text-[var(--fg)]">
                   {pod.metadata?.displayName || pod.podName || `Pod ${pod.subscriptionId}`}
                 </h2>
-                <p className="text-sm text-[#5b6476]">{pod.poolName}</p>
+                <p className="text-sm text-[var(--fg-muted)]">{pod.poolName}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[#f7f8fb] rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--ink)] rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-[#5b6476]" />
+              <X className="w-5 h-5 text-[var(--fg-muted)]" />
             </button>
           </div>
         </div>
@@ -285,32 +285,32 @@ export function PodDetailModal({
         <div className="p-6 space-y-6 max-h-[calc(90vh-180px)] overflow-y-auto">
           {/* Status & Basic Info */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
-              <div className="text-xs text-[#5b6476] uppercase tracking-wide mb-1">Status</div>
+            <div className="bg-[var(--ink)] rounded-xl p-4">
+              <div className="text-xs text-[var(--fg-muted)] uppercase tracking-wide mb-1">Status</div>
               <span className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(pod.status)}`}>
                 {pod.status}
               </span>
             </div>
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
-              <div className="text-xs text-[#5b6476] uppercase tracking-wide mb-1">vGPUs</div>
+            <div className="bg-[var(--ink)] rounded-xl p-4">
+              <div className="text-xs text-[var(--fg-muted)] uppercase tracking-wide mb-1">vGPUs</div>
               <div className="flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-purple-600" />
-                <span className="text-lg font-semibold text-[#0b0f1c]">{pod.vgpuCount}</span>
+                <span className="text-lg font-semibold text-[var(--fg)]">{pod.vgpuCount}</span>
               </div>
             </div>
           </div>
 
           {/* Owner Info */}
-          <div className="bg-[#f7f8fb] rounded-xl p-4">
+          <div className="bg-[var(--ink)] rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <User className="w-4 h-4 text-[#5b6476]" />
-              <span className="text-xs text-[#5b6476] uppercase tracking-wide">Owner</span>
+              <User className="w-4 h-4 text-[var(--fg-muted)]" />
+              <span className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Owner</span>
             </div>
             {pod.owner ? (
               <div>
-                <div className="font-medium text-[#0b0f1c]">{pod.owner.name}</div>
-                <div className="text-sm text-[#5b6476]">{pod.owner.email}</div>
-                <div className="text-xs text-[#9ca3af] mt-1 font-mono">{pod.owner.customerId}</div>
+                <div className="font-medium text-[var(--fg)]">{pod.owner.name}</div>
+                <div className="text-sm text-[var(--fg-muted)]">{pod.owner.email}</div>
+                <div className="text-xs text-[var(--fg-muted)] mt-1 font-mono">{pod.owner.customerId}</div>
               </div>
             ) : (
               <div className="text-sm text-orange-600 flex items-center gap-2">
@@ -322,22 +322,22 @@ export function PodDetailModal({
 
           {/* IDs */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
-              <div className="text-xs text-[#5b6476] uppercase tracking-wide mb-1">Subscription ID</div>
-              <div className="font-mono text-sm text-[#0b0f1c] break-all">{pod.subscriptionId}</div>
+            <div className="bg-[var(--ink)] rounded-xl p-4">
+              <div className="text-xs text-[var(--fg-muted)] uppercase tracking-wide mb-1">Subscription ID</div>
+              <div className="font-mono text-sm text-[var(--fg)] break-all">{pod.subscriptionId}</div>
             </div>
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
-              <div className="text-xs text-[#5b6476] uppercase tracking-wide mb-1">Team ID</div>
-              <div className="font-mono text-sm text-[#0b0f1c] break-all">{pod.teamId}</div>
+            <div className="bg-[var(--ink)] rounded-xl p-4">
+              <div className="text-xs text-[var(--fg-muted)] uppercase tracking-wide mb-1">Team ID</div>
+              <div className="font-mono text-sm text-[var(--fg)] break-all">{pod.teamId}</div>
             </div>
           </div>
 
           {/* GPU Utilization History Charts */}
-          <div className="bg-[#f7f8fb] rounded-xl p-4">
+          <div className="bg-[var(--ink)] rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs text-[#5b6476] uppercase tracking-wide">GPU Usage History</span>
+                <span className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">GPU Usage History</span>
               </div>
               <div className="flex items-center gap-2">
                 {[1, 6, 24, 168].map((hours) => (
@@ -347,7 +347,7 @@ export function PodDetailModal({
                     className={`px-2 py-1 text-xs rounded transition-colors ${
                       historyHours === hours
                         ? "bg-indigo-600 text-white"
-                        : "bg-white border border-[#e4e7ef] hover:bg-[#e4e7ef] text-[#5b6476]"
+                        : "bg-white border border-[var(--line)] hover:bg-[var(--ink-raise)] text-[var(--fg-muted)]"
                     }`}
                   >
                     {hours === 1 ? "1h" : hours === 6 ? "6h" : hours === 24 ? "24h" : "7d"}
@@ -359,18 +359,18 @@ export function PodDetailModal({
             {historyLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-                <span className="ml-2 text-sm text-[#5b6476]">Loading history...</span>
+                <span className="ml-2 text-sm text-[var(--fg-muted)]">Loading history...</span>
               </div>
             ) : history && history.dataPoints.length > 0 ? (
               <div className="space-y-4">
                 {/* GPU Utilization Chart */}
-                <div className="bg-white rounded-lg p-3 border border-[#e4e7ef]">
+                <div className="bg-white rounded-lg p-3 border border-[var(--line)]">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Cpu className="w-4 h-4 text-indigo-600" />
-                      <span className="text-xs font-medium text-[#0b0f1c]">GPU Utilization</span>
+                      <span className="text-xs font-medium text-[var(--fg)]">GPU Utilization</span>
                     </div>
-                    <div className="text-xs text-[#5b6476]">
+                    <div className="text-xs text-[var(--fg-muted)]">
                       Avg: {history.summary.avgUtilization.toFixed(1)}% | Max: {history.summary.maxUtilization.toFixed(1)}%
                     </div>
                   </div>
@@ -400,19 +400,19 @@ export function PodDetailModal({
                       </defs>
                     </svg>
                     {/* Y-axis labels */}
-                    <div className="absolute left-0 top-0 text-[10px] text-[#9ca3af]">100%</div>
-                    <div className="absolute left-0 bottom-0 text-[10px] text-[#9ca3af]">0%</div>
+                    <div className="absolute left-0 top-0 text-[10px] text-[var(--fg-muted)]">100%</div>
+                    <div className="absolute left-0 bottom-0 text-[10px] text-[var(--fg-muted)]">0%</div>
                   </div>
                 </div>
 
                 {/* Memory Usage Chart */}
-                <div className="bg-white rounded-lg p-3 border border-[#e4e7ef]">
+                <div className="bg-white rounded-lg p-3 border border-[var(--line)]">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <HardDrive className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs font-medium text-[#0b0f1c]">VRAM Usage</span>
+                      <span className="text-xs font-medium text-[var(--fg)]">VRAM Usage</span>
                     </div>
-                    <div className="text-xs text-[#5b6476]">
+                    <div className="text-xs text-[var(--fg-muted)]">
                       Avg: {history.summary.avgMemoryPercent.toFixed(1)}%
                     </div>
                   </div>
@@ -444,13 +444,13 @@ export function PodDetailModal({
                 {/* Temperature & Power Row */}
                 <div className="grid grid-cols-2 gap-3">
                   {/* Temperature Chart */}
-                  <div className="bg-white rounded-lg p-3 border border-[#e4e7ef]">
+                  <div className="bg-white rounded-lg p-3 border border-[var(--line)]">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Thermometer className="w-4 h-4 text-orange-500" />
-                        <span className="text-xs font-medium text-[#0b0f1c]">Temperature</span>
+                        <span className="text-xs font-medium text-[var(--fg)]">Temperature</span>
                       </div>
-                      <div className="text-xs text-[#5b6476]">
+                      <div className="text-xs text-[var(--fg-muted)]">
                         Avg: {history.summary.avgTemperature.toFixed(0)}C
                       </div>
                     </div>
@@ -477,13 +477,13 @@ export function PodDetailModal({
                   </div>
 
                   {/* Power Draw Chart */}
-                  <div className="bg-white rounded-lg p-3 border border-[#e4e7ef]">
+                  <div className="bg-white rounded-lg p-3 border border-[var(--line)]">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Zap className="w-4 h-4 text-yellow-500" />
-                        <span className="text-xs font-medium text-[#0b0f1c]">Power Draw</span>
+                        <span className="text-xs font-medium text-[var(--fg)]">Power Draw</span>
                       </div>
-                      <div className="text-xs text-[#5b6476]">
+                      <div className="text-xs text-[var(--fg-muted)]">
                         {history.dataPoints.length > 0
                           ? `${Math.round(
                               history.dataPoints.reduce((s, d) => s + d.powerDraw, 0) /
@@ -528,7 +528,7 @@ export function PodDetailModal({
                 </div>
 
                 {/* Time range indicator */}
-                <div className="flex justify-between text-[10px] text-[#9ca3af] px-1">
+                <div className="flex justify-between text-[10px] text-[var(--fg-muted)] px-1">
                   <span>
                     {new Date(history.dataPoints[0]?.timestamp || "").toLocaleString(undefined, {
                       month: "short",
@@ -551,7 +551,7 @@ export function PodDetailModal({
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 text-sm text-[#5b6476]">
+              <div className="text-center py-6 text-sm text-[var(--fg-muted)]">
                 No historical data available for this pod yet.
                 <br />
                 <span className="text-xs">Data is collected every 3 minutes.</span>
@@ -560,31 +560,31 @@ export function PodDetailModal({
           </div>
 
           {/* Timestamps */}
-          <div className="bg-[#f7f8fb] rounded-xl p-4">
+          <div className="bg-[var(--ink)] rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-[#5b6476]" />
-              <span className="text-xs text-[#5b6476] uppercase tracking-wide">Deployed</span>
+              <Clock className="w-4 h-4 text-[var(--fg-muted)]" />
+              <span className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Deployed</span>
             </div>
-            <div className="text-sm text-[#0b0f1c]">{formatDate(pod.metadata?.deployTime)}</div>
+            <div className="text-sm text-[var(--fg)]">{formatDate(pod.metadata?.deployTime)}</div>
           </div>
 
           {/* Metrics */}
           {(pod.metrics?.tflopsUsage !== undefined || pod.metrics?.vramUsage !== undefined) && (
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
-              <div className="text-xs text-[#5b6476] uppercase tracking-wide mb-3">Metrics</div>
+            <div className="bg-[var(--ink)] rounded-xl p-4">
+              <div className="text-xs text-[var(--fg-muted)] uppercase tracking-wide mb-3">Metrics</div>
               <div className="grid grid-cols-2 gap-4">
                 {pod.metrics?.tflopsUsage !== undefined && (
                   <div>
-                    <div className="text-xs text-[#5b6476]">TFLOPS Usage</div>
-                    <div className="text-lg font-semibold text-[#0b0f1c]">
+                    <div className="text-xs text-[var(--fg-muted)]">TFLOPS Usage</div>
+                    <div className="text-lg font-semibold text-[var(--fg)]">
                       {pod.metrics.tflopsUsage.toFixed(2)}
                     </div>
                   </div>
                 )}
                 {pod.metrics?.vramUsage !== undefined && (
                   <div>
-                    <div className="text-xs text-[#5b6476]">VRAM Usage</div>
-                    <div className="text-lg font-semibold text-[#0b0f1c]">
+                    <div className="text-xs text-[var(--fg-muted)]">VRAM Usage</div>
+                    <div className="text-lg font-semibold text-[var(--fg)]">
                       {(pod.metrics.vramUsage / 1024).toFixed(1)} GB
                     </div>
                   </div>
@@ -595,15 +595,15 @@ export function PodDetailModal({
 
           {/* SSH Connection */}
           {pod.ssh && (
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
+            <div className="bg-[var(--ink)] rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-[#5b6476]" />
-                  <span className="text-xs text-[#5b6476] uppercase tracking-wide">SSH Connection</span>
+                  <Terminal className="w-4 h-4 text-[var(--fg-muted)]" />
+                  <span className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">SSH Connection</span>
                 </div>
                 <button
                   onClick={copySSH}
-                  className="flex items-center gap-1 px-3 py-1 text-xs bg-white border border-[#e4e7ef] rounded-lg hover:bg-[#e4e7ef] transition-colors"
+                  className="flex items-center gap-1 px-3 py-1 text-xs bg-white border border-[var(--line)] rounded-lg hover:bg-[var(--ink-raise)] transition-colors"
                 >
                   {copiedSSH ? (
                     <>
@@ -618,7 +618,7 @@ export function PodDetailModal({
                   )}
                 </button>
               </div>
-              <div className="font-mono text-xs text-[#0b0f1c] bg-white p-3 rounded-lg border border-[#e4e7ef] break-all">
+              <div className="font-mono text-xs text-[var(--fg)] bg-white p-3 rounded-lg border border-[var(--line)] break-all">
                 {getSSHCommand()}
               </div>
             </div>
@@ -626,9 +626,9 @@ export function PodDetailModal({
 
           {/* Notes */}
           {pod.metadata?.notes && (
-            <div className="bg-[#f7f8fb] rounded-xl p-4">
-              <div className="text-xs text-[#5b6476] uppercase tracking-wide mb-2">Notes</div>
-              <div className="text-sm text-[#0b0f1c]">{pod.metadata.notes}</div>
+            <div className="bg-[var(--ink)] rounded-xl p-4">
+              <div className="text-xs text-[var(--fg-muted)] uppercase tracking-wide mb-2">Notes</div>
+              <div className="text-sm text-[var(--fg)]">{pod.metadata.notes}</div>
             </div>
           )}
 
@@ -654,7 +654,7 @@ export function PodDetailModal({
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmTerminate(false)}
-                  className="px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg hover:bg-[#f7f8fb] transition-colors"
+                  className="px-4 py-2 bg-white border border-[var(--line)] rounded-lg hover:bg-[var(--ink)] transition-colors"
                 >
                   Cancel
                 </button>
@@ -676,9 +676,9 @@ export function PodDetailModal({
         </div>
 
         {/* Actions Footer */}
-        <div className="border-t border-[#e4e7ef] px-6 py-4 bg-[#f7f8fb]">
+        <div className="border-t border-[var(--line)] px-6 py-4 bg-[var(--ink)]">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-[#5b6476]">
+            <div className="text-xs text-[var(--fg-muted)]">
               Pool ID: {pod.poolId}
             </div>
             <div className="flex gap-2">

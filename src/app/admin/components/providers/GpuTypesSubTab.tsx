@@ -53,28 +53,28 @@ export function GpuTypesSubTab({
       <div className="mb-4">
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-[#1a4fff] text-white hover:bg-[#1238c9] rounded-lg font-medium text-sm"
+          className="px-4 py-2 bg-[var(--acid)] text-white hover:bg-[var(--acid-deep)] rounded-lg font-medium text-sm"
         >
           + Add GPU Type
         </button>
       </div>
 
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#f7f8fb] border-b border-[#e4e7ef]">
+          <thead className="bg-[var(--ink)] border-b border-[var(--line)]">
             <tr>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">GPU Type</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Provider Rate</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Customer Rate</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Payout Model</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Status</th>
-              <th className="text-right px-4 py-3 text-sm font-medium text-[#5b6476]">Actions</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">GPU Type</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Provider Rate</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Customer Rate</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Payout Model</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Status</th>
+              <th className="text-right px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e4e7ef]">
+          <tbody className="divide-y divide-[var(--line)]">
             {gpuTypes.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-[#5b6476]">
+                <td colSpan={6} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                   No GPU types configured
                 </td>
               </tr>
@@ -82,13 +82,13 @@ export function GpuTypesSubTab({
               gpuTypes.map((gpu) => (
                 <tr key={gpu.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-[#0b0f1c]">{gpu.name}</div>
-                    <div className="text-xs text-[#5b6476]">{gpu.shortName} • {gpu.manufacturer}</div>
+                    <div className="font-medium text-[var(--fg)]">{gpu.name}</div>
+                    <div className="text-xs text-[var(--fg-muted)]">{gpu.shortName} • {gpu.manufacturer}</div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#0b0f1c]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg)]">
                     ${(gpu.defaultProviderRateCents / 100).toFixed(2)}/hr
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#0b0f1c]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg)]">
                     ${(gpu.defaultCustomerRateCents / 100).toFixed(2)}/hr
                   </td>
                   <td className="px-4 py-3">
@@ -96,7 +96,7 @@ export function GpuTypesSubTab({
                       {getPayoutModelLabel(gpu.payoutModelChoice)}
                     </span>
                     {gpu.payoutModelChoice !== "fixed_only" && gpu.defaultRevenueSharePercent && (
-                      <div className="text-xs text-[#5b6476] mt-1">
+                      <div className="text-xs text-[var(--fg-muted)] mt-1">
                         {gpu.defaultRevenueSharePercent}% rev share
                       </div>
                     )}
@@ -115,7 +115,7 @@ export function GpuTypesSubTab({
                   <td className="px-4 py-3 text-right space-x-2">
                     <button
                       onClick={() => setEditingGpu(gpu)}
-                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-[#0b0f1c] rounded"
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-[var(--fg)] rounded"
                     >
                       Edit
                     </button>
@@ -222,41 +222,41 @@ function GpuTypeModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-[#0b0f1c] mb-4">
+        <h2 className="text-xl font-bold text-[var(--fg)] mb-4">
           {gpuType ? "Edit GPU Type" : "Add GPU Type"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#5b6476] mb-1">Name</label>
+            <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">Name</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
               placeholder="NVIDIA H100 80GB"
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">Short Name</label>
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">Short Name</label>
               <input
                 type="text"
                 value={form.shortName}
                 onChange={(e) => setForm({ ...form, shortName: e.target.value })}
                 required
                 placeholder="H100"
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">Manufacturer</label>
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">Manufacturer</label>
               <select
                 value={form.manufacturer}
                 onChange={(e) => setForm({ ...form, manufacturer: e.target.value })}
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               >
                 <option value="NVIDIA">NVIDIA</option>
                 <option value="AMD">AMD</option>
@@ -266,7 +266,7 @@ function GpuTypeModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#5b6476] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">
               Match Patterns (comma-separated)
             </label>
             <input
@@ -275,16 +275,16 @@ function GpuTypeModal({
               onChange={(e) => setForm({ ...form, matchPatterns: e.target.value })}
               required
               placeholder="H100, A100"
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
             />
-            <p className="text-xs text-[#5b6476] mt-1">
+            <p className="text-xs text-[var(--fg-muted)] mt-1">
               Used to match GPU names from validation
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">
                 Provider Rate ($/hr)
               </label>
               <input
@@ -296,11 +296,11 @@ function GpuTypeModal({
                 step="0.01"
                 min="0"
                 required
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">
                 Customer Rate ($/hr)
               </label>
               <input
@@ -312,19 +312,19 @@ function GpuTypeModal({
                 step="0.01"
                 min="0"
                 required
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#5b6476] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">
               Payout Model Option
             </label>
             <select
               value={form.payoutModelChoice}
               onChange={(e) => setForm({ ...form, payoutModelChoice: e.target.value })}
-              className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
             >
               <option value="fixed_only">Fixed Rate Only (providers must use $/hr)</option>
               <option value="revenue_share_only">Revenue Share Only (providers must use %)</option>
@@ -334,7 +334,7 @@ function GpuTypeModal({
 
           {form.payoutModelChoice !== "fixed_only" && (
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">
                 Default Revenue Share %
               </label>
               <input
@@ -345,9 +345,9 @@ function GpuTypeModal({
                 }
                 min="0"
                 max="100"
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               />
-              <p className="text-xs text-[#5b6476] mt-1">
+              <p className="text-xs text-[var(--fg-muted)] mt-1">
                 Percentage of revenue paid to provider
               </p>
             </div>
@@ -355,23 +355,23 @@ function GpuTypeModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">Min VRAM (GB)</label>
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">Min VRAM (GB)</label>
               <input
                 type="number"
                 value={form.minVramGb}
                 onChange={(e) => setForm({ ...form, minVramGb: parseInt(e.target.value) || 0 })}
                 min="0"
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#5b6476] mb-1">Display Order</label>
+              <label className="block text-sm font-medium text-[var(--fg-muted)] mb-1">Display Order</label>
               <input
                 type="number"
                 value={form.displayOrder}
                 onChange={(e) => setForm({ ...form, displayOrder: parseInt(e.target.value) || 0 })}
                 min="0"
-                className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
               />
             </div>
           </div>
@@ -380,14 +380,14 @@ function GpuTypeModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#e4e7ef] rounded-lg text-[#5b6476] hover:bg-gray-50"
+              className="px-4 py-2 border border-[var(--line)] rounded-lg text-[var(--fg-muted)] hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-[#1a4fff] text-white rounded-lg hover:bg-[#1238c9] disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid-deep)] disabled:opacity-50"
             >
               {saving ? "Saving..." : gpuType ? "Update" : "Create"}
             </button>

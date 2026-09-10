@@ -51,11 +51,11 @@ export function AdminsTab({
           placeholder="Add admin email..."
           value={newAdminEmail}
           onChange={(e) => onNewAdminEmailChange(e.target.value)}
-          className="flex-1 px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+          className="flex-1 px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-[#1a4fff] text-white hover:bg-[#1238c9] rounded-lg font-medium"
+          className="px-4 py-2 bg-[var(--acid)] text-white hover:bg-[var(--acid-deep)] rounded-lg font-medium"
         >
           Add Admin
         </button>
@@ -67,7 +67,7 @@ export function AdminsTab({
             Email is not configured. Share this setup URL with the new admin:
           </p>
           <div className="flex gap-2 items-center">
-            <code className="flex-1 px-3 py-2 bg-white border border-blue-200 rounded text-sm text-[#0b0f1c] truncate">
+            <code className="flex-1 px-3 py-2 bg-white border border-blue-200 rounded text-sm text-[var(--fg)] truncate">
               {window.location.origin}{setupUrl}
             </code>
             <button
@@ -82,29 +82,29 @@ export function AdminsTab({
         </div>
       )}
 
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#f7f8fb] border-b border-[#e4e7ef]">
+          <thead className="bg-[var(--ink)] border-b border-[var(--line)]">
             <tr>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Email</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Added</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Added By</th>
-              <th className="text-right px-4 py-3 text-sm font-medium text-[#5b6476]">Actions</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Email</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Added</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Added By</th>
+              <th className="text-right px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e4e7ef]">
+          <tbody className="divide-y divide-[var(--line)]">
             {admins.map((admin) => (
               <tr key={admin.email} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-[#0b0f1c]">{admin.email}</td>
-                <td className="px-4 py-3 text-sm text-[#5b6476]">
+                <td className="px-4 py-3 font-medium text-[var(--fg)]">{admin.email}</td>
+                <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                   {new Date(admin.addedAt).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-3 text-sm text-[#5b6476]">{admin.addedBy}</td>
+                <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">{admin.addedBy}</td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <button
                     onClick={() => onResendInvite(admin.email)}
                     disabled={actionLoading === admin.email}
-                    className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-[#0b0f1c] rounded disabled:opacity-50"
+                    className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-[var(--fg)] rounded disabled:opacity-50"
                   >
                     {actionLoading === admin.email ? "Sending..." : "Resend Invite"}
                   </button>

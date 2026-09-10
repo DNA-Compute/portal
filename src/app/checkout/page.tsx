@@ -189,7 +189,7 @@ function CheckoutContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8fb] text-[#0b0f1c] flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-[var(--ink)] text-[var(--fg)] flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-8 text-center">
         <Link href="/" className="inline-flex items-center justify-center gap-2 mb-6">
           <BrandLogo
@@ -204,21 +204,21 @@ function CheckoutContent() {
         <h1 className="text-2xl font-bold mb-2">
           {selectedProduct?.billingType === "monthly" ? "Subscribe" : "Add Funds"}
         </h1>
-        <p className="text-[#5b6476] mb-4">
+        <p className="text-[var(--fg-muted)] mb-4">
           {selectedProduct?.billingType === "monthly"
             ? "Start your monthly GPU subscription — cancel anytime."
             : "Select your GPU and make an initial deposit to start using cloud GPUs."}
         </p>
         {!IS_OSS && (
           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 mb-6 text-sm text-zinc-600">
-            New here? <Link href={`/account${initialEmail ? `?email=${encodeURIComponent(initialEmail)}` : ""}${initialProductId ? `${initialEmail ? "&" : "?"}gpu=${encodeURIComponent(initialProductId)}` : ""}`} className="text-[#1a4fff] font-medium hover:underline">Create a free account</Link> — no credit card required.
+            New here? <Link href={`/account${initialEmail ? `?email=${encodeURIComponent(initialEmail)}` : ""}${initialProductId ? `${initialEmail ? "&" : "?"}gpu=${encodeURIComponent(initialProductId)}` : ""}`} className="text-[var(--acid)] font-medium hover:underline">Create a free account</Link> — no credit card required.
           </div>
         )}
 
         {/* Product Selection */}
         {productsLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin h-6 w-6 border-2 border-[#1a4fff] border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-6 w-6 border-2 border-[var(--acid)] border-t-transparent rounded-full"></div>
           </div>
         ) : products.length === 0 ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -232,8 +232,8 @@ function CheckoutContent() {
                   onClick={() => setSelectedProduct(product)}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all relative ${
                     selectedProduct?.id === product.id
-                      ? "border-[#1a4fff] bg-blue-50"
-                      : "border-[#e4e7ef] hover:border-[#1a4fff]/50"
+                      ? "border-[var(--acid)] bg-blue-50"
+                      : "border-[var(--line)] hover:border-[var(--acid)]/50"
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -241,15 +241,15 @@ function CheckoutContent() {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">{product.name}</span>
                         {product.badgeText && (
-                          <span className="text-xs bg-[#1a4fff] text-white px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-[var(--acid)] text-white px-2 py-0.5 rounded-full">
                             {product.badgeText}
                           </span>
                         )}
                       </div>
                       {product.description && (
-                        <p className="text-sm text-[#5b6476] mt-1">{product.description}</p>
+                        <p className="text-sm text-[var(--fg-muted)] mt-1">{product.description}</p>
                       )}
-                      <div className="flex gap-3 mt-2 text-xs text-[#5b6476]">
+                      <div className="flex gap-3 mt-2 text-xs text-[var(--fg-muted)]">
                         {product.vramGb && <span>{product.vramGb} GB VRAM</span>}
                         {product.cudaCores && <span>{product.cudaCores.toLocaleString()} CUDA Cores</span>}
                       </div>
@@ -257,17 +257,17 @@ function CheckoutContent() {
                     <div className="text-right">
                       {product.billingType === "monthly" && product.pricePerMonthCents ? (
                         <>
-                          <span className="font-bold text-[#1a4fff]">
+                          <span className="font-bold text-[var(--acid)]">
                             ${(product.pricePerMonthCents / 100).toFixed(0)}
                           </span>
-                          <span className="text-sm text-[#5b6476]">/month</span>
+                          <span className="text-sm text-[var(--fg-muted)]">/month</span>
                         </>
                       ) : (
                         <>
-                          <span className="font-bold text-[#1a4fff]">
+                          <span className="font-bold text-[var(--acid)]">
                             ${(product.pricePerHourCents / 100).toFixed(2)}
                           </span>
-                          <span className="text-sm text-[#5b6476]">/hour</span>
+                          <span className="text-sm text-[var(--fg-muted)]">/hour</span>
                         </>
                       )}
                     </div>
@@ -278,29 +278,29 @@ function CheckoutContent() {
         )}
 
         {selectedProduct && (
-          <div className="bg-[#f7f8fb] rounded-lg p-4 mb-6">
+          <div className="bg-[var(--ink)] rounded-lg p-4 mb-6">
             {selectedProduct.billingType === "monthly" && selectedProduct.pricePerMonthCents ? (
               <>
-                <p className="text-sm text-[#5b6476] mb-1">Monthly subscription:</p>
-                <p className="text-[#1a4fff] font-bold text-xl">
+                <p className="text-sm text-[var(--fg-muted)] mb-1">Monthly subscription:</p>
+                <p className="text-[var(--acid)] font-bold text-xl">
                   ${(selectedProduct.pricePerMonthCents / 100).toFixed(0)}/month
                 </p>
-                <p className="text-xs text-[#5b6476] mt-1">
+                <p className="text-xs text-[var(--fg-muted)] mt-1">
                   Billed monthly. Cancel anytime from your dashboard.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-sm text-[#5b6476] mb-1">
+                <p className="text-sm text-[var(--fg-muted)] mb-1">
                   {validatedVoucher ? "Amount to pay:" : "Initial deposit:"}
                 </p>
                 {validatedVoucher ? (
                   <>
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-[#5b6476] line-through text-lg">
+                      <span className="text-[var(--fg-muted)] line-through text-lg">
                         $50
                       </span>
-                      <span className="text-[#1a4fff] font-bold text-xl">
+                      <span className="text-[var(--acid)] font-bold text-xl">
                         {getDepositAmount() === 0 ? "Free!" : `$${getDepositAmount().toFixed(0)}`}
                       </span>
                     </div>
@@ -309,9 +309,9 @@ function CheckoutContent() {
                     </p>
                   </>
                 ) : (
-                  <p className="text-[#1a4fff] font-bold text-xl">${getDepositAmount().toFixed(0)}</p>
+                  <p className="text-[var(--acid)] font-bold text-xl">${getDepositAmount().toFixed(0)}</p>
                 )}
-                <p className="text-xs text-[#5b6476] mt-1">
+                <p className="text-xs text-[var(--fg-muted)] mt-1">
                   Pay-as-you-go at ${(selectedProduct.pricePerHourCents / 100).toFixed(2)}/hour
                 </p>
               </>
@@ -326,7 +326,7 @@ function CheckoutContent() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={status === "loading"}
-            className="w-full px-4 py-3 bg-[#f7f8fb] border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder:text-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff] focus:border-transparent transition-all disabled:opacity-50"
+            className="w-full px-4 py-3 bg-[var(--ink)] border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--fg-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)] focus:border-transparent transition-all disabled:opacity-50"
           />
 
           {/* Voucher code - only for hourly products */}
@@ -336,7 +336,7 @@ function CheckoutContent() {
                 <button
                   type="button"
                   onClick={() => setShowVoucherInput(true)}
-                  className="text-xs text-[#5b6476] hover:text-[#1a4fff] transition-colors"
+                  className="text-xs text-[var(--fg-muted)] hover:text-[var(--acid)] transition-colors"
                 >
                   Have a voucher code?
                 </button>
@@ -351,13 +351,13 @@ function CheckoutContent() {
                         onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                         disabled={status === "loading"}
                         autoFocus
-                        className="flex-1 px-3 py-2 text-sm bg-[#f7f8fb] border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder:text-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff] focus:border-transparent transition-all disabled:opacity-50 uppercase"
+                        className="flex-1 px-3 py-2 text-sm bg-[var(--ink)] border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--fg-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)] focus:border-transparent transition-all disabled:opacity-50 uppercase"
                       />
                       <button
                         type="button"
                         onClick={() => validateVoucher(voucherCode)}
                         disabled={!voucherCode.trim() || voucherValidating || status === "loading"}
-                        className="px-3 py-2 text-sm bg-[#e4e7ef] hover:bg-[#d1d5e0] disabled:opacity-50 text-[#5b6476] font-medium rounded-lg transition-colors"
+                        className="px-3 py-2 text-sm bg-[var(--ink-raise)] hover:bg-[var(--ink-raise)] disabled:opacity-50 text-[var(--fg-muted)] font-medium rounded-lg transition-colors"
                       >
                         {voucherValidating ? "..." : "Apply"}
                       </button>
@@ -391,20 +391,20 @@ function CheckoutContent() {
               type="checkbox"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-1 w-4 h-4 rounded border-[#e4e7ef] text-[#1a4fff] focus:ring-[#1a4fff]"
+              className="mt-1 w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
             />
-            <span className="text-sm text-[#5b6476]">
+            <span className="text-sm text-[var(--fg-muted)]">
               I agree to the{" "}
-              <a href="/terms" target="_blank" className="text-[#1a4fff] hover:underline">Legal Policies</a>
+              <a href="/terms" target="_blank" className="text-[var(--acid)] hover:underline">Legal Policies</a>
               {" "}and{" "}
-              <a href="/privacy" target="_blank" className="text-[#1a4fff] hover:underline">Privacy Policies</a>
+              <a href="/privacy" target="_blank" className="text-[var(--acid)] hover:underline">Privacy Policies</a>
             </span>
           </label>
 
           <button
             type="submit"
             disabled={status === "loading" || !selectedProduct || !termsAccepted}
-            className="w-full px-6 py-3 bg-[#1a4fff] hover:bg-[#1238c9] disabled:bg-[#e4e7ef] text-white font-medium rounded-lg transition-colors"
+            className="w-full px-6 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] disabled:bg-[var(--ink-raise)] text-white font-medium rounded-lg transition-colors"
           >
             {status === "loading" ? (
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -421,13 +421,13 @@ function CheckoutContent() {
           )}
         </form>
 
-        <p className="text-xs text-[#5b6476] mt-6">
+        <p className="text-xs text-[var(--fg-muted)] mt-6">
           {selectedProduct?.billingType === "monthly"
             ? "Cancel anytime from your dashboard. No long-term commitment."
             : "Cancel anytime. Unused balance can be withdrawn."}
         </p>
 
-        <Link href="/" className="inline-block mt-4 text-sm text-[#5b6476] hover:text-[#0b0f1c] transition-colors">
+        <Link href="/" className="inline-block mt-4 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">
           &larr; Back to home
         </Link>
       </div>
@@ -438,8 +438,8 @@ function CheckoutContent() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f7f8fb] flex items-center justify-center">
-        <div className="animate-spin h-5 w-5 border-2 border-[#1a4fff] border-t-transparent rounded-full"></div>
+      <div className="min-h-screen bg-[var(--ink)] flex items-center justify-center">
+        <div className="animate-spin h-5 w-5 border-2 border-[var(--acid)] border-t-transparent rounded-full"></div>
       </div>
     }>
       <CheckoutContent />

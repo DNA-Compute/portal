@@ -288,7 +288,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
             <button
               onClick={applyCode}
               disabled={applying || !inputCode.trim()}
-              className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-xl transition-colors text-sm font-medium"
+              className="px-4 py-2.5 bg-zinc-50 hover:bg-zinc-100 disabled:bg-zinc-400 text-white rounded-xl transition-colors text-sm font-medium"
             >
               {applying ? "Applying..." : "Apply"}
             </button>

@@ -184,7 +184,7 @@ export function NodeMonitoringTab() {
     return (
       <div className="flex items-center justify-center py-12">
         <RefreshCw className="w-8 h-8 text-teal-500 animate-spin" />
-        <span className="ml-3 text-[#5b6476]">Loading node data...</span>
+        <span className="ml-3 text-[var(--fg-muted)]">Loading node data...</span>
       </div>
     );
   }
@@ -237,8 +237,8 @@ export function NodeMonitoringTab() {
             <Server className="w-5 h-5 text-teal-600" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-[#0b0f1c]">Node Monitoring</h2>
-            <p className="text-sm text-[#5b6476]">
+            <h2 className="text-lg font-semibold text-[var(--fg)]">Node Monitoring</h2>
+            <p className="text-sm text-[var(--fg-muted)]">
               Real-time view of all GPU nodes and their workloads
             </p>
           </div>
@@ -256,35 +256,35 @@ export function NodeMonitoringTab() {
       {/* Global Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Providers</p>
-          <p className="text-2xl font-bold text-[#0b0f1c]">{data.summary.totalProviders}</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Providers</p>
+          <p className="text-2xl font-bold text-[var(--fg)]">{data.summary.totalProviders}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Nodes</p>
-          <p className="text-2xl font-bold text-[#0b0f1c]">{data.summary.totalNodes}</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Nodes</p>
+          <p className="text-2xl font-bold text-[var(--fg)]">{data.summary.totalNodes}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Total GPUs</p>
-          <p className="text-2xl font-bold text-[#0b0f1c]">{data.summary.totalGpus}</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Total GPUs</p>
+          <p className="text-2xl font-bold text-[var(--fg)]">{data.summary.totalGpus}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Allocated</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Allocated</p>
           <p className="text-2xl font-bold text-blue-600">{data.summary.allocatedGpus}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Available</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Available</p>
           <p className="text-2xl font-bold text-emerald-600">{data.summary.availableGpus}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Utilization</p>
-          <p className="text-2xl font-bold text-[#0b0f1c]">{data.summary.utilizationPercent}%</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Utilization</p>
+          <p className="text-2xl font-bold text-[var(--fg)]">{data.summary.utilizationPercent}%</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Active Pods</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Active Pods</p>
           <p className="text-2xl font-bold text-purple-600">{data.summary.activePods}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-[#5b6476] uppercase tracking-wide">Total vGPUs</p>
+          <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wide">Total vGPUs</p>
           <p className="text-2xl font-bold text-indigo-600">{data.summary.totalVgpus}</p>
         </div>
       </div>
@@ -308,8 +308,8 @@ export function NodeMonitoringTab() {
                 <div className="flex items-center gap-2">
                   <Building className="w-5 h-5 text-gray-400" />
                   <div>
-                    <h3 className="font-semibold text-[#0b0f1c]">{provider.name}</h3>
-                    <p className="text-sm text-[#5b6476]">{provider.email}</p>
+                    <h3 className="font-semibold text-[var(--fg)]">{provider.name}</h3>
+                    <p className="text-sm text-[var(--fg-muted)]">{provider.email}</p>
                   </div>
                 </div>
                 <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
@@ -318,21 +318,21 @@ export function NodeMonitoringTab() {
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-sm">
                 <div>
-                  <p className="text-lg font-bold text-[#0b0f1c]">{provider.nodeCount}</p>
-                  <p className="text-xs text-[#5b6476]">Nodes</p>
+                  <p className="text-lg font-bold text-[var(--fg)]">{provider.nodeCount}</p>
+                  <p className="text-xs text-[var(--fg-muted)]">Nodes</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-[#0b0f1c]">{provider.totalGpus}</p>
-                  <p className="text-xs text-[#5b6476]">GPUs</p>
+                  <p className="text-lg font-bold text-[var(--fg)]">{provider.totalGpus}</p>
+                  <p className="text-xs text-[var(--fg-muted)]">GPUs</p>
                 </div>
                 <div>
                   <p className="text-lg font-bold text-purple-600">{provider.activePods}</p>
-                  <p className="text-xs text-[#5b6476]">Pods</p>
+                  <p className="text-xs text-[var(--fg-muted)]">Pods</p>
                 </div>
               </div>
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-[#5b6476]">Utilization</span>
+                  <span className="text-xs text-[var(--fg-muted)]">Utilization</span>
                   <span className="text-xs font-medium">{provider.utilizationPercent}%</span>
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -350,7 +350,7 @@ export function NodeMonitoringTab() {
       {/* Filter indicator */}
       {selectedProvider && (
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-[#5b6476]">
+          <span className="text-[var(--fg-muted)]">
             Showing nodes from:{" "}
             <strong>{data.providers.find((p) => p.id === selectedProvider)?.name}</strong>
           </span>
@@ -367,7 +367,7 @@ export function NodeMonitoringTab() {
       {ownedNodes.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 className="font-semibold text-[#0b0f1c]">Provider Nodes ({ownedNodes.length})</h3>
+            <h3 className="font-semibold text-[var(--fg)]">Provider Nodes ({ownedNodes.length})</h3>
           </div>
           <div className="divide-y divide-gray-100">
             {ownedNodes.map((node) => (
@@ -452,8 +452,8 @@ function NodeRow({
             <div className="flex items-center gap-2">
               {getStatusIcon(node.status)}
               <div>
-                <p className="font-medium text-[#0b0f1c]">{node.hostname}</p>
-                <p className="text-sm text-[#5b6476]">{node.ip}</p>
+                <p className="font-medium text-[var(--fg)]">{node.hostname}</p>
+                <p className="text-sm text-[var(--fg-muted)]">{node.ip}</p>
               </div>
             </div>
             <span
@@ -463,16 +463,16 @@ function NodeRow({
             >
               {node.status}
             </span>
-            <span className="text-xs text-[#5b6476]">{node.providerName}</span>
+            <span className="text-xs text-[var(--fg-muted)]">{node.providerName}</span>
           </div>
 
           <div className="flex items-center gap-6">
             {/* GPU Info */}
             <div className="text-right">
-              <p className="text-sm font-medium text-[#0b0f1c]">
+              <p className="text-sm font-medium text-[var(--fg)]">
                 {node.gpuModel || "Unknown GPU"}
               </p>
-              <p className="text-xs text-[#5b6476]">
+              <p className="text-xs text-[var(--fg-muted)]">
                 {node.gpuCount} GPU{node.gpuCount !== 1 ? "s" : ""}
               </p>
             </div>
@@ -480,7 +480,7 @@ function NodeRow({
             {/* Utilization Bar */}
             <div className="w-32">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-[#5b6476]">Utilization</span>
+                <span className="text-xs text-[var(--fg-muted)]">Utilization</span>
                 <span className="text-xs font-medium">{node.summary.utilizationPercent}%</span>
               </div>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -494,13 +494,13 @@ function NodeRow({
             {/* Pod Count */}
             <div className="text-center min-w-[60px]">
               <p className="text-lg font-bold text-purple-600">{node.summary.activePods}</p>
-              <p className="text-xs text-[#5b6476]">Pods</p>
+              <p className="text-xs text-[var(--fg-muted)]">Pods</p>
             </div>
 
             {/* vGPU Count */}
             <div className="text-center min-w-[60px]">
               <p className="text-lg font-bold text-indigo-600">{node.summary.totalVgpus}</p>
-              <p className="text-xs text-[#5b6476]">vGPUs</p>
+              <p className="text-xs text-[var(--fg-muted)]">vGPUs</p>
             </div>
           </div>
         </div>
@@ -516,10 +516,10 @@ function NodeRow({
                 <div className="flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-gray-400" />
                   <div>
-                    <p className="text-xs text-[#5b6476]">CPU</p>
+                    <p className="text-xs text-[var(--fg-muted)]">CPU</p>
                     <p className="text-sm font-medium">{node.hardware.cpuModel}</p>
                     {node.hardware.cpuCores && (
-                      <p className="text-xs text-[#5b6476]">{node.hardware.cpuCores} cores</p>
+                      <p className="text-xs text-[var(--fg-muted)]">{node.hardware.cpuCores} cores</p>
                     )}
                   </div>
                 </div>
@@ -528,7 +528,7 @@ function NodeRow({
                 <div className="flex items-center gap-2">
                   <MemoryStick className="w-4 h-4 text-gray-400" />
                   <div>
-                    <p className="text-xs text-[#5b6476]">Memory</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Memory</p>
                     <p className="text-sm font-medium">{node.hardware.memoryGb} GB</p>
                   </div>
                 </div>
@@ -537,7 +537,7 @@ function NodeRow({
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4 text-gray-400" />
                   <div>
-                    <p className="text-xs text-[#5b6476]">Storage</p>
+                    <p className="text-xs text-[var(--fg-muted)]">Storage</p>
                     <p className="text-sm font-medium">{node.hardware.storageGb} GB</p>
                   </div>
                 </div>
@@ -546,7 +546,7 @@ function NodeRow({
                 <div className="flex items-center gap-2">
                   <Server className="w-4 h-4 text-gray-400" />
                   <div>
-                    <p className="text-xs text-[#5b6476]">GPUaaS</p>
+                    <p className="text-xs text-[var(--fg-muted)]">GPUaaS</p>
                     <p className="text-sm font-medium">
                       Cluster {node.gpuaasClusterId}
                       {node.gpuaasNodeId && ` / Node ${node.gpuaasNodeId}`}
@@ -559,7 +559,7 @@ function NodeRow({
             {/* Pools */}
             {node.pools.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-[#0b0f1c] mb-2">
+                <h4 className="text-sm font-semibold text-[var(--fg)] mb-2">
                   Pools ({node.pools.length})
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -570,7 +570,7 @@ function NodeRow({
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-sm">{pool.name}</span>
-                        <span className="text-xs text-[#5b6476]">
+                        <span className="text-xs text-[var(--fg-muted)]">
                           {pool.allocatedGpus}/{pool.totalGpus} GPUs
                         </span>
                       </div>
@@ -589,7 +589,7 @@ function NodeRow({
             {/* Pods Table */}
             {node.pods.length > 0 ? (
               <div>
-                <h4 className="text-sm font-semibold text-[#0b0f1c] mb-2 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-[var(--fg)] mb-2 flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   Running Pods ({node.pods.length})
                 </h4>
@@ -597,16 +597,16 @@ function NodeRow({
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-[#5b6476] uppercase">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                           Pod Name
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-[#5b6476] uppercase">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                           Status
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-[#5b6476] uppercase">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                           vGPUs
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-[#5b6476] uppercase">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-[var(--fg-muted)] uppercase">
                           Customer
                         </th>
                       </tr>
@@ -614,7 +614,7 @@ function NodeRow({
                     <tbody className="divide-y divide-gray-100">
                       {node.pods.map((pod, idx) => (
                         <tr key={`${pod.subscriptionId}-${idx}`}>
-                          <td className="px-4 py-2 font-medium text-[#0b0f1c]">{pod.podName}</td>
+                          <td className="px-4 py-2 font-medium text-[var(--fg)]">{pod.podName}</td>
                           <td className="px-4 py-2">
                             <span
                               className={`px-2 py-0.5 text-xs font-medium rounded ${getPodStatusColor(
@@ -624,8 +624,8 @@ function NodeRow({
                               {pod.status}
                             </span>
                           </td>
-                          <td className="px-4 py-2 text-[#5b6476]">{pod.vgpuCount}</td>
-                          <td className="px-4 py-2 text-[#5b6476]">
+                          <td className="px-4 py-2 text-[var(--fg-muted)]">{pod.vgpuCount}</td>
+                          <td className="px-4 py-2 text-[var(--fg-muted)]">
                             {pod.customerName || pod.customerEmail || "Unknown"}
                           </td>
                         </tr>
@@ -636,7 +636,7 @@ function NodeRow({
               </div>
             ) : (
               <div className="text-center py-6 bg-gray-100 rounded-lg">
-                <p className="text-[#5b6476]">No pods running on this node</p>
+                <p className="text-[var(--fg-muted)]">No pods running on this node</p>
               </div>
             )}
           </div>

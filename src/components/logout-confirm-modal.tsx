@@ -28,7 +28,7 @@ export function LogoutConfirmModal({
       {/* Modal */}
       <div
         className={`relative z-10 w-full max-w-md rounded-xl p-6 shadow-xl ${
-          isDark ? "bg-zinc-900 border border-zinc-700" : "bg-white border border-gray-200"
+          isDark ? "bg-zinc-50 border border-zinc-300" : "bg-white border border-gray-200"
         }`}
       >
         <h2
@@ -48,7 +48,7 @@ export function LogoutConfirmModal({
             onClick={onClose}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               isDark
-                ? "bg-zinc-800 text-white hover:bg-zinc-700"
+                ? "bg-zinc-100 text-white hover:bg-zinc-200"
                 : "bg-gray-100 text-gray-900 hover:bg-gray-200"
             }`}
           >

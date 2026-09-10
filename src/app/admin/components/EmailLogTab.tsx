@@ -58,8 +58,8 @@ export function EmailLogTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-semibold text-[#0b0f1c] mb-1">Email Delivery Log</h2>
-        <p className="text-sm text-[#5b6476]">
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-1">Email Delivery Log</h2>
+        <p className="text-sm text-[var(--fg-muted)]">
           Recent email delivery history. Logs are retained for 90 days.
         </p>
       </div>
@@ -71,12 +71,12 @@ export function EmailLogTab() {
           placeholder="Search by recipient or subject..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="flex-1 px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+          className="flex-1 px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)] placeholder-[#5b6476]/50 focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
         />
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-sm text-[#0b0f1c]"
+          className="px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-sm text-[var(--fg)]"
         >
           <option value="">All statuses</option>
           <option value="sent">Sent</option>
@@ -84,38 +84,38 @@ export function EmailLogTab() {
         </select>
         <button
           onClick={fetchLogs}
-          className="px-3 py-2 bg-white border border-[#e4e7ef] hover:bg-zinc-50 rounded-lg text-sm"
+          className="px-3 py-2 bg-white border border-[var(--line)] hover:bg-zinc-50 rounded-lg text-sm"
         >
           Refresh
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
+      <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#e4e7ef] bg-zinc-50/50">
-              <th className="text-left px-4 py-3 font-medium text-[#5b6476]">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-[#5b6476]">To</th>
-              <th className="text-left px-4 py-3 font-medium text-[#5b6476]">Subject</th>
-              <th className="text-left px-4 py-3 font-medium text-[#5b6476]">Provider</th>
-              <th className="text-left px-4 py-3 font-medium text-[#5b6476]">Time</th>
+            <tr className="border-b border-[var(--line)] bg-zinc-50/50">
+              <th className="text-left px-4 py-3 font-medium text-[var(--fg-muted)]">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-[var(--fg-muted)]">To</th>
+              <th className="text-left px-4 py-3 font-medium text-[var(--fg-muted)]">Subject</th>
+              <th className="text-left px-4 py-3 font-medium text-[var(--fg-muted)]">Provider</th>
+              <th className="text-left px-4 py-3 font-medium text-[var(--fg-muted)]">Time</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-[#5b6476]">Loading...</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-[var(--fg-muted)]">Loading...</td>
               </tr>
             ) : logs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-[#5b6476]">
+                <td colSpan={5} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                   {search || statusFilter ? "No matching logs found." : "No email logs yet."}
                 </td>
               </tr>
             ) : (
               logs.map((log) => (
-                <tr key={log.id} className="border-b border-[#e4e7ef] last:border-0 hover:bg-zinc-50/50">
+                <tr key={log.id} className="border-b border-[var(--line)] last:border-0 hover:bg-zinc-50/50">
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
                       log.status === "sent"
@@ -125,12 +125,12 @@ export function EmailLogTab() {
                       {log.status === "sent" ? "✓ Sent" : "✗ Failed"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#0b0f1c] font-mono text-xs truncate max-w-48">{log.to}</td>
-                  <td className="px-4 py-3 text-[#0b0f1c] truncate max-w-64" title={log.subject}>{log.subject}</td>
+                  <td className="px-4 py-3 text-[var(--fg)] font-mono text-xs truncate max-w-48">{log.to}</td>
+                  <td className="px-4 py-3 text-[var(--fg)] truncate max-w-64" title={log.subject}>{log.subject}</td>
                   <td className="px-4 py-3">
-                    <span className="text-xs text-[#5b6476] uppercase">{log.provider}</span>
+                    <span className="text-xs text-[var(--fg-muted)] uppercase">{log.provider}</span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-[#5b6476] whitespace-nowrap">{formatDate(log.createdAt)}</td>
+                  <td className="px-4 py-3 text-xs text-[var(--fg-muted)] whitespace-nowrap">{formatDate(log.createdAt)}</td>
                 </tr>
               ))
             )}
@@ -141,7 +141,7 @@ export function EmailLogTab() {
       {/* Error details (shown on hover/click would be nice, but keeping it simple) */}
       {logs.some((l) => l.error) && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-[#0b0f1c]">Failed Deliveries</h3>
+          <h3 className="text-sm font-medium text-[var(--fg)]">Failed Deliveries</h3>
           {logs.filter((l) => l.error).map((log) => (
             <div key={log.id} className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs">
               <p className="font-medium text-red-800">{log.to} — {log.subject}</p>
@@ -153,7 +153,7 @@ export function EmailLogTab() {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-[#5b6476]">
+        <div className="flex items-center justify-between text-sm text-[var(--fg-muted)]">
           <span>
             Showing {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
           </span>
@@ -161,14 +161,14 @@ export function EmailLogTab() {
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 bg-white border border-[#e4e7ef] rounded text-sm disabled:opacity-50 hover:bg-zinc-50"
+              className="px-3 py-1 bg-white border border-[var(--line)] rounded text-sm disabled:opacity-50 hover:bg-zinc-50"
             >
               Previous
             </button>
             <button
               disabled={page >= pagination.totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 bg-white border border-[#e4e7ef] rounded text-sm disabled:opacity-50 hover:bg-zinc-50"
+              className="px-3 py-1 bg-white border border-[var(--line)] rounded text-sm disabled:opacity-50 hover:bg-zinc-50"
             >
               Next
             </button>

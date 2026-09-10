@@ -76,13 +76,13 @@ function TerminalContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
-        <div className="bg-zinc-800 rounded-lg p-6 max-w-md">
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="bg-zinc-100 rounded-lg p-6 max-w-md">
           <h1 className="text-red-400 text-lg font-semibold mb-2">Connection Error</h1>
-          <p className="text-zinc-300">{error}</p>
+          <p className="text-zinc-600">{error}</p>
           <button
             onClick={() => window.close()}
-            className="mt-4 px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600"
+            className="mt-4 px-4 py-2 bg-zinc-200 text-white rounded hover:bg-zinc-300"
           >
             Close
           </button>
@@ -92,10 +92,10 @@ function TerminalContent() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-        <p className="text-zinc-300">{status}</p>
+        <p className="text-zinc-600">{status}</p>
       </div>
     </div>
   );
@@ -105,10 +105,10 @@ export default function TerminalPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
+        <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-            <p className="text-zinc-300">Loading...</p>
+            <p className="text-zinc-600">Loading...</p>
           </div>
         </div>
       }

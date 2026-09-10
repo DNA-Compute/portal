@@ -281,7 +281,7 @@ export function BillingTab({
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
           <div className="text-xs text-[var(--muted)] mb-1">All-Time Spend</div>
           {allTimeStatsLoading ? (
-            <div className="text-2xl font-bold text-zinc-300 animate-pulse">$—</div>
+            <div className="text-2xl font-bold text-zinc-600 animate-pulse">$—</div>
           ) : (
             <>
               <div className="text-2xl font-bold text-[var(--ink)]">

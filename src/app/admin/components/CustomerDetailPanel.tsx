@@ -386,8 +386,8 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-8">
-          <div className="animate-spin h-8 w-8 border-2 border-[#1a4fff] border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-[#5b6476] mt-4">Loading customer...</p>
+          <div className="animate-spin h-8 w-8 border-2 border-[var(--acid)] border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-[var(--fg-muted)] mt-4">Loading customer...</p>
         </div>
       </div>
     );
@@ -398,7 +398,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-8 text-center max-w-md">
           <p className="text-red-500 mb-4">{error || "Customer not found"}</p>
-          <button onClick={onClose} className="text-[#1a4fff] hover:underline">
+          <button onClick={onClose} className="text-[var(--acid)] hover:underline">
             Close
           </button>
         </div>
@@ -413,17 +413,17 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-white border-b border-[#e4e7ef] px-6 py-4">
+          <div className="bg-white border-b border-[var(--line)] px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <button onClick={onClose} className="text-[#5b6476] hover:text-[#0b0f1c]">
+                <button onClick={onClose} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
                 <div>
-                  <h1 className="text-xl font-bold text-[#0b0f1c]">{customer.name || customer.email}</h1>
-                  <p className="text-sm text-[#5b6476]">{customer.email}</p>
+                  <h1 className="text-xl font-bold text-[var(--fg)]">{customer.name || customer.email}</h1>
+                  <p className="text-sm text-[var(--fg-muted)]">{customer.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -446,7 +446,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 <button
                   onClick={() => handleAction("send-credentials")}
                   disabled={actionLoading === "send-credentials"}
-                  className="px-3 py-1.5 bg-[#1a4fff] hover:bg-[#1238c9] text-white text-sm rounded-lg disabled:opacity-50"
+                  className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white text-sm rounded-lg disabled:opacity-50"
                 >
                   {actionLoading === "send-credentials" ? "..." : "Send Credentials"}
                 </button>
@@ -505,7 +505,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
           )}
 
           {/* Tabs */}
-          <div className="bg-white border-b border-[#e4e7ef]">
+          <div className="bg-white border-b border-[var(--line)]">
             <div className="px-6">
               <nav className="flex gap-6">
                 {(["overview", "billing", "activity"] as const).map((tab) => (
@@ -514,8 +514,8 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                     onClick={() => setActiveTab(tab)}
                     className={`py-3 text-sm font-medium border-b-2 transition-colors ${
                       activeTab === tab
-                        ? "border-[#1a4fff] text-[#1a4fff]"
-                        : "border-transparent text-[#5b6476] hover:text-[#0b0f1c]"
+                        ? "border-[var(--acid)] text-[var(--acid)]"
+                        : "border-transparent text-[var(--fg-muted)] hover:text-[var(--fg)]"
                     }`}
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -530,39 +530,39 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
             {activeTab === "overview" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Customer Info */}
-                <div className="bg-[#f7f8fb] rounded-xl p-6">
-                  <h2 className="font-semibold text-[#0b0f1c] mb-4">Customer Info</h2>
+                <div className="bg-[var(--ink)] rounded-xl p-6">
+                  <h2 className="font-semibold text-[var(--fg)] mb-4">Customer Info</h2>
                   <dl className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">ID</dt>
-                      <dd className="text-[#0b0f1c] font-mono text-xs">{customer.id}</dd>
+                      <dt className="text-[var(--fg-muted)]">ID</dt>
+                      <dd className="text-[var(--fg)] font-mono text-xs">{customer.id}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">Email</dt>
-                      <dd className="text-[#0b0f1c]">{customer.email}</dd>
+                      <dt className="text-[var(--fg-muted)]">Email</dt>
+                      <dd className="text-[var(--fg)]">{customer.email}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">Name</dt>
-                      <dd className="text-[#0b0f1c]">{customer.name || "—"}</dd>
+                      <dt className="text-[var(--fg-muted)]">Name</dt>
+                      <dd className="text-[var(--fg)]">{customer.name || "—"}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">Phone</dt>
-                      <dd className="text-[#0b0f1c]">{customer.phone || "—"}</dd>
+                      <dt className="text-[var(--fg-muted)]">Phone</dt>
+                      <dd className="text-[var(--fg)]">{customer.phone || "—"}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">Company</dt>
-                      <dd className="text-[#0b0f1c]">{customer.metadata?.company || "—"}</dd>
+                      <dt className="text-[var(--fg-muted)]">Company</dt>
+                      <dd className="text-[var(--fg)]">{customer.metadata?.company || "—"}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">Billing Type</dt>
-                      <dd className="text-[#0b0f1c] capitalize">{customer.billingType}</dd>
+                      <dt className="text-[var(--fg-muted)]">Billing Type</dt>
+                      <dd className="text-[var(--fg)] capitalize">{customer.billingType}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5b6476]">Signed Up</dt>
-                      <dd className="text-[#0b0f1c]">{formatDate(customer.created)}</dd>
+                      <dt className="text-[var(--fg-muted)]">Signed Up</dt>
+                      <dd className="text-[var(--fg)]">{formatDate(customer.created)}</dd>
                     </div>
                     <div className="flex justify-between items-center">
-                      <dt className="text-[#5b6476]">Bare Metal</dt>
+                      <dt className="text-[var(--fg-muted)]">Bare Metal</dt>
                       <dd>
                         <button
                           onClick={() => handleAction("toggle-bare-metal")}
@@ -581,8 +581,8 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 </div>
 
                 {/* Billing Summary */}
-                <div className="bg-[#f7f8fb] rounded-xl p-6">
-                  <h2 className="font-semibold text-[#0b0f1c] mb-4">Billing Summary</h2>
+                <div className="bg-[var(--ink)] rounded-xl p-6">
+                  <h2 className="font-semibold text-[var(--fg)] mb-4">Billing Summary</h2>
                   <div className="space-y-4">
                     <div className="p-4 bg-emerald-50 rounded-lg">
                       <div className="flex items-center justify-between">
@@ -606,20 +606,20 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 </div>
 
                 {/* Hosted.ai Team */}
-                <div className="bg-[#f7f8fb] rounded-xl p-6">
-                  <h2 className="font-semibold text-[#0b0f1c] mb-4">Hosted.ai Team</h2>
+                <div className="bg-[var(--ink)] rounded-xl p-6">
+                  <h2 className="font-semibold text-[var(--fg)] mb-4">Hosted.ai Team</h2>
                   {hostedaiTeam ? (
                     <dl className="space-y-3 text-sm">
                       <div className="flex justify-between">
-                        <dt className="text-[#5b6476]">Team ID</dt>
-                        <dd className="text-[#0b0f1c] font-mono text-xs">{hostedaiTeam.id}</dd>
+                        <dt className="text-[var(--fg-muted)]">Team ID</dt>
+                        <dd className="text-[var(--fg)] font-mono text-xs">{hostedaiTeam.id}</dd>
                       </div>
                       <div className="flex justify-between">
-                        <dt className="text-[#5b6476]">Team Name</dt>
-                        <dd className="text-[#0b0f1c]">{hostedaiTeam.name}</dd>
+                        <dt className="text-[var(--fg-muted)]">Team Name</dt>
+                        <dd className="text-[var(--fg)]">{hostedaiTeam.name}</dd>
                       </div>
                       <div className="flex justify-between">
-                        <dt className="text-[#5b6476]">Status</dt>
+                        <dt className="text-[var(--fg-muted)]">Status</dt>
                         <dd>
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
                             hostedaiTeam.suspended
@@ -632,32 +632,32 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                       </div>
                     </dl>
                   ) : (
-                    <p className="text-sm text-[#5b6476]">No hosted.ai team linked</p>
+                    <p className="text-sm text-[var(--fg-muted)]">No hosted.ai team linked</p>
                   )}
 
                   {/* Referral Info */}
                   {referral && (
-                    <div className="mt-6 pt-6 border-t border-[#e4e7ef]">
-                      <h3 className="font-medium text-[#0b0f1c] mb-3">Referral</h3>
+                    <div className="mt-6 pt-6 border-t border-[var(--line)]">
+                      <h3 className="font-medium text-[var(--fg)] mb-3">Referral</h3>
                       <dl className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <dt className="text-[#5b6476]">Role</dt>
-                          <dd className="text-[#0b0f1c] capitalize">{referral.role}</dd>
+                          <dt className="text-[var(--fg-muted)]">Role</dt>
+                          <dd className="text-[var(--fg)] capitalize">{referral.role}</dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-[#5b6476]">Code</dt>
-                          <dd className="text-[#0b0f1c] font-mono">{referral.code}</dd>
+                          <dt className="text-[var(--fg-muted)]">Code</dt>
+                          <dd className="text-[var(--fg)] font-mono">{referral.code}</dd>
                         </div>
                         {referral.role === "referrer" && (
                           <div className="flex justify-between">
-                            <dt className="text-[#5b6476]">Claims</dt>
-                            <dd className="text-[#0b0f1c]">{referral.creditedClaims || 0} / {referral.totalClaims || 0}</dd>
+                            <dt className="text-[var(--fg-muted)]">Claims</dt>
+                            <dd className="text-[var(--fg)]">{referral.creditedClaims || 0} / {referral.totalClaims || 0}</dd>
                           </div>
                         )}
                         {referral.role === "referred" && (
                           <div className="flex justify-between">
-                            <dt className="text-[#5b6476]">Status</dt>
-                            <dd className="text-[#0b0f1c]">{referral.credited ? "Credited" : referral.status || "Pending"}</dd>
+                            <dt className="text-[var(--fg-muted)]">Status</dt>
+                            <dd className="text-[var(--fg)]">{referral.credited ? "Credited" : referral.status || "Pending"}</dd>
                           </div>
                         )}
                       </dl>
@@ -666,12 +666,12 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
 
                   {/* Vouchers */}
                   {voucherRedemptions.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-[#e4e7ef]">
-                      <h3 className="font-medium text-[#0b0f1c] mb-3">Vouchers Used</h3>
+                    <div className="mt-6 pt-6 border-t border-[var(--line)]">
+                      <h3 className="font-medium text-[var(--fg)] mb-3">Vouchers Used</h3>
                       <div className="space-y-2">
                         {voucherRedemptions.map((v) => (
                           <div key={v.id} className="flex justify-between text-sm">
-                            <span className="text-[#5b6476]">{v.voucherCode}</span>
+                            <span className="text-[var(--fg-muted)]">{v.voucherCode}</span>
                             <span className="text-emerald-600">+{formatCents(v.creditCents)}</span>
                           </div>
                         ))}
@@ -685,9 +685,9 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
             {activeTab === "billing" && (
               <div className="space-y-6">
                 {/* Balance Transactions */}
-                <div className="bg-[#f7f8fb] rounded-xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-[#e4e7ef] flex justify-between items-center">
-                    <h2 className="font-semibold text-[#0b0f1c]">Wallet Transactions</h2>
+                <div className="bg-[var(--ink)] rounded-xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-[var(--line)] flex justify-between items-center">
+                    <h2 className="font-semibold text-[var(--fg)]">Wallet Transactions</h2>
                     <button
                       onClick={() => setShowCreditModal(true)}
                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg"
@@ -699,30 +699,30 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                     <table className="w-full">
                       <thead className="bg-white">
                         <tr>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Date</th>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Description</th>
-                          <th className="text-right px-6 py-3 text-xs font-medium text-[#5b6476]">Amount</th>
-                          <th className="text-right px-6 py-3 text-xs font-medium text-[#5b6476]">Balance</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Date</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Description</th>
+                          <th className="text-right px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Amount</th>
+                          <th className="text-right px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Balance</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#e4e7ef]">
+                      <tbody className="divide-y divide-[var(--line)]">
                         {balanceTransactions.map((t) => (
                           <tr key={t.id} className="bg-white">
-                            <td className="px-6 py-3 text-sm text-[#0b0f1c]">{formatDate(t.created)}</td>
-                            <td className="px-6 py-3 text-sm text-[#5b6476]">{t.description || t.type}</td>
+                            <td className="px-6 py-3 text-sm text-[var(--fg)]">{formatDate(t.created)}</td>
+                            <td className="px-6 py-3 text-sm text-[var(--fg-muted)]">{t.description || t.type}</td>
                             <td className={`px-6 py-3 text-sm text-right font-medium ${
                               t.amount < 0 ? "text-emerald-600" : "text-red-600"
                             }`}>
                               {t.amount < 0 ? "+" : "-"}{formatCents(t.amount)}
                             </td>
-                            <td className="px-6 py-3 text-sm text-right text-[#0b0f1c]">
+                            <td className="px-6 py-3 text-sm text-right text-[var(--fg)]">
                               {formatCents(-t.endingBalance)}
                             </td>
                           </tr>
                         ))}
                         {balanceTransactions.length === 0 && (
                           <tr>
-                            <td colSpan={4} className="px-6 py-8 text-center text-[#5b6476] bg-white">
+                            <td colSpan={4} className="px-6 py-8 text-center text-[var(--fg-muted)] bg-white">
                               No wallet transactions
                             </td>
                           </tr>
@@ -733,25 +733,25 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 </div>
 
                 {/* Charges */}
-                <div className="bg-[#f7f8fb] rounded-xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-[#e4e7ef]">
-                    <h2 className="font-semibold text-[#0b0f1c]">Payments</h2>
+                <div className="bg-[var(--ink)] rounded-xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-[var(--line)]">
+                    <h2 className="font-semibold text-[var(--fg)]">Payments</h2>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-white">
                         <tr>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Date</th>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Description</th>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Status</th>
-                          <th className="text-right px-6 py-3 text-xs font-medium text-[#5b6476]">Amount</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Date</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Description</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Status</th>
+                          <th className="text-right px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#e4e7ef]">
+                      <tbody className="divide-y divide-[var(--line)]">
                         {charges.map((c) => (
                           <tr key={c.id} className="bg-white">
-                            <td className="px-6 py-3 text-sm text-[#0b0f1c]">{formatDate(c.created)}</td>
-                            <td className="px-6 py-3 text-sm text-[#5b6476]">{c.description || "Payment"}</td>
+                            <td className="px-6 py-3 text-sm text-[var(--fg)]">{formatDate(c.created)}</td>
+                            <td className="px-6 py-3 text-sm text-[var(--fg-muted)]">{c.description || "Payment"}</td>
                             <td className="px-6 py-3">
                               <span className={`px-2 py-0.5 rounded-full text-xs ${
                                 c.refunded
@@ -763,14 +763,14 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                                 {c.refunded ? "Refunded" : c.paid ? "Paid" : "Failed"}
                               </span>
                             </td>
-                            <td className="px-6 py-3 text-sm text-right font-medium text-[#0b0f1c]">
+                            <td className="px-6 py-3 text-sm text-right font-medium text-[var(--fg)]">
                               {formatCents(c.amount)}
                             </td>
                           </tr>
                         ))}
                         {charges.length === 0 && (
                           <tr>
-                            <td colSpan={4} className="px-6 py-8 text-center text-[#5b6476] bg-white">
+                            <td colSpan={4} className="px-6 py-8 text-center text-[var(--fg-muted)] bg-white">
                               No payments
                             </td>
                           </tr>
@@ -781,26 +781,26 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 </div>
 
                 {/* Invoices */}
-                <div className="bg-[#f7f8fb] rounded-xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-[#e4e7ef]">
-                    <h2 className="font-semibold text-[#0b0f1c]">Invoices</h2>
+                <div className="bg-[var(--ink)] rounded-xl overflow-hidden">
+                  <div className="px-6 py-4 border-b border-[var(--line)]">
+                    <h2 className="font-semibold text-[var(--fg)]">Invoices</h2>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-white">
                         <tr>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Date</th>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Number</th>
-                          <th className="text-left px-6 py-3 text-xs font-medium text-[#5b6476]">Status</th>
-                          <th className="text-right px-6 py-3 text-xs font-medium text-[#5b6476]">Amount</th>
-                          <th className="text-right px-6 py-3 text-xs font-medium text-[#5b6476]">Actions</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Date</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Number</th>
+                          <th className="text-left px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Status</th>
+                          <th className="text-right px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Amount</th>
+                          <th className="text-right px-6 py-3 text-xs font-medium text-[var(--fg-muted)]">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#e4e7ef]">
+                      <tbody className="divide-y divide-[var(--line)]">
                         {invoices.map((inv) => (
                           <tr key={inv.id} className="bg-white">
-                            <td className="px-6 py-3 text-sm text-[#0b0f1c]">{formatDate(inv.created)}</td>
-                            <td className="px-6 py-3 text-sm text-[#5b6476]">{inv.number || "—"}</td>
+                            <td className="px-6 py-3 text-sm text-[var(--fg)]">{formatDate(inv.created)}</td>
+                            <td className="px-6 py-3 text-sm text-[var(--fg-muted)]">{inv.number || "—"}</td>
                             <td className="px-6 py-3">
                               <span className={`px-2 py-0.5 rounded-full text-xs ${
                                 inv.status === "paid"
@@ -812,7 +812,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                                 {inv.status || "Unknown"}
                               </span>
                             </td>
-                            <td className="px-6 py-3 text-sm text-right font-medium text-[#0b0f1c]">
+                            <td className="px-6 py-3 text-sm text-right font-medium text-[var(--fg)]">
                               {formatCents(inv.amount)}
                             </td>
                             <td className="px-6 py-3 text-right">
@@ -821,7 +821,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                                   href={inv.pdfUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-[#1a4fff] hover:underline text-sm"
+                                  className="text-[var(--acid)] hover:underline text-sm"
                                 >
                                   PDF
                                 </a>
@@ -831,7 +831,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                         ))}
                         {invoices.length === 0 && (
                           <tr>
-                            <td colSpan={5} className="px-6 py-8 text-center text-[#5b6476] bg-white">
+                            <td colSpan={5} className="px-6 py-8 text-center text-[var(--fg-muted)] bg-white">
                               No invoices
                             </td>
                           </tr>
@@ -844,26 +844,26 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
             )}
 
             {activeTab === "activity" && (
-              <div className="bg-[#f7f8fb] rounded-xl p-6">
-                <h2 className="font-semibold text-[#0b0f1c] mb-4">Customer Metadata</h2>
+              <div className="bg-[var(--ink)] rounded-xl p-6">
+                <h2 className="font-semibold text-[var(--fg)] mb-4">Customer Metadata</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-white">
                       <tr>
-                        <th className="text-left px-4 py-2 text-xs font-medium text-[#5b6476]">Key</th>
-                        <th className="text-left px-4 py-2 text-xs font-medium text-[#5b6476]">Value</th>
+                        <th className="text-left px-4 py-2 text-xs font-medium text-[var(--fg-muted)]">Key</th>
+                        <th className="text-left px-4 py-2 text-xs font-medium text-[var(--fg-muted)]">Value</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#e4e7ef]">
+                    <tbody className="divide-y divide-[var(--line)]">
                       {Object.entries(customer.metadata).map(([key, value]) => (
                         <tr key={key} className="bg-white">
-                          <td className="px-4 py-2 text-sm font-mono text-[#5b6476]">{key}</td>
-                          <td className="px-4 py-2 text-sm text-[#0b0f1c]">{value || "—"}</td>
+                          <td className="px-4 py-2 text-sm font-mono text-[var(--fg-muted)]">{key}</td>
+                          <td className="px-4 py-2 text-sm text-[var(--fg)]">{value || "—"}</td>
                         </tr>
                       ))}
                       {Object.keys(customer.metadata).length === 0 && (
                         <tr>
-                          <td colSpan={2} className="px-4 py-8 text-center text-[#5b6476] bg-white">
+                          <td colSpan={2} className="px-4 py-8 text-center text-[var(--fg-muted)] bg-white">
                             No metadata
                           </td>
                         </tr>
@@ -881,20 +881,20 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
       {showCreditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-[#0b0f1c] mb-4">Adjust Wallet Balance</h3>
-            <p className="text-sm text-[#5b6476] mb-4">
+            <h3 className="text-lg font-semibold text-[var(--fg)] mb-4">Adjust Wallet Balance</h3>
+            <p className="text-sm text-[var(--fg-muted)] mb-4">
               Current balance: <span className="font-medium text-emerald-600">{formatCents(customer.walletBalance)}</span>
             </p>
 
             {/* Reason (shared by quick-add and set-balance) */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                 Reason <span className="text-red-500">*</span>
               </label>
               <select
                 value={adjustReason}
                 onChange={(e) => setAdjustReason(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                className="w-full px-3 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
               >
                 <option value="">Select a reason...</option>
                 <option value="bug_fix">Bug / System failure</option>
@@ -907,7 +907,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
             </div>
             {adjustReason === "other" ? (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   Details <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -915,27 +915,27 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                   value={adjustReasonNote}
                   onChange={(e) => setAdjustReasonNote(e.target.value)}
                   placeholder="Explain the reason for this adjustment..."
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
             ) : adjustReason ? (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
-                  Additional notes <span className="text-[#5b6476] font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
+                  Additional notes <span className="text-[var(--fg-muted)] font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
                   value={adjustReasonNote}
                   onChange={(e) => setAdjustReasonNote(e.target.value)}
                   placeholder="Any extra context..."
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
               </div>
             ) : null}
 
             {/* Quick Add Buttons */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-[#0b0f1c] mb-2">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                 Quick Add Credits
               </label>
               <div className="flex gap-2">
@@ -951,28 +951,28 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-[#5b6476] mt-1">
+              <p className="text-xs text-[var(--fg-muted)] mt-1">
                 Adds to current balance
               </p>
             </div>
 
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#e4e7ef]"></div>
+                <div className="w-full border-t border-[var(--line)]"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-2 bg-white text-[#5b6476]">or</span>
+                <span className="px-2 bg-white text-[var(--fg-muted)]">or</span>
               </div>
             </div>
 
             {/* Set Balance Form */}
             <form onSubmit={handleSetBalance}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   Set Total Balance To
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5b6476]">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">$</span>
                   <input
                     type="number"
                     step="0.01"
@@ -980,10 +980,10 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                     value={creditAmount}
                     onChange={(e) => setCreditAmount(e.target.value)}
                     placeholder="100.00"
-                    className="w-full pl-8 pr-4 py-2 border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+                    className="w-full pl-8 pr-4 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                   />
                 </div>
-                <p className="text-xs text-[#5b6476] mt-1">
+                <p className="text-xs text-[var(--fg-muted)] mt-1">
                   Sets the wallet to this exact amount (e.g., 100 = $100.00 balance)
                 </p>
               </div>
@@ -991,14 +991,14 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 <button
                   type="button"
                   onClick={() => { setShowCreditModal(false); setCreditAmount(""); setAdjustReason(""); setAdjustReasonNote(""); }}
-                  className="px-4 py-2 text-[#5b6476] hover:text-[#0b0f1c]"
+                  className="px-4 py-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading === "set-balance" || !creditAmount || !adjustReason || (adjustReason === "other" && !adjustReasonNote.trim())}
-                  className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg disabled:opacity-50"
                 >
                   {actionLoading === "set-balance" ? "Saving..." : "Set Balance"}
                 </button>

@@ -145,14 +145,14 @@ export function AdminSidebar({
   const { data: securityHealth, loading: securityLoading } = useSecurityHealth();
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-[#0b0f1c] text-white flex flex-col transition-all duration-300 ${
+      className={`fixed left-0 top-0 h-full bg-[var(--fg)] text-white flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
       {/* Logo/Brand */}
       <div className={`border-b border-white/10 ${isCollapsed ? "p-3" : "p-6"}`}>
         {isCollapsed ? (
-          <div className="w-10 h-10 bg-[#1a4fff] rounded-lg flex items-center justify-center font-bold text-lg">
+          <div className="w-10 h-10 bg-[var(--acid)] rounded-lg flex items-center justify-center font-bold text-lg">
             A
           </div>
         ) : (
@@ -206,7 +206,7 @@ export function AdminSidebar({
                         isCollapsed ? "justify-center px-3" : "px-6"
                       } ${
                         isActive
-                          ? "bg-[#1a4fff] text-white"
+                          ? "bg-[var(--acid)] text-white"
                           : "text-gray-600 hover:bg-white/5 hover:text-white"
                       }`}
                     >

@@ -196,7 +196,7 @@ export default function XTerminal({
   }, [host, port, username, password]);
 
   return (
-    <div className="h-full w-full bg-zinc-900 relative">
+    <div className="h-full w-full bg-zinc-50 relative">
       {/* Terminal container - absolute positioning ensures proper size calculation */}
       <div
         ref={terminalRef}

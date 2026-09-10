@@ -485,7 +485,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
                 <div className="p-6 text-center">
                   {debouncedSearch ? (
                     <div className="text-zinc-400">
-                      <svg className="w-10 h-10 mx-auto mb-3 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-10 h-10 mx-auto mb-3 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
                       <p className="font-medium text-zinc-500">No tickets found</p>

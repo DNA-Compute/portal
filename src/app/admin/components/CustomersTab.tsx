@@ -66,7 +66,7 @@ export function CustomersTab({
 
   const sortIcon = (field: SortField) => {
     if (sortBy !== field) return <span className="ml-1 text-[#c4c9d4]">&uarr;&darr;</span>;
-    return <span className="ml-1 text-[#1a4fff]">{sortDir === "asc" ? "\u2191" : "\u2193"}</span>;
+    return <span className="ml-1 text-[var(--acid)]">{sortDir === "asc" ? "\u2191" : "\u2193"}</span>;
   };
 
   const getPageNumbers = (): (number | "...")[] => {
@@ -115,50 +115,50 @@ export function CustomersTab({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSearch()}
-          className="flex-1 px-4 py-2 bg-white border border-[#e4e7ef] rounded-lg text-[#0b0f1c] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[#1a4fff]"
+          className="flex-1 px-4 py-2 bg-white border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder-[#5b6476] focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
         />
         <button
           onClick={onSearch}
-          className="px-4 py-2 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded-lg"
+          className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg"
         >
           Search
         </button>
         <button
           onClick={onClearSearch}
-          className="px-4 py-2 bg-white border border-[#e4e7ef] hover:bg-gray-50 text-[#0b0f1c] rounded-lg"
+          className="px-4 py-2 bg-white border border-[var(--line)] hover:bg-gray-50 text-[var(--fg)] rounded-lg"
         >
           Clear
         </button>
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="px-4 py-2 bg-white border border-[#e4e7ef] hover:bg-gray-50 text-[#0b0f1c] rounded-lg disabled:opacity-50 flex items-center gap-1.5"
+          className="px-4 py-2 bg-white border border-[var(--line)] hover:bg-gray-50 text-[var(--fg)] rounded-lg disabled:opacity-50 flex items-center gap-1.5"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           {exporting ? "Exporting..." : "Export CSV"}
         </button>
-        <span className="text-sm text-[#5b6476] ml-2 whitespace-nowrap">
+        <span className="text-sm text-[var(--fg-muted)] ml-2 whitespace-nowrap">
           {total} customer{total !== 1 ? "s" : ""}
         </span>
       </div>
 
-      <div className={`bg-white border border-[#e4e7ef] rounded-lg overflow-hidden ${customersLoading ? "opacity-60" : ""}`}>
+      <div className={`bg-white border border-[var(--line)] rounded-lg overflow-hidden ${customersLoading ? "opacity-60" : ""}`}>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#f7f8fb] border-b border-[#e4e7ef]">
+            <thead className="bg-[var(--ink)] border-b border-[var(--line)]">
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476]">Customer</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476] cursor-pointer select-none hover:text-[#0b0f1c]" onClick={() => onSort("teamId")}>Team ID{sortIcon("teamId")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476] cursor-pointer select-none hover:text-[#0b0f1c]" onClick={() => onSort("productId")}>Plan{sortIcon("productId")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476] cursor-pointer select-none hover:text-[#0b0f1c]" onClick={() => onSort("walletBalance")}>Credits{sortIcon("walletBalance")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476] cursor-pointer select-none hover:text-[#0b0f1c]" onClick={() => onSort("activeGPUs")}>Active GPUs{sortIcon("activeGPUs")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-[#5b6476] cursor-pointer select-none hover:text-[#0b0f1c]" onClick={() => onSort("created")}>Signed Up{sortIcon("created")}</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-[#5b6476]">Actions</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Customer</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)] cursor-pointer select-none hover:text-[var(--fg)]" onClick={() => onSort("teamId")}>Team ID{sortIcon("teamId")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)] cursor-pointer select-none hover:text-[var(--fg)]" onClick={() => onSort("productId")}>Plan{sortIcon("productId")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)] cursor-pointer select-none hover:text-[var(--fg)]" onClick={() => onSort("walletBalance")}>Credits{sortIcon("walletBalance")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)] cursor-pointer select-none hover:text-[var(--fg)]" onClick={() => onSort("activeGPUs")}>Active GPUs{sortIcon("activeGPUs")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-[var(--fg-muted)] cursor-pointer select-none hover:text-[var(--fg)]" onClick={() => onSort("created")}>Signed Up{sortIcon("created")}</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-[var(--fg-muted)]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e4e7ef]">
+            <tbody className="divide-y divide-[var(--line)]">
               {customers.map((customer) => (
                 <tr
                   key={customer.id}
@@ -166,8 +166,8 @@ export function CustomersTab({
                   onClick={() => onSelectCustomer(customer.id)}
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-[#0b0f1c]">{customer.name || "\u2014"}</p>
-                    <p className="text-sm text-[#5b6476]">{customer.email}</p>
+                    <p className="font-medium text-[var(--fg)]">{customer.name || "\u2014"}</p>
+                    <p className="text-sm text-[var(--fg-muted)]">{customer.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     {customer.teamId ? (
@@ -176,7 +176,7 @@ export function CustomersTab({
                           e.stopPropagation();
                           navigator.clipboard.writeText(customer.teamId);
                         }}
-                        className="text-[#5b6476] hover:text-[#1a4fff] transition-colors"
+                        className="text-[var(--fg-muted)] hover:text-[var(--acid)] transition-colors"
                         title={customer.teamId}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -184,11 +184,11 @@ export function CustomersTab({
                         </svg>
                       </button>
                     ) : (
-                      <span className="text-sm text-[#5b6476]">{"\u2014"}</span>
+                      <span className="text-sm text-[var(--fg-muted)]">{"\u2014"}</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-[#0b0f1c]">{customer.productId || "\u2014"}</span>
+                    <span className="text-sm text-[var(--fg)]">{customer.productId || "\u2014"}</span>
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     {customer.walletBalance === 0 ? (
@@ -204,7 +204,7 @@ export function CustomersTab({
                       >
                         ${(customer.walletBalance / 100).toFixed(2)}
                         {customer.billingType && customer.billingType !== "hourly" && (
-                          <span className="ml-1 text-xs font-normal text-[#5b6476]">
+                          <span className="ml-1 text-xs font-normal text-[var(--fg-muted)]">
                             {customer.billingType}
                           </span>
                         )}
@@ -217,12 +217,12 @@ export function CustomersTab({
                         {customer.activeGPUs} GPU{customer.activeGPUs !== 1 ? "s" : ""}
                       </span>
                     ) : (
-                      <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-[#5b6476]">
+                      <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-[var(--fg-muted)]">
                         0
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#5b6476]">
+                  <td className="px-4 py-3 text-sm text-[var(--fg-muted)]">
                     {new Date(customer.created * 1000).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
@@ -246,7 +246,7 @@ export function CustomersTab({
                       <button
                         onClick={() => onCustomerAction(customer.id, "send-credentials")}
                         disabled={actionLoading === customer.id}
-                        className="text-xs px-2 py-1 bg-[#1a4fff] hover:bg-[#1238c9] text-white rounded disabled:opacity-50"
+                        className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded disabled:opacity-50"
                       >
                         Send Credentials
                       </button>
@@ -264,7 +264,7 @@ export function CustomersTab({
               ))}
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-[#5b6476]">
+                  <td colSpan={7} className="px-4 py-8 text-center text-[var(--fg-muted)]">
                     {customersLoading ? "Loading customers..." : "No customers found"}
                   </td>
                 </tr>
@@ -277,20 +277,20 @@ export function CustomersTab({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-[#5b6476]">
+          <p className="text-sm text-[var(--fg-muted)]">
             Showing {(page - 1) * 25 + 1}{"\u2013"}{Math.min(page * 25, total)} of {total}
           </p>
           <div className="flex items-center gap-1">
             <button
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1 || customersLoading}
-              className="px-3 py-1.5 text-sm border border-[#e4e7ef] rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm border border-[var(--line)] rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Previous
             </button>
             {getPageNumbers().map((p, i) =>
               p === "..." ? (
-                <span key={`ellipsis-${i}`} className="px-2 text-[#5b6476]">...</span>
+                <span key={`ellipsis-${i}`} className="px-2 text-[var(--fg-muted)]">...</span>
               ) : (
                 <button
                   key={p}
@@ -298,8 +298,8 @@ export function CustomersTab({
                   disabled={customersLoading}
                   className={`px-3 py-1.5 text-sm rounded-lg ${
                     p === page
-                      ? "bg-[#1a4fff] text-white"
-                      : "border border-[#e4e7ef] hover:bg-gray-50"
+                      ? "bg-[var(--acid)] text-white"
+                      : "border border-[var(--line)] hover:bg-gray-50"
                   }`}
                 >
                   {p}
@@ -309,7 +309,7 @@ export function CustomersTab({
             <button
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages || customersLoading}
-              className="px-3 py-1.5 text-sm border border-[#e4e7ef] rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm border border-[var(--line)] rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>

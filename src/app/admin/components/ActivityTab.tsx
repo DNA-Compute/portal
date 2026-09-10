@@ -128,10 +128,10 @@ export function ActivityTab({
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-[#0b0f1c]">Platform Activity Log</h2>
+        <h2 className="text-xl font-semibold text-[var(--fg)]">Platform Activity Log</h2>
         <button
           onClick={fetchActivities}
-          className="px-4 py-2 bg-white border border-[#e4e7ef] hover:bg-gray-50 text-[#0b0f1c] rounded-lg text-sm"
+          className="px-4 py-2 bg-white border border-[var(--line)] hover:bg-gray-50 text-[var(--fg)] rounded-lg text-sm"
           disabled={loading}
         >
           {loading ? "Loading..." : "Refresh"}
@@ -145,7 +145,7 @@ export function ActivityTab({
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#e4e7ef] rounded-lg bg-white text-[#0b0f1c]"
+            className="px-3 py-2 text-sm border border-[var(--line)] rounded-lg bg-white text-[var(--fg)]"
           >
             {SOURCE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -156,7 +156,7 @@ export function ActivityTab({
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#e4e7ef] rounded-lg bg-white text-[#0b0f1c] min-w-[180px]"
+            className="px-3 py-2 text-sm border border-[var(--line)] rounded-lg bg-white text-[var(--fg)] min-w-[180px]"
           >
             <option value="">All Event Types</option>
             {Object.entries(TYPE_CATEGORIES).map(([category, types]) => (
@@ -175,11 +175,11 @@ export function ActivityTab({
               placeholder="Search descriptions, actors, IDs..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 px-3 py-2 text-sm border border-[#e4e7ef] rounded-lg bg-white text-[#0b0f1c] placeholder:text-[#5b6476]"
+              className="flex-1 px-3 py-2 text-sm border border-[var(--line)] rounded-lg bg-white text-[var(--fg)] placeholder:text-[var(--fg-muted)]"
             />
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-[#0b0f1c] text-white rounded-lg hover:bg-[#1a1f2e]"
+              className="px-4 py-2 text-sm bg-[var(--fg)] text-white rounded-lg hover:bg-[#1a1f2e]"
             >
               Search
             </button>
@@ -196,7 +196,7 @@ export function ActivityTab({
         </div>
 
         {/* Summary */}
-        <div className="text-xs text-[#5b6476]">
+        <div className="text-xs text-[var(--fg-muted)]">
           Showing {data.length} events
           {hasActiveFilters && " (filtered)"}
         </div>
@@ -204,14 +204,14 @@ export function ActivityTab({
 
       {/* Results */}
       {loading && data.length === 0 ? (
-        <div className="text-center py-8 text-[#5b6476]">Loading activities...</div>
+        <div className="text-center py-8 text-[var(--fg-muted)]">Loading activities...</div>
       ) : data.length === 0 ? (
-        <div className="text-center py-8 text-[#5b6476]">
+        <div className="text-center py-8 text-[var(--fg-muted)]">
           {hasActiveFilters ? "No activities match the current filters" : "No activities logged yet"}
         </div>
       ) : (
-        <div className="bg-white border border-[#e4e7ef] rounded-lg overflow-hidden">
-          <div className="space-y-0 divide-y divide-[#e4e7ef]">
+        <div className="bg-white border border-[var(--line)] rounded-lg overflow-hidden">
+          <div className="space-y-0 divide-y divide-[var(--line)]">
             {data.map((activity) => {
               const time = new Date(activity.created * 1000);
               const timeAgo = getTimeAgo(time);
@@ -230,12 +230,12 @@ export function ActivityTab({
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getActivityColor(activity.type, activity.source)}`}>
                           {activity.type.replace(/_/g, " ")}
                         </span>
-                        <span className="text-[#5b6476]">by</span>
-                        <span className="text-[#0b0f1c] font-medium truncate max-w-[200px]" title={activity.actor}>
+                        <span className="text-[var(--fg-muted)]">by</span>
+                        <span className="text-[var(--fg)] font-medium truncate max-w-[200px]" title={activity.actor}>
                           {activity.actor}
                         </span>
                       </div>
-                      <p className="mt-1 text-[#0b0f1c] text-sm">{activity.description}</p>
+                      <p className="mt-1 text-[var(--fg)] text-sm">{activity.description}</p>
                       {isQuoteRelated && quoteId && quoteNumber && (
                         <button
                           onClick={() => {
@@ -246,13 +246,13 @@ export function ActivityTab({
                               onSwitchToQuotes();
                             }
                           }}
-                          className="mt-1 text-xs text-[#1a4fff] hover:text-[#1238c9] underline"
+                          className="mt-1 text-xs text-[var(--acid)] hover:text-[var(--acid-deep)] underline"
                         >
                           View Quote {quoteNumber}
                         </button>
                       )}
                     </div>
-                    <div className="text-xs text-[#5b6476] whitespace-nowrap">
+                    <div className="text-xs text-[var(--fg-muted)] whitespace-nowrap">
                       {timeAgo}
                     </div>
                   </div>

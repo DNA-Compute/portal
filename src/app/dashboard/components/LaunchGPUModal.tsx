@@ -649,7 +649,7 @@ export function LaunchGPUModal({
             </div>
           ) : loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-zinc-900"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-zinc-100"></div>
               <p className="text-sm text-[var(--muted)]">Loading GPU options...</p>
             </div>
           ) : error && !options ? (
@@ -771,7 +771,7 @@ export function LaunchGPUModal({
                               ? (n >= minStep
                                   ? "text-teal-500 cursor-pointer hover:text-teal-600"
                                   : "text-teal-500 cursor-default")
-                              : "text-zinc-300 cursor-default"
+                              : "text-zinc-600 cursor-default"
                         }`}
                       >
                         <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${

@@ -41,7 +41,7 @@ export function MobileHeader({ balance, onMenuOpen, onTopUp, logoUrl }: MobileHe
         {balance !== undefined ? (
           <button
             onClick={onTopUp}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-900 text-white rounded-xl text-sm font-semibold"
+            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-50 text-white rounded-xl text-sm font-semibold"
           >
             <span>{balance}</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

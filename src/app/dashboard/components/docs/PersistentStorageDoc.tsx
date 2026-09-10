@@ -184,24 +184,24 @@ sudo chown $USER:$USER /data/shareXX/new-folder`}</code>
       </ul>
 
       <h3>What Data Survives?</h3>
-      <table className="w-full border-collapse border border-zinc-200 dark:border-zinc-700 my-4">
+      <table className="w-full border-collapse border border-zinc-200 dark:border-zinc-300 my-4">
         <thead>
-          <tr className="bg-zinc-100 dark:bg-zinc-800">
-            <th className="border border-zinc-200 dark:border-zinc-700 p-2 text-left">Storage Type</th>
-            <th className="border border-zinc-200 dark:border-zinc-700 p-2 text-left">Location</th>
-            <th className="border border-zinc-200 dark:border-zinc-700 p-2 text-left">Survives Termination?</th>
+          <tr className="bg-zinc-100 dark:bg-zinc-100">
+            <th className="border border-zinc-200 dark:border-zinc-300 p-2 text-left">Storage Type</th>
+            <th className="border border-zinc-200 dark:border-zinc-300 p-2 text-left">Location</th>
+            <th className="border border-zinc-200 dark:border-zinc-300 p-2 text-left">Survives Termination?</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td className="border border-zinc-200 dark:border-zinc-700 p-2"><strong>Persistent Storage</strong></td>
-            <td className="border border-zinc-200 dark:border-zinc-700 p-2"><code>/data/shareXX/</code></td>
-            <td className="border border-zinc-200 dark:border-zinc-700 p-2 text-green-600 dark:text-green-400">Yes</td>
+            <td className="border border-zinc-200 dark:border-zinc-300 p-2"><strong>Persistent Storage</strong></td>
+            <td className="border border-zinc-200 dark:border-zinc-300 p-2"><code>/data/shareXX/</code></td>
+            <td className="border border-zinc-200 dark:border-zinc-300 p-2 text-green-600 dark:text-green-400">Yes</td>
           </tr>
           <tr>
-            <td className="border border-zinc-200 dark:border-zinc-700 p-2"><strong>Ephemeral Storage</strong></td>
-            <td className="border border-zinc-200 dark:border-zinc-700 p-2"><code>/home/ubuntu</code>, <code>/tmp</code>, <code>/root</code></td>
-            <td className="border border-zinc-200 dark:border-zinc-700 p-2 text-red-600 dark:text-red-400">No</td>
+            <td className="border border-zinc-200 dark:border-zinc-300 p-2"><strong>Ephemeral Storage</strong></td>
+            <td className="border border-zinc-200 dark:border-zinc-300 p-2"><code>/home/ubuntu</code>, <code>/tmp</code>, <code>/root</code></td>
+            <td className="border border-zinc-200 dark:border-zinc-300 p-2 text-red-600 dark:text-red-400">No</td>
           </tr>
         </tbody>
       </table>

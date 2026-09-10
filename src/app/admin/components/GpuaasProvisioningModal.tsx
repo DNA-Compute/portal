@@ -183,8 +183,8 @@ export function GpuaasProvisioningModal({
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-8">
-          <div className="animate-spin w-8 h-8 border-2 border-[#1a4fff] border-t-transparent rounded-full mx-auto" />
-          <p className="text-[#5b6476] mt-4">Loading GPUaaS data...</p>
+          <div className="animate-spin w-8 h-8 border-2 border-[var(--acid)] border-t-transparent rounded-full mx-auto" />
+          <p className="text-[var(--fg-muted)] mt-4">Loading GPUaaS data...</p>
         </div>
       </div>
     );
@@ -222,14 +222,14 @@ export function GpuaasProvisioningModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#e4e7ef] px-6 py-4 flex justify-between items-center">
+        <div className="sticky top-0 bg-white border-b border-[var(--line)] px-6 py-4 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-bold text-[#0b0f1c]">GPUaaS Provisioning</h2>
-            <p className="text-sm text-[#5b6476]">
+            <h2 className="text-xl font-bold text-[var(--fg)]">GPUaaS Provisioning</h2>
+            <p className="text-sm text-[var(--fg-muted)]">
               {node.hostname || node.ipAddress} ({node.provider.companyName})
             </p>
           </div>
-          <button onClick={onClose} className="text-[#5b6476] hover:text-[#0b0f1c]">
+          <button onClick={onClose} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -266,7 +266,7 @@ export function GpuaasProvisioningModal({
                         : isComplete
                         ? "bg-green-100 text-green-600"
                         : isActive
-                        ? "bg-[#1a4fff] text-white"
+                        ? "bg-[var(--acid)] text-white"
                         : "bg-gray-100 text-gray-400"
                     }`}
                   >
@@ -274,7 +274,7 @@ export function GpuaasProvisioningModal({
                   </div>
                   <span
                     className={`ml-2 text-sm ${
-                      isActive ? "text-[#0b0f1c] font-medium" : "text-[#5b6476]"
+                      isActive ? "text-[var(--fg)] font-medium" : "text-[var(--fg-muted)]"
                     }`}
                   >
                     {step}
@@ -292,29 +292,29 @@ export function GpuaasProvisioningModal({
           </div>
 
           {/* Node Info */}
-          <div className="bg-[#f7f8fb] rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-[#0b0f1c] mb-2">Node Details</h3>
+          <div className="bg-[var(--ink)] rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-[var(--fg)] mb-2">Node Details</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-[#5b6476]">IP Address:</span>{" "}
-                <span className="text-[#0b0f1c]">{node.ipAddress}:{node.sshPort}</span>
+                <span className="text-[var(--fg-muted)]">IP Address:</span>{" "}
+                <span className="text-[var(--fg)]">{node.ipAddress}:{node.sshPort}</span>
               </div>
               <div>
-                <span className="text-[#5b6476]">Username:</span>{" "}
-                <span className="text-[#0b0f1c]">{node.sshUsername}</span>
+                <span className="text-[var(--fg-muted)]">Username:</span>{" "}
+                <span className="text-[var(--fg)]">{node.sshUsername}</span>
               </div>
               <div>
-                <span className="text-[#5b6476]">Status:</span>{" "}
-                <span className="text-[#0b0f1c]">{node.status}</span>
+                <span className="text-[var(--fg-muted)]">Status:</span>{" "}
+                <span className="text-[var(--fg)]">{node.status}</span>
               </div>
               <div>
-                <span className="text-[#5b6476]">GPUaaS ID:</span>{" "}
-                <span className="text-[#0b0f1c]">{node.gpuaasNodeId || "Not registered"}</span>
+                <span className="text-[var(--fg-muted)]">GPUaaS ID:</span>{" "}
+                <span className="text-[var(--fg)]">{node.gpuaasNodeId || "Not registered"}</span>
               </div>
             </div>
             {gpuaasStatus && !gpuaasStatus.error && (
-              <div className="mt-3 pt-3 border-t border-[#e4e7ef] text-sm">
-                <span className="text-[#5b6476]">Init Status:</span>{" "}
+              <div className="mt-3 pt-3 border-t border-[var(--line)] text-sm">
+                <span className="text-[var(--fg-muted)]">Init Status:</span>{" "}
                 <span
                   className={`font-medium ${
                     gpuaasStatus.initStatusLabel === "Completed"
@@ -335,18 +335,18 @@ export function GpuaasProvisioningModal({
           {/* Step Content */}
           {currentStep === "register" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">Step 1: Register with GPUaaS</h3>
-              <p className="text-sm text-[#5b6476]">
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Step 1: Register with GPUaaS</h3>
+              <p className="text-sm text-[var(--fg-muted)]">
                 Register this node with the GPUaaS Admin system. Select a region and provide
                 the external IP address for customer access.
               </p>
 
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">Region *</label>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">Region *</label>
                 <select
                   value={selectedRegionId || ""}
                   onChange={(e) => setSelectedRegionId(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                 >
                   <option value="">Select a region...</option>
                   {regions.filter((r) => r.gpuaasEnabled).map((r) => (
@@ -358,7 +358,7 @@ export function GpuaasProvisioningModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-1">
+                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                   External Service IP *
                 </label>
                 <input
@@ -366,15 +366,15 @@ export function GpuaasProvisioningModal({
                   value={externalServiceIp}
                   onChange={(e) => setExternalServiceIp(e.target.value)}
                   placeholder="e.g., 203.0.113.100"
-                  className="w-full px-3 py-2 border border-[#e4e7ef] rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-lg"
                 />
-                <p className="text-xs text-[#5b6476] mt-1">
+                <p className="text-xs text-[var(--fg-muted)] mt-1">
                   Public IP address that customers will use to connect to this node
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#0b0f1c] mb-2">Node Roles</label>
+                <label className="block text-sm font-medium text-[var(--fg)] mb-2">Node Roles</label>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2">
                     <input
@@ -418,7 +418,7 @@ export function GpuaasProvisioningModal({
               <button
                 onClick={handleRegister}
                 disabled={actionLoading || !selectedRegionId || !externalServiceIp}
-                className="w-full py-3 bg-[#1a4fff] text-white rounded-lg font-medium hover:bg-[#1238c9] disabled:opacity-50"
+                className="w-full py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
               >
                 {actionLoading ? "Registering..." : "Register Node"}
               </button>
@@ -427,8 +427,8 @@ export function GpuaasProvisioningModal({
 
           {currentStep === "ssh-keys" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">Step 2: Install SSH Keys</h3>
-              <p className="text-sm text-[#5b6476]">
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Step 2: Install SSH Keys</h3>
+              <p className="text-sm text-[var(--fg-muted)]">
                 Install the GPUaaS SSH key on the node to allow remote management.
               </p>
 
@@ -459,7 +459,7 @@ export function GpuaasProvisioningModal({
                 </p>
               </div>
 
-              <div className="text-center text-sm text-[#5b6476]">— or —</div>
+              <div className="text-center text-sm text-[var(--fg-muted)]">— or —</div>
 
               {/* Manual option */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -498,8 +498,8 @@ export function GpuaasProvisioningModal({
 
           {currentStep === "initialize" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">Step 3: Initialize Node</h3>
-              <p className="text-sm text-[#5b6476]">
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Step 3: Initialize Node</h3>
+              <p className="text-sm text-[var(--fg-muted)]">
                 Start the node initialization process. This will install required software
                 and configure the node for GPU workloads.
               </p>
@@ -507,7 +507,7 @@ export function GpuaasProvisioningModal({
               <button
                 onClick={handleInitialize}
                 disabled={actionLoading}
-                className="w-full py-3 bg-[#1a4fff] text-white rounded-lg font-medium hover:bg-[#1238c9] disabled:opacity-50"
+                className="w-full py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
               >
                 {actionLoading ? "Starting..." : "Start Initialization"}
               </button>
@@ -516,19 +516,19 @@ export function GpuaasProvisioningModal({
 
           {currentStep === "waiting" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#0b0f1c]">Initialization In Progress</h3>
-              <p className="text-sm text-[#5b6476]">
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Initialization In Progress</h3>
+              <p className="text-sm text-[var(--fg-muted)]">
                 The node is being initialized. This may take several minutes.
               </p>
 
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin w-12 h-12 border-4 border-[#1a4fff] border-t-transparent rounded-full" />
+                <div className="animate-spin w-12 h-12 border-4 border-[var(--acid)] border-t-transparent rounded-full" />
               </div>
 
               <button
                 onClick={handleCheckStatus}
                 disabled={actionLoading}
-                className="w-full py-3 bg-gray-100 text-[#0b0f1c] rounded-lg font-medium hover:bg-gray-200 disabled:opacity-50"
+                className="w-full py-3 bg-gray-100 text-[var(--fg)] rounded-lg font-medium hover:bg-gray-200 disabled:opacity-50"
               >
                 {actionLoading ? "Checking..." : "Check Status"}
               </button>
@@ -538,7 +538,7 @@ export function GpuaasProvisioningModal({
           {currentStep === "error" && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-red-600">Initialization Failed</h3>
-              <p className="text-sm text-[#5b6476]">
+              <p className="text-sm text-[var(--fg-muted)]">
                 The node initialization encountered an error. Check the node logs for details.
               </p>
 
@@ -546,14 +546,14 @@ export function GpuaasProvisioningModal({
                 <button
                   onClick={handleInitialize}
                   disabled={actionLoading}
-                  className="flex-1 py-3 bg-[#1a4fff] text-white rounded-lg font-medium hover:bg-[#1238c9] disabled:opacity-50"
+                  className="flex-1 py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
                 >
                   {actionLoading ? "Retrying..." : "Retry Initialization"}
                 </button>
                 <button
                   onClick={handleCheckStatus}
                   disabled={actionLoading}
-                  className="flex-1 py-3 bg-gray-100 text-[#0b0f1c] rounded-lg font-medium hover:bg-gray-200 disabled:opacity-50"
+                  className="flex-1 py-3 bg-gray-100 text-[var(--fg)] rounded-lg font-medium hover:bg-gray-200 disabled:opacity-50"
                 >
                   Refresh Status
                 </button>
@@ -564,7 +564,7 @@ export function GpuaasProvisioningModal({
           {currentStep === "complete" && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-green-600">Node Ready!</h3>
-              <p className="text-sm text-[#5b6476]">
+              <p className="text-sm text-[var(--fg-muted)]">
                 The node has been initialized successfully. You can now:
               </p>
 
@@ -572,7 +572,7 @@ export function GpuaasProvisioningModal({
                 <button
                   onClick={handleJoinCluster}
                   disabled={actionLoading}
-                  className="py-3 bg-[#1a4fff] text-white rounded-lg font-medium hover:bg-[#1238c9] disabled:opacity-50"
+                  className="py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
                 >
                   {actionLoading ? "Joining..." : "Join Cluster"}
                 </button>
