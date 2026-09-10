@@ -181,7 +181,7 @@ export function AddStorageModal({
         <div className="border-b border-[var(--line)] px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-[var(--ink)]">Storage</h2>
+              <h2 className="text-lg font-semibold text-[var(--fg)]">Storage</h2>
               <p className="text-xs text-[var(--muted)]">
                 Manage persistent storage volumes
               </p>
@@ -206,7 +206,7 @@ export function AddStorageModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-[var(--ink)]">Volume is being attached</p>
+              <p className="text-sm font-medium text-[var(--fg)]">Volume is being attached</p>
               <p className="text-xs text-[var(--muted)]">The GPU will restart briefly. Check the card for status.</p>
             </div>
           ) : loading ? (
@@ -310,7 +310,7 @@ export function AddStorageModal({
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-sm font-medium text-[var(--ink)]">{vol.name}</div>
+                              <div className="text-sm font-medium text-[var(--fg)]">{vol.name}</div>
                               <div className="text-xs text-[var(--muted)]">
                                 {vol.size_in_gb}GB · {vol.mount_point}
                               </div>

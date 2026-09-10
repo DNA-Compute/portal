@@ -425,7 +425,7 @@ export function PodsTab() {
           </button>
           <button
             onClick={loadPods}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-[var(--ink)] rounded-lg transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh

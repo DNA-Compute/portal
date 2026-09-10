@@ -248,7 +248,7 @@ export function BillingTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--ink)]">Billing</h1>
+        <h1 className="text-2xl font-bold text-[var(--fg)]">Billing</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={onDownloadCSV}
@@ -275,7 +275,7 @@ export function BillingTab({
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
           <div className="text-xs text-[var(--muted)] mb-1">Current Balance</div>
-          <div className="text-2xl font-bold text-[var(--ink)]">{walletBalance}</div>
+          <div className="text-2xl font-bold text-[var(--fg)]">{walletBalance}</div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
@@ -284,7 +284,7 @@ export function BillingTab({
             <div className="text-2xl font-bold text-zinc-600 animate-pulse">$—</div>
           ) : (
             <>
-              <div className="text-2xl font-bold text-[var(--ink)]">
+              <div className="text-2xl font-bold text-[var(--fg)]">
                 ${(serverAllTimeStats ?? allTimeStats).netSpend.toFixed(2)}
               </div>
               <div className="text-xs text-zinc-400">
@@ -296,7 +296,7 @@ export function BillingTab({
 
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
           <div className="text-xs text-[var(--muted)] mb-1">Total Transactions</div>
-          <div className="text-2xl font-bold text-[var(--ink)]">{stats.transactionCount}</div>
+          <div className="text-2xl font-bold text-[var(--fg)]">{stats.transactionCount}</div>
           <div className="text-xs text-zinc-400">{period !== "all" ? `${periodLabels[period]}` : "all time"}</div>
         </div>
 
@@ -318,7 +318,7 @@ export function BillingTab({
         <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden">
           <div className="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-[var(--ink)]">Active Subscriptions</h3>
+              <h3 className="font-semibold text-[var(--fg)]">Active Subscriptions</h3>
               <p className="text-xs text-zinc-400 mt-1">Your monthly GPU subscriptions</p>
             </div>
             {billingPortalUrl && (
@@ -388,7 +388,7 @@ export function BillingTab({
       {payments.length > 0 && (
         <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden">
           <div className="px-6 py-4 border-b border-[var(--line)]">
-            <h3 className="font-semibold text-[var(--ink)]">Card Payments</h3>
+            <h3 className="font-semibold text-[var(--fg)]">Card Payments</h3>
             <p className="text-xs text-zinc-400 mt-1">Actual charges to your payment method</p>
           </div>
           <div className="divide-y divide-zinc-100">
@@ -445,7 +445,7 @@ export function BillingTab({
       {/* Spend Chart */}
       <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-[var(--ink)]">Spend Over Time</h3>
+          <h3 className="font-semibold text-[var(--fg)]">Spend Over Time</h3>
           <span className="text-xs text-zinc-400">Last 14 days</span>
         </div>
         <div className="h-48">
@@ -463,7 +463,7 @@ export function BillingTab({
               onClick={() => setPeriod(p)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 period === p
-                  ? "bg-white text-[var(--ink)] shadow-sm"
+                  ? "bg-white text-[var(--fg)] shadow-sm"
                   : "text-zinc-500 hover:text-zinc-700"
               }`}
             >
@@ -480,7 +480,7 @@ export function BillingTab({
               onClick={() => setFilter(f)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 filter === f
-                  ? "bg-white text-[var(--ink)] shadow-sm"
+                  ? "bg-white text-[var(--fg)] shadow-sm"
                   : "text-zinc-500 hover:text-zinc-700"
               }`}
             >
@@ -514,7 +514,7 @@ export function BillingTab({
       {/* Transactions List */}
       <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between">
-          <h3 className="font-semibold text-[var(--ink)]">
+          <h3 className="font-semibold text-[var(--fg)]">
             Transactions
             <span className="ml-2 text-sm font-normal text-zinc-400">
               ({filteredTransactions.length} of {transactions.length})

@@ -97,7 +97,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
   return (
     <div className="bg-white border border-[var(--line)] rounded-xl p-6">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-[var(--ink)]">Profile</h2>
+        <h2 className="text-lg font-semibold text-[var(--fg)]">Profile</h2>
         <p className="text-sm text-[var(--muted)]">
           Your personal information and preferences
         </p>
@@ -107,7 +107,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
         {/* Name and Company row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Full Name
             </label>
             <input
@@ -115,11 +115,11 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               placeholder="Your name"
-              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Company
             </label>
             <input
@@ -127,7 +127,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
               value={profile.company}
               onChange={(e) => setProfile({ ...profile, company: e.target.value })}
               placeholder="Your company"
-              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
             />
           </div>
         </div>
@@ -135,7 +135,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
         {/* Email (read-only) and Phone row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Email
             </label>
             <input
@@ -147,7 +147,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
             <p className="text-xs text-[var(--muted)] mt-1">Contact support to change your email</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Phone
             </label>
             <input
@@ -155,7 +155,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
               value={profile.phone}
               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               placeholder="+1 (555) 123-4567"
-              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
             />
           </div>
         </div>
@@ -163,7 +163,7 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
         {/* Job Title and Website row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Job Title
             </label>
             <input
@@ -171,11 +171,11 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
               value={profile.jobTitle}
               onChange={(e) => setProfile({ ...profile, jobTitle: e.target.value })}
               placeholder="e.g. ML Engineer"
-              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+            <label className="block text-sm font-medium text-[var(--fg)] mb-1">
               Website
             </label>
             <input
@@ -183,20 +183,20 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
               value={profile.website}
               onChange={(e) => setProfile({ ...profile, website: e.target.value })}
               placeholder="https://yourcompany.com"
-              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
             />
           </div>
         </div>
 
         {/* Use Case */}
         <div>
-          <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+          <label className="block text-sm font-medium text-[var(--fg)] mb-1">
             Primary Use Case
           </label>
           <select
             value={profile.useCase}
             onChange={(e) => setProfile({ ...profile, useCase: e.target.value })}
-            className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
           >
             <option value="">Select your primary use case</option>
             <option value="ml-training">Machine Learning Training</option>
@@ -211,13 +211,13 @@ export function ProfileSettings({ token }: ProfileSettingsProps) {
 
         {/* Timezone */}
         <div>
-          <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+          <label className="block text-sm font-medium text-[var(--fg)] mb-1">
             Timezone
           </label>
           <select
             value={profile.timezone}
             onChange={(e) => setProfile({ ...profile, timezone: e.target.value })}
-            className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
           >
             <option value="">Select your timezone</option>
             <option value="America/Los_Angeles">Pacific Time (PT)</option>

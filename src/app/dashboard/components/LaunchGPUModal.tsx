@@ -592,7 +592,7 @@ export function LaunchGPUModal({
         <div className="border-b border-[var(--line)] px-6 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-[var(--ink)]">
+              <h2 className="text-lg font-semibold text-[var(--fg)]">
                 {deployContext?.title || "New GPU"}
               </h2>
               {deployContext?.subtitle && (
@@ -634,7 +634,7 @@ export function LaunchGPUModal({
                   />
                 </svg>
               </div>
-              <h3 className="font-semibold text-[var(--ink)] mb-2">Scheduled Maintenance</h3>
+              <h3 className="font-semibold text-[var(--fg)] mb-2">Scheduled Maintenance</h3>
               <p className="text-sm text-[var(--muted)] mb-4">
                 New GPU deployments are temporarily unavailable while we perform infrastructure
                 upgrades. Your existing GPUs are not affected.
@@ -671,7 +671,7 @@ export function LaunchGPUModal({
                       />
                     </svg>
                   </div>
-                  <h3 className="font-semibold text-[var(--ink)] mb-2">Unlock GPU Access</h3>
+                  <h3 className="font-semibold text-[var(--fg)] mb-2">Unlock GPU Access</h3>
                   <p className="text-sm text-[var(--muted)] mb-4">
                     Add funds to deploy GPU instances.
                   </p>
@@ -684,7 +684,7 @@ export function LaunchGPUModal({
                         onClick={() =>
                           onTopup?.(amount * 100, undefined, selectedProduct || undefined)
                         }
-                        className="px-4 py-3 border-2 border-[var(--line)] rounded-xl text-center font-semibold text-[var(--ink)] hover:border-teal-500 hover:bg-teal-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-3 border-2 border-[var(--line)] rounded-xl text-center font-semibold text-[var(--fg)] hover:border-teal-500 hover:bg-teal-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {topupLoading ? "..." : `$${amount}`}
                       </button>
@@ -697,7 +697,7 @@ export function LaunchGPUModal({
                   <p className="text-sm text-[var(--muted)] mb-4">{error}</p>
                   <button
                     onClick={onClose}
-                    className="text-sm text-zinc-600 hover:text-[var(--ink)]"
+                    className="text-sm text-zinc-600 hover:text-[var(--fg)]"
                   >
                     Close
                   </button>
@@ -721,15 +721,15 @@ export function LaunchGPUModal({
                   />
                 </svg>
               </div>
-              <h3 className="font-semibold text-[var(--ink)] mb-2">Fund Your Wallet</h3>
+              <h3 className="font-semibold text-[var(--fg)] mb-2">Fund Your Wallet</h3>
               <p className="text-sm text-[var(--muted)] mb-1">
                 You need at least{" "}
-                <span className="font-semibold text-[var(--ink)]">${getMinimumRequired()}</span> to
+                <span className="font-semibold text-[var(--fg)]">${getMinimumRequired()}</span> to
                 launch this GPU.
               </p>
               <p className="text-sm text-[var(--muted)] mb-5">
                 Your current balance is{" "}
-                <span className="font-semibold text-[var(--ink)]">${walletBalanceDollars}</span>.
+                <span className="font-semibold text-[var(--fg)]">${walletBalanceDollars}</span>.
               </p>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[50, 100, 250, 500].map((amount) => (
@@ -740,7 +740,7 @@ export function LaunchGPUModal({
                     onClick={() =>
                       onTopup?.(amount * 100, undefined, selectedProduct || undefined)
                     }
-                    className="px-4 py-3 border-2 border-[var(--line)] rounded-xl text-center font-semibold text-[var(--ink)] hover:border-teal-500 hover:bg-teal-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-3 border-2 border-[var(--line)] rounded-xl text-center font-semibold text-[var(--fg)] hover:border-teal-500 hover:bg-teal-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {topupLoading ? "..." : `$${amount}`}
                   </button>
@@ -821,7 +821,7 @@ export function LaunchGPUModal({
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="font-medium text-[var(--ink)]">{family}</span>
+                              <span className="font-medium text-[var(--fg)]">{family}</span>
                               <span className="text-xs text-[var(--muted)]">
                                 {isPending ? "Pending setup" : `${productCount} product${productCount !== 1 ? "s" : ""}`}
                               </span>
@@ -911,7 +911,7 @@ export function LaunchGPUModal({
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                   </svg>
                                 )}
-                                <span className="font-medium text-[var(--ink)]">
+                                <span className="font-medium text-[var(--fg)]">
                                   {product.name}
                                 </span>
                                 {product.badgeText && (
@@ -954,7 +954,7 @@ export function LaunchGPUModal({
                                 </>
                               ) : (
                                 <>
-                                  <div className="text-lg font-bold text-[var(--ink)]">
+                                  <div className="text-lg font-bold text-[var(--fg)]">
                                     ${pricePerHour}
                                   </div>
                                   <div className="text-xs text-[var(--muted)]">per hour</div>
@@ -1038,7 +1038,7 @@ export function LaunchGPUModal({
                           <div className="flex items-center gap-3">
                             {flag && <span className="text-xl">{flag}</span>}
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-[var(--ink)]">
+                              <div className="text-sm font-medium text-[var(--fg)]">
                                 {(region as { city?: string }).city || region.region_name}
                                 {(region as { country?: string }).country && (
                                   <span className="text-[var(--muted)] font-normal">, {(region as { country?: string }).country}</span>
@@ -1106,7 +1106,7 @@ export function LaunchGPUModal({
                       <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--line)] cursor-pointer hover:border-teal-300 transition-colors">
                         <input type="radio" name="storage-mode-top" checked={storageMode === "none"} onChange={() => { setStorageMode("none"); setSelectedExistingVolume(null); }} className="w-4 h-4 accent-teal-500" />
                         <div>
-                          <span className="text-sm font-medium text-[var(--ink)]">None</span>
+                          <span className="text-sm font-medium text-[var(--fg)]">None</span>
                           <p className="text-xs text-[var(--muted)]">Ephemeral storage only (data lost on termination)</p>
                         </div>
                       </label>
@@ -1114,7 +1114,7 @@ export function LaunchGPUModal({
                         <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--line)] cursor-pointer hover:border-teal-300 transition-colors">
                           <input type="radio" name="storage-mode-top" checked={storageMode === "create"} onChange={() => { setStorageMode("create"); setSelectedExistingVolume(null); if (storageBlocks.length > 0 && !selectedStorageBlock) setSelectedStorageBlock(storageBlocks[0].id); }} className="w-4 h-4 accent-teal-500" />
                           <div>
-                            <span className="text-sm font-medium text-[var(--ink)]">Create new volume</span>
+                            <span className="text-sm font-medium text-[var(--fg)]">Create new volume</span>
                             <p className="text-xs text-[var(--muted)]">Persistent storage that survives termination</p>
                           </div>
                         </label>
@@ -1126,7 +1126,7 @@ export function LaunchGPUModal({
                           <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--line)] cursor-pointer hover:border-teal-300 transition-colors">
                             <input type="radio" name="storage-mode-top" checked={storageMode === "existing"} onChange={() => { setStorageMode("existing"); setSelectedExistingVolume(regionVolumes[0].id); }} className="w-4 h-4 accent-teal-500" />
                             <div className="flex-1">
-                              <span className="text-sm font-medium text-[var(--ink)]">Use existing volume</span>
+                              <span className="text-sm font-medium text-[var(--fg)]">Use existing volume</span>
                               <p className="text-xs text-[var(--muted)]">Attach a volume you already own</p>
                             </div>
                             <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">{regionVolumes.length} available</span>
@@ -1229,7 +1229,7 @@ export function LaunchGPUModal({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span>{preset.icon}</span>
-                                <span className="text-sm font-medium text-[var(--ink)]">
+                                <span className="text-sm font-medium text-[var(--fg)]">
                                   {preset.name}
                                 </span>
                                 <span className="text-xs text-[var(--muted)]">
@@ -1262,7 +1262,7 @@ export function LaunchGPUModal({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span>📝</span>
-                              <span className="text-sm font-medium text-[var(--ink)]">
+                              <span className="text-sm font-medium text-[var(--fg)]">
                                 Custom script
                               </span>
                             </div>
@@ -1296,11 +1296,11 @@ export function LaunchGPUModal({
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-[var(--muted)]">
                       Wallet:{" "}
-                      <span className="font-medium text-[var(--ink)]">${walletBalanceDollars}</span>
+                      <span className="font-medium text-[var(--fg)]">${walletBalanceDollars}</span>
                     </div>
                     <div className="text-sm text-[var(--muted)]">
                       Est:{" "}
-                      <span className="font-bold text-[var(--ink)]">
+                      <span className="font-bold text-[var(--fg)]">
                         ${(selectedProductDetails.pricePerHourCents / 100).toFixed(2)}/hr
                       </span>
                     </div>
@@ -1342,7 +1342,7 @@ export function LaunchGPUModal({
                       className="w-4 h-4 mt-0.5 accent-teal-500"
                     />
                     <div>
-                      <span className="text-sm font-medium text-[var(--ink)]">Add Chat UI (Open WebUI)</span>
+                      <span className="text-sm font-medium text-[var(--fg)]">Add Chat UI (Open WebUI)</span>
                       <p className="text-xs text-[var(--muted)]">Deploy a ChatGPT-like interface alongside your model</p>
                     </div>
                   </label>

@@ -476,7 +476,7 @@ export default function HuggingFaceTab({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[var(--ink)]">Hugging Face</h1>
+        <h1 className="text-2xl font-bold text-[var(--fg)]">Hugging Face</h1>
       </div>
 
       {/* Search Bar */}
@@ -547,7 +547,7 @@ export default function HuggingFaceTab({
           {(searchSubmitted || searchQuery.length > 0) && (
             <button
               onClick={clearSearch}
-              className="px-4 py-2.5 text-[var(--muted)] hover:text-[var(--ink)]"
+              className="px-4 py-2.5 text-[var(--muted)] hover:text-[var(--fg)]"
             >
               Clear
             </button>
@@ -571,7 +571,7 @@ export default function HuggingFaceTab({
       {/* Search Results */}
       {searchResults.length > 0 ? (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-[var(--ink)] mb-4">
+          <h2 className="text-lg font-semibold text-[var(--fg)] mb-4">
             Search Results ({searchResults.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -589,7 +589,7 @@ export default function HuggingFaceTab({
         // PA-180: explicit empty state so users don't mistake the default
         // browse tabs below for "search returned irrelevant results".
         <div className="mb-8 text-center py-16 border border-dashed border-[var(--line)] rounded-xl">
-          <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">
+          <h2 className="text-lg font-semibold text-[var(--fg)] mb-2">
             No models found for &ldquo;{lastSearchQuery}&rdquo;
           </h2>
           <p className="text-sm text-[var(--muted)] mb-4">
@@ -616,7 +616,7 @@ export default function HuggingFaceTab({
                       className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                         activeTab === tab
                           ? "border-[var(--blue)] text-[var(--blue)]"
-                          : "border-transparent text-[var(--muted)] hover:text-[var(--ink)] hover:border-zinc-300"
+                          : "border-transparent text-[var(--muted)] hover:text-[var(--fg)] hover:border-zinc-300"
                       }`}
                     >
                       {tab === "popular"

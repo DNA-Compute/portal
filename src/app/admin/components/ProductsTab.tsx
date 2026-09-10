@@ -742,7 +742,7 @@ export function ProductsTab() {
               setEditingId(null);
               setShowCreateModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm font-medium">Add Product</span>
@@ -784,7 +784,7 @@ export function ProductsTab() {
               <button
                 onClick={handleSaveStoragePricing}
                 disabled={savingStorage}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 transition-colors disabled:opacity-50"
               >
                 {savingStorage ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -822,7 +822,7 @@ export function ProductsTab() {
               setEditingCategoryId(null);
               setShowCategoryModal(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Category
@@ -950,7 +950,7 @@ export function ProductsTab() {
             </div>
             <div className="p-6 border-t border-[var(--line)] flex justify-end gap-3">
               <button onClick={() => { setShowCategoryModal(false); setEditingCategoryId(null); }} className="px-4 py-2 text-[var(--fg-muted)] hover:bg-[var(--ink)] rounded-lg transition-colors">Cancel</button>
-              <button onClick={handleSaveCategory} disabled={savingCategory} className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50">
+              <button onClick={handleSaveCategory} disabled={savingCategory} className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50">
                 {savingCategory && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingCategoryId ? "Save" : "Create"}
               </button>
@@ -1529,7 +1529,7 @@ export function ProductsTab() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 transition-colors disabled:opacity-50"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingId ? "Save Changes" : "Create Product"}

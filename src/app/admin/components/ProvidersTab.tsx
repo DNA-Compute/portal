@@ -399,7 +399,7 @@ function ProvidersSubTab({
                         <button
                           onClick={() => onLoginAs(provider.id)}
                           disabled={actionLoading === provider.id}
-                          className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded disabled:opacity-50"
                         >
                           Login As
                         </button>

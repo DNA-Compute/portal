@@ -101,7 +101,7 @@ export function SnapshotCard({ snapshot, token, onRestore, onDelete }: SnapshotC
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-[var(--ink)] truncate">{snapshot.displayName}</h3>
+              <h3 className="font-semibold text-[var(--fg)] truncate">{snapshot.displayName}</h3>
               <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs rounded-full">
                 {snapshot.snapshotType === "full" ? "Full" : "Template"}
               </span>
@@ -157,7 +157,7 @@ export function SnapshotCard({ snapshot, token, onRestore, onDelete }: SnapshotC
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-auto my-auto shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[var(--ink)]">Resume Pod</h3>
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Resume Pod</h3>
               <button
                 onClick={() => setShowRestoreModal(false)}
                 className="text-zinc-400 hover:text-zinc-600 p-1"
@@ -218,7 +218,7 @@ export function SnapshotCard({ snapshot, token, onRestore, onDelete }: SnapshotC
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-[var(--ink)] mb-2">Delete Snapshot?</h3>
+            <h3 className="text-lg font-semibold text-[var(--fg)] mb-2">Delete Snapshot?</h3>
             <p className="text-sm text-zinc-600 mb-4">
               This will delete &quot;{snapshot.displayName}&quot;.
               {snapshot.hasStorage && (

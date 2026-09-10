@@ -145,7 +145,7 @@ export default function GPUMetricsCard({
               d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
             />
           </svg>
-          <span className="text-sm font-medium text-[var(--ink)]">GPU Metrics</span>
+          <span className="text-sm font-medium text-[var(--fg)]">GPU Metrics</span>
           {metrics?.isHealthy !== undefined && (
             <span
               className={`px-2 py-0.5 rounded-full text-xs ${
@@ -169,7 +169,7 @@ export default function GPUMetricsCard({
       {metrics?.modelId && (
         <div className="mb-3 px-3 py-2 bg-white rounded-lg border border-zinc-200">
           <span className="text-xs text-[var(--muted)]">Model: </span>
-          <span className="text-xs font-mono text-[var(--ink)]">
+          <span className="text-xs font-mono text-[var(--fg)]">
             {metrics.modelId}
           </span>
         </div>
@@ -181,7 +181,7 @@ export default function GPUMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">GPU Cache</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {metrics?.gpuCacheUsagePercent.toFixed(0)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">%</span>
@@ -198,7 +198,7 @@ export default function GPUMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">Gen Throughput</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {metrics?.avgGenerationThroughput.toFixed(1)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">tok/s</span>
@@ -209,7 +209,7 @@ export default function GPUMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">Prompt Throughput</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {metrics?.avgPromptThroughput.toFixed(1)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">tok/s</span>
@@ -220,7 +220,7 @@ export default function GPUMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">Time to First Token</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {metrics?.avgTimeToFirstToken.toFixed(0)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">ms</span>
@@ -256,7 +256,7 @@ export default function GPUMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">Total Tokens</div>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-[var(--ink)]">
+            <span className="text-lg font-semibold text-[var(--fg)]">
               {formatNumber((metrics?.promptTokensTotal || 0) + (metrics?.generationTokensTotal || 0))}
             </span>
           </div>

@@ -446,7 +446,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 <button
                   onClick={() => handleAction("send-credentials")}
                   disabled={actionLoading === "send-credentials"}
-                  className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white text-sm rounded-lg disabled:opacity-50"
+                  className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] text-sm rounded-lg disabled:opacity-50"
                 >
                   {actionLoading === "send-credentials" ? "..." : "Send Credentials"}
                 </button>
@@ -998,7 +998,7 @@ export function CustomerDetailPanel({ customerId, onClose, onCustomerUpdated }: 
                 <button
                   type="submit"
                   disabled={actionLoading === "set-balance" || !creditAmount || !adjustReason || (adjustReason === "other" && !adjustReasonNote.trim())}
-                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg disabled:opacity-50"
                 >
                   {actionLoading === "set-balance" ? "Saving..." : "Set Balance"}
                 </button>

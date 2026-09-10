@@ -171,7 +171,7 @@ export function SaveSnapshotModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-[var(--ink)]">
+          <h3 className="text-lg font-semibold text-[var(--fg)]">
             {snapshotStep === "name" && "Save Pod Configuration"}
             {snapshotStep === "options" && "Data Preservation"}
             {snapshotStep === "saving" && "Saving..."}

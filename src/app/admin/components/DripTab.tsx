@@ -130,7 +130,7 @@ export function DripTab() {
             <button
               onClick={handleSeed}
               disabled={seeding}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50 text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50 text-sm"
             >
               <Plus className="w-4 h-4" />
               {seeding ? "Creating..." : "Create Default Sequence"}
@@ -155,7 +155,7 @@ export function DripTab() {
           <button
             onClick={handleSeed}
             disabled={seeding}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             {seeding ? "Creating..." : "Create Default Sequence"}

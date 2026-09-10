@@ -241,7 +241,7 @@ function CheckoutContent() {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">{product.name}</span>
                         {product.badgeText && (
-                          <span className="text-xs bg-[var(--acid)] text-white px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-[var(--acid)] text-[var(--ink)] px-2 py-0.5 rounded-full">
                             {product.badgeText}
                           </span>
                         )}
@@ -404,7 +404,7 @@ function CheckoutContent() {
           <button
             type="submit"
             disabled={status === "loading" || !selectedProduct || !termsAccepted}
-            className="w-full px-6 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] disabled:bg-[var(--ink-raise)] text-white font-medium rounded-lg transition-colors"
+            className="w-full px-6 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] disabled:bg-[var(--ink-raise)] text-[var(--ink)] font-medium rounded-lg transition-colors"
           >
             {status === "loading" ? (
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

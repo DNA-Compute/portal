@@ -136,7 +136,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
     <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-6 border border-teal-100">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="font-semibold text-[var(--ink)] flex items-center gap-2">
+          <h3 className="font-semibold text-[var(--fg)] flex items-center gap-2">
             <span className="text-xl">🎁</span>
             Refer a Friend
           </h3>
@@ -188,7 +188,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
             <div className="text-xs text-[var(--muted)]">Available</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold text-[var(--ink)]">
+            <div className="text-xl font-bold text-[var(--fg)]">
               {data.stats?.totalReferrals || 0}
             </div>
             <div className="text-xs text-[var(--muted)]">Shared</div>
@@ -240,7 +240,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
               <tbody>
                 {data.referrals.map((referral) => (
                   <tr key={referral.id} className="border-t border-teal-50">
-                    <td className="px-4 py-2 text-[var(--ink)]">
+                    <td className="px-4 py-2 text-[var(--fg)]">
                       {referral.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
                     </td>
                     <td className="px-4 py-2">

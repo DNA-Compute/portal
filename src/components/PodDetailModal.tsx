@@ -65,7 +65,7 @@ export function PodDetailModal({ pod, timestamp, onClose }: PodDetailModalProps)
       >
         <div className="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
           <div>
-            <h3 className="font-semibold text-[var(--ink)]">{pod.poolName}</h3>
+            <h3 className="font-semibold text-[var(--fg)]">{pod.poolName}</h3>
             <p className="text-xs text-zinc-500">{pod.podName}</p>
           </div>
           <button
@@ -103,7 +103,7 @@ export function PodDetailModal({ pod, timestamp, onClose }: PodDetailModalProps)
           {/* GPU Metrics */}
           {pod.gpu ? (
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-[var(--ink)] mb-3">GPU Metrics</h4>
+              <h4 className="text-sm font-medium text-[var(--fg)] mb-3">GPU Metrics</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {/* Utilization */}
                 <div className="bg-zinc-50 rounded-xl p-4">
@@ -188,7 +188,7 @@ export function PodDetailModal({ pod, timestamp, onClose }: PodDetailModalProps)
           {/* System Metrics */}
           {pod.system && (
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-[var(--ink)] mb-3">System Metrics</h4>
+              <h4 className="text-sm font-medium text-[var(--fg)] mb-3">System Metrics</h4>
               <div className="grid grid-cols-2 gap-4">
                 {/* CPU */}
                 <div className="bg-zinc-50 rounded-xl p-4">

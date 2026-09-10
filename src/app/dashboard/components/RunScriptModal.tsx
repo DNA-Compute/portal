@@ -62,7 +62,7 @@ export function RunScriptModal({ isOpen, onClose, subscriptionId, token, podName
       <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
         <div className="border-b border-[var(--line)] px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-medium text-[var(--ink)]">Run Script</h2>
+            <h2 className="text-base font-medium text-[var(--fg)]">Run Script</h2>
             <p className="text-xs text-[var(--muted)]">Execute a bash script on the pod</p>
           </div>
           <button onClick={onClose} className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors">
@@ -109,7 +109,7 @@ export function RunScriptModal({ isOpen, onClose, subscriptionId, token, podName
         </div>
 
         <div className="border-t border-[var(--line)] px-6 py-4 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-[var(--ink)] transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-[var(--fg)] transition-colors">
             Close
           </button>
           <button

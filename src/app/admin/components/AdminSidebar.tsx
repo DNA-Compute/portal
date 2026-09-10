@@ -145,7 +145,7 @@ export function AdminSidebar({
   const { data: securityHealth, loading: securityLoading } = useSecurityHealth();
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-[var(--fg)] text-white flex flex-col transition-all duration-300 ${
+      className={`fixed left-0 top-0 h-full bg-[var(--ink-raise)] text-white flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
@@ -206,8 +206,8 @@ export function AdminSidebar({
                         isCollapsed ? "justify-center px-3" : "px-6"
                       } ${
                         isActive
-                          ? "bg-[var(--acid)] text-white"
-                          : "text-gray-600 hover:bg-white/5 hover:text-white"
+                          ? "bg-[var(--acid)] text-[var(--ink)]"
+                          : "text-gray-600 hover:bg-white/5 hover:text-[var(--ink)]"
                       }`}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />

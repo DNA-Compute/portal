@@ -339,7 +339,7 @@ export function GPUPicker({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-[var(--ink)]">{family}</span>
+                    <span className="font-medium text-[var(--fg)]">{family}</span>
                     <span className="text-xs text-[var(--muted)]">
                       {isPending ? "Pending setup" : `${productCount} product${productCount !== 1 ? "s" : ""}`}
                     </span>
@@ -413,7 +413,7 @@ export function GPUPicker({
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-[var(--ink)]">{product.name}</span>
+                            <span className="font-medium text-[var(--fg)]">{product.name}</span>
                             {product.featured && (
                               <span className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-medium">Popular</span>
                             )}
@@ -433,7 +433,7 @@ export function GPUPicker({
                           ) : (
                             <div className="flex items-center gap-2">
                               <div>
-                                <span className="text-lg font-bold text-[var(--ink)]">${pricePerHour}</span>
+                                <span className="text-lg font-bold text-[var(--fg)]">${pricePerHour}</span>
                                 <span className="text-xs text-[var(--muted)]">/hr</span>
                               </div>
                               {isSelected && (
@@ -480,7 +480,7 @@ export function GPUPicker({
                       <div className="flex items-center gap-3">
                         {flag && <span className="text-xl">{flag}</span>}
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-[var(--ink)]">
+                          <div className="text-sm font-medium text-[var(--fg)]">
                             {region.city || region.region_name}
                             {region.country && <span className="text-[var(--muted)] font-normal">, {region.country}</span>}
                           </div>

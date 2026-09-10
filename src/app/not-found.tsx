@@ -135,7 +135,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/"
-            className="px-8 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white font-medium rounded-lg transition-all hover:scale-105"
+            className="px-8 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] font-medium rounded-lg transition-all hover:scale-105"
           >
             Return to Homepage
           </Link>

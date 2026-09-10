@@ -282,7 +282,7 @@ export default function CustomerDetailPage() {
             <button
               onClick={() => handleAction("send-credentials")}
               disabled={actionLoading === "send-credentials"}
-              className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white text-sm rounded-lg disabled:opacity-50"
+              className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] text-sm rounded-lg disabled:opacity-50"
             >
               {actionLoading === "send-credentials" ? "..." : "Send Credentials"}
             </button>

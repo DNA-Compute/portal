@@ -454,7 +454,7 @@ function ConfirmDialog({ title, message, confirmLabel, confirmColor, onConfirm, 
           <button onClick={onCancel} className="px-3 py-1.5 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] rounded-lg border border-[var(--line)] hover:bg-zinc-50">
             Cancel
           </button>
-          <button onClick={onConfirm} className={`px-3 py-1.5 text-sm text-white rounded-lg font-medium ${confirmColor || "bg-[var(--acid)] hover:bg-[var(--acid)]/90"}`}>
+          <button onClick={onConfirm} className={`px-3 py-1.5 text-sm text-[var(--ink)] rounded-lg font-medium ${confirmColor || "bg-[var(--acid)] hover:bg-[var(--acid)]/90"}`}>
             {confirmLabel}
           </button>
         </div>
@@ -1058,7 +1058,7 @@ export function PlatformSettingsTab() {
                     }
                   }}
                   disabled={!blocklistNewDomain.trim() || !blocklistNewDomain.includes(".")}
-                  className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-[var(--ink)] rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add
                 </button>
@@ -1212,7 +1212,7 @@ export function PlatformSettingsTab() {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-[var(--ink)] rounded-lg text-sm font-medium disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>

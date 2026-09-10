@@ -105,13 +105,13 @@ export function OnboardingChecklist({
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-[var(--ink)] text-sm">Get started with {getBrandName()}</h3>
+            <h3 className="font-semibold text-[var(--fg)] text-sm">Get started with {getBrandName()}</h3>
             <p className="text-xs text-[var(--muted)]">{completedCount} of {steps.length} complete</p>
           </div>
         </div>
         <button
           onClick={handleDismiss}
-          className="text-[var(--muted)] hover:text-[var(--ink)] text-xs transition-colors"
+          className="text-[var(--muted)] hover:text-[var(--fg)] text-xs transition-colors"
         >
           Dismiss
         </button>
@@ -159,7 +159,7 @@ export function OnboardingChecklist({
               </div>
 
               <div className={`text-xs font-medium mb-0.5 ${
-                step.completed ? "text-teal-700" : "text-[var(--ink)]"
+                step.completed ? "text-teal-700" : "text-[var(--fg)]"
               }`}>
                 {step.label}
               </div>

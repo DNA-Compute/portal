@@ -171,7 +171,7 @@ export function MobileMenuSheet({
               {userName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[var(--ink)] truncate">{userName}</p>
+              <p className="font-semibold text-[var(--fg)] truncate">{userName}</p>
               <p className="text-sm text-[var(--muted)] truncate">{userEmail}</p>
             </div>
             <button
@@ -191,7 +191,7 @@ export function MobileMenuSheet({
             {check("huggingface.use") && (
               <button onClick={() => handleTabClick("huggingface")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-zinc-50 transition-colors">
                 <span className="text-xl">🤗</span>
-                <span className="font-medium text-[var(--ink)]">Hugging Face</span>
+                <span className="font-medium text-[var(--fg)]">Hugging Face</span>
               </button>
             )}
 
@@ -200,7 +200,7 @@ export function MobileMenuSheet({
                 <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
-                <span className="font-medium text-[var(--ink)]">Apps</span>
+                <span className="font-medium text-[var(--fg)]">Apps</span>
               </button>
             )}
 
@@ -209,7 +209,7 @@ export function MobileMenuSheet({
                 <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                 </svg>
-                <span className="font-medium text-[var(--ink)]">Storage</span>
+                <span className="font-medium text-[var(--fg)]">Storage</span>
               </button>
             )}
 
@@ -218,7 +218,7 @@ export function MobileMenuSheet({
                 <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
                 </svg>
-                <span className="font-medium text-[var(--ink)]">Bare Metal</span>
+                <span className="font-medium text-[var(--fg)]">Bare Metal</span>
               </button>
             )}
 
@@ -227,7 +227,7 @@ export function MobileMenuSheet({
                 <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <span className="font-medium text-[var(--ink)]">Metrics</span>
+                <span className="font-medium text-[var(--fg)]">Metrics</span>
               </button>
             )}
 
@@ -239,7 +239,7 @@ export function MobileMenuSheet({
               <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-              <span className="font-medium text-[var(--ink)]">Team</span>
+              <span className="font-medium text-[var(--fg)]">Team</span>
             </button>
 
             <div className="my-4 border-t border-[var(--line)]" />
@@ -249,7 +249,7 @@ export function MobileMenuSheet({
               <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              <span className="font-medium text-[var(--ink)]">Documentation</span>
+              <span className="font-medium text-[var(--fg)]">Documentation</span>
               <svg className="w-4 h-4 text-zinc-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -259,14 +259,14 @@ export function MobileMenuSheet({
               <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <span className="font-medium text-[var(--ink)]">Support</span>
+              <span className="font-medium text-[var(--fg)]">Support</span>
             </button>
 
             <button onClick={() => handleTabClick("referrals")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-zinc-50 transition-colors">
               <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
               </svg>
-              <span className="font-medium text-[var(--ink)]">Referrals</span>
+              <span className="font-medium text-[var(--fg)]">Referrals</span>
             </button>
 
             <div className="my-4 border-t border-[var(--line)]" />
@@ -285,7 +285,7 @@ export function MobileMenuSheet({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               )}
-              <span className="font-medium text-[var(--ink)]">Stripe Portal</span>
+              <span className="font-medium text-[var(--fg)]">Stripe Portal</span>
             </button>
             )}
 
@@ -335,7 +335,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
           <div className="grid grid-cols-3 gap-4">
             <button onClick={() => handleTabClick("huggingface")} className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors">
               <span className="text-2xl">🤗</span>
-              <span className="text-xs font-medium text-[var(--ink)]">Hugging Face</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Hugging Face</span>
             </button>
 
             <button onClick={() => handleTabClick("apps")} className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors">
@@ -344,7 +344,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
               </div>
-              <span className="text-xs font-medium text-[var(--ink)]">Apps</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Apps</span>
             </button>
 
             <button onClick={() => handleTabClick("storage")} className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors">
@@ -353,7 +353,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                 </svg>
               </div>
-              <span className="text-xs font-medium text-[var(--ink)]">Storage</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Storage</span>
             </button>
 
             {bareMetalEnabled && (
@@ -363,7 +363,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
                   </svg>
                 </div>
-                <span className="text-xs font-medium text-[var(--ink)]">Bare Metal</span>
+                <span className="text-xs font-medium text-[var(--fg)]">Bare Metal</span>
               </button>
             )}
 
@@ -373,7 +373,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <span className="text-xs font-medium text-[var(--ink)]">Metrics</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Metrics</span>
             </button>
 
             <button onClick={() => handleTabClick("support")} className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors relative">
@@ -385,7 +385,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white" />
                 )}
               </div>
-              <span className="text-xs font-medium text-[var(--ink)]">Support</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Support</span>
             </button>
 
             <button onClick={() => handleTabClick("referrals")} className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors">
@@ -394,7 +394,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                 </svg>
               </div>
-              <span className="text-xs font-medium text-[var(--ink)]">Referrals</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Referrals</span>
             </button>
 
             <button onClick={() => handleTabClick("team")} className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors">
@@ -403,7 +403,7 @@ export function MobileMoreSheet({ isOpen, onClose, onTabChange, hasUnreadSupport
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               </div>
-              <span className="text-xs font-medium text-[var(--ink)]">Team</span>
+              <span className="text-xs font-medium text-[var(--fg)]">Team</span>
             </button>
           </div>
         </div>

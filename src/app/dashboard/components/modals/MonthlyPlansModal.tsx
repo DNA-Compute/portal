@@ -162,7 +162,7 @@ export function MonthlyPlansModal({
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-xl flex flex-col overflow-hidden">
         <div className="flex items-start justify-between p-6 border-b border-[var(--line)]">
           <div>
-            <h3 className="text-lg font-semibold text-[var(--ink)]">Monthly plans</h3>
+            <h3 className="text-lg font-semibold text-[var(--fg)]">Monthly plans</h3>
             <p className="text-sm text-[var(--muted)] mt-0.5">
               Commit to a GPU monthly for a lower effective hourly rate.
             </p>
@@ -203,7 +203,7 @@ export function MonthlyPlansModal({
                   className="w-full text-left px-4 py-3 rounded-lg border-2 border-[var(--line)] hover:border-teal-400 hover:bg-teal-50/50 transition-all"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-[var(--ink)]">{bucket.name}</span>
+                    <span className="font-medium text-[var(--fg)]">{bucket.name}</span>
                     <span className="text-xs text-[var(--muted)]">
                       {bucket.products.length} plan{bucket.products.length !== 1 ? "s" : ""}
                     </span>
@@ -250,7 +250,7 @@ export function MonthlyPlansModal({
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-[var(--ink)]">{product.name}</h4>
+                          <h4 className="font-semibold text-[var(--fg)]">{product.name}</h4>
                           {product.badgeText && (
                             <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
                               {product.badgeText}
@@ -271,7 +271,7 @@ export function MonthlyPlansModal({
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-2xl font-bold text-[var(--ink)] leading-none">
+                        <div className="text-2xl font-bold text-[var(--fg)] leading-none">
                           ${monthlyPrice}
                           <span className="text-sm font-normal text-[var(--muted)]">/mo</span>
                         </div>

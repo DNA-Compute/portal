@@ -273,7 +273,7 @@ export function WelcomeModal({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-xl font-bold text-[var(--ink)] mb-1">
+                <p className="text-xl font-bold text-[var(--fg)] mb-1">
                   ${(redeemSuccess / 100).toFixed(0)} added to your wallet
                 </p>
                 <p className="text-sm text-zinc-500 mb-6">Your voucher has been redeemed successfully.</p>
@@ -290,7 +290,7 @@ export function WelcomeModal({
                 {/* PAYG wallet section — hidden when free voucher is validated */}
                 {!isFreeVoucher && (
                   <div className="px-8 pt-5 pb-4">
-                    <p className="text-sm font-semibold text-[var(--ink)] mb-1">PAYG, on-demand GPU wallet</p>
+                    <p className="text-sm font-semibold text-[var(--fg)] mb-1">PAYG, on-demand GPU wallet</p>
                     <p className="text-xs text-[var(--muted)] mb-5">Choose an amount. RTX Pro 6000 from $0.66/hr</p>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -317,7 +317,7 @@ export function WelcomeModal({
                                 {option.tag}
                               </span>
                             )}
-                            <span className="text-2xl font-bold text-[var(--ink)] group-hover:text-teal-600 transition-colors">{option.label}</span>
+                            <span className="text-2xl font-bold text-[var(--fg)] group-hover:text-teal-600 transition-colors">{option.label}</span>
                             {validatedVoucher ? (
                               <span className="text-xs text-green-600 font-medium mt-1">
                                 ~{totalHours}h GPU time (+{bonusHours}h bonus)

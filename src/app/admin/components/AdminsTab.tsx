@@ -55,7 +55,7 @@ export function AdminsTab({
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-[var(--acid)] text-white hover:bg-[var(--acid-deep)] rounded-lg font-medium"
+          className="px-4 py-2 bg-[var(--acid)] text-[var(--ink)] hover:bg-[var(--acid-deep)] rounded-lg font-medium"
         >
           Add Admin
         </button>

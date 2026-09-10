@@ -105,7 +105,7 @@ export function SettingsTab({
             <button
               type="submit"
               disabled={pricingSaving}
-              className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg font-medium disabled:opacity-50"
             >
               {pricingSaving ? "Saving..." : "Save Pricing"}
             </button>
@@ -244,7 +244,7 @@ function RateLimitCapSection() {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
+            className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg font-medium disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Rate Limits"}
           </button>

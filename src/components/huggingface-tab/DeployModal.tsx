@@ -109,7 +109,7 @@ export function DeployModal({
         <div className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold text-[var(--ink)]">
+              <h2 className="text-xl font-bold text-[var(--fg)]">
                 Deploy to GPU
               </h2>
               <p className="text-sm text-[var(--muted)] mt-1">
@@ -118,7 +118,7 @@ export function DeployModal({
             </div>
             <button
               onClick={onClose}
-              className="text-[var(--muted)] hover:text-[var(--ink)] p-1"
+              className="text-[var(--muted)] hover:text-[var(--fg)] p-1"
             >
               <svg
                 className="w-6 h-6"
@@ -150,7 +150,7 @@ export function DeployModal({
           {/* Deploy Mode Selection */}
           {existingSubscriptions.length > 0 && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[var(--ink)] mb-2">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                 Deploy To
               </label>
               <div className="flex gap-2">
@@ -181,7 +181,7 @@ export function DeployModal({
           {/* Existing GPU Selection */}
           {deployMode === "existing" && existingSubscriptions.length > 0 && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[var(--ink)] mb-2">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                 Select GPU
               </label>
               <select
@@ -248,7 +248,7 @@ export function DeployModal({
           {/* HF Token (for gated models) */}
           {"gated" in selectedItem && selectedItem.gated && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[var(--ink)] mb-2">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                 HuggingFace Token
                 <span className="text-orange-600 ml-1">*</span>
               </label>
@@ -284,7 +284,7 @@ export function DeployModal({
                   className="w-4 h-4 text-[var(--blue)] rounded border-zinc-300 focus:ring-[var(--blue)]"
                 />
                 <div>
-                  <span className="font-medium text-[var(--ink)]">
+                  <span className="font-medium text-[var(--fg)]">
                     Add Chat UI (Open WebUI)
                   </span>
                   <p className="text-xs text-[var(--muted)]">
@@ -393,7 +393,7 @@ export function DeployModal({
                 </div>
                 {deployResult && (
                   <div className="mt-3 p-3 bg-white rounded border border-green-200">
-                    <p className="text-sm text-[var(--ink)] mb-1">
+                    <p className="text-sm text-[var(--fg)] mb-1">
                       <strong>API Endpoint:</strong>
                     </p>
                     <code className="text-sm text-[var(--blue)] break-all">
@@ -422,7 +422,7 @@ export function DeployModal({
           {showLogs && deployLogs && (
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-[var(--ink)]">
+                <span className="text-sm font-medium text-[var(--fg)]">
                   Deployment Logs
                 </span>
                 <button
@@ -444,7 +444,7 @@ export function DeployModal({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-2.5 px-4 border border-[var(--line)] rounded-lg text-[var(--ink)] hover:bg-zinc-50 transition-colors font-medium"
+              className="flex-1 py-2.5 px-4 border border-[var(--line)] rounded-lg text-[var(--fg)] hover:bg-zinc-50 transition-colors font-medium"
             >
               {deploySuccess || isPolling ? "Close" : "Cancel"}
             </button>

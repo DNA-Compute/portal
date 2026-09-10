@@ -119,7 +119,7 @@ export function CustomersTab({
         />
         <button
           onClick={onSearch}
-          className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg"
+          className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg"
         >
           Search
         </button>
@@ -246,7 +246,7 @@ export function CustomersTab({
                       <button
                         onClick={() => onCustomerAction(customer.id, "send-credentials")}
                         disabled={actionLoading === customer.id}
-                        className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded disabled:opacity-50"
+                        className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded disabled:opacity-50"
                       >
                         Send Credentials
                       </button>
@@ -298,7 +298,7 @@ export function CustomersTab({
                   disabled={customersLoading}
                   className={`px-3 py-1.5 text-sm rounded-lg ${
                     p === page
-                      ? "bg-[var(--acid)] text-white"
+                      ? "bg-[var(--acid)] text-[var(--ink)]"
                       : "border border-[var(--line)] hover:bg-gray-50"
                   }`}
                 >

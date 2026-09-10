@@ -642,7 +642,7 @@ export function DashboardContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">Access Denied</h2>
+          <h2 className="text-lg font-semibold text-[var(--fg)] mb-2">Access Denied</h2>
           <p className="text-sm text-[var(--muted)] mb-6">{error || "Unable to load account"}</p>
           <Link href="/account" className="inline-block px-6 py-3 bg-zinc-50 text-white rounded-xl text-sm font-medium hover:bg-zinc-100 transition-colors">
             Request New Access Link
@@ -768,7 +768,7 @@ export function DashboardContent() {
             </div>
             <div className="min-w-0">
               <p className="text-xs text-[var(--muted)]">{greeting},</p>
-              <p className="font-semibold text-[var(--ink)] truncate">{headerDisplayName}</p>
+              <p className="font-semibold text-[var(--fg)] truncate">{headerDisplayName}</p>
             </div>
           </div>
           {(tagline || easterEgg) && (
@@ -1019,7 +1019,7 @@ export function DashboardContent() {
                 }`}
               >
                 <div>
-                  <h1 className="text-2xl font-bold text-[var(--ink)]">Dashboard</h1>
+                  <h1 className="text-2xl font-bold text-[var(--fg)]">Dashboard</h1>
                   <p className="text-sm text-[var(--muted)]">Manage your GPU instances</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1073,7 +1073,7 @@ export function DashboardContent() {
                 <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
                   <div className="text-xs text-[var(--muted)] mb-1">Active GPUs</div>
                   <div className="flex items-center gap-2">
-                    <div className="text-3xl font-bold text-[var(--ink)]">{totalRunning}</div>
+                    <div className="text-3xl font-bold text-[var(--fg)]">{totalRunning}</div>
                     {totalRunning > 0 && <StatusDot status="running" />}
                   </div>
                 </div>
@@ -1082,13 +1082,13 @@ export function DashboardContent() {
                 {canViewBilling && (<>
                 <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
                   <div className="text-xs text-[var(--muted)] mb-1">GPU Hours</div>
-                  <div className="text-3xl font-bold text-[var(--ink)]">{gpuHoursFromTxns.toFixed(2)}h</div>
+                  <div className="text-3xl font-bold text-[var(--fg)]">{gpuHoursFromTxns.toFixed(2)}h</div>
                   <div className="text-xs text-zinc-400">this month</div>
                 </div>
 
                 <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
                   <div className="text-xs text-[var(--muted)] mb-1">Spent</div>
-                  <div className="text-3xl font-bold text-[var(--ink)]">${spentFromTxns.toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-[var(--fg)]">${spentFromTxns.toFixed(2)}</div>
                   {hasStorageCost ? (
                     <div className="text-xs text-zinc-400">
                       ${(spentFromTxns - storageCost).toFixed(2)} GPU + {formatSmartPrice(storageCost)} storage
@@ -1100,7 +1100,7 @@ export function DashboardContent() {
 
                 <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
                   <div className="text-xs text-[var(--muted)] mb-1">Projected</div>
-                  <div className="text-3xl font-bold text-[var(--ink)]">~${projectedSpend.toFixed(0)}</div>
+                  <div className="text-3xl font-bold text-[var(--fg)]">~${projectedSpend.toFixed(0)}</div>
                   <div className="text-xs text-zinc-400">this month</div>
                 </div>
                 </>)}
@@ -1146,7 +1146,7 @@ export function DashboardContent() {
                 return (
                   <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-[var(--ink)]">
+                      <h2 className="text-lg font-semibold text-[var(--fg)]">
                         Monthly Subscriptions
                         {undeployedSubs.length > 0 && (
                           <span className="ml-2 text-sm font-normal text-zinc-400">({undeployedSubs.length})</span>
@@ -1165,7 +1165,7 @@ export function DashboardContent() {
                       <div className="bg-white rounded-2xl border border-dashed border-[var(--line)] p-5">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <h3 className="font-medium text-[var(--ink)] mb-1">
+                            <h3 className="font-medium text-[var(--fg)] mb-1">
                               {hasAnySubs ? "All subscriptions deployed" : "Save with a monthly commitment"}
                             </h3>
                             <p className="text-sm text-[var(--muted)]">
@@ -1211,7 +1211,7 @@ export function DashboardContent() {
                                       </svg>
                                     </div>
                                     <div>
-                                      <h3 className="font-semibold text-[var(--ink)]">
+                                      <h3 className="font-semibold text-[var(--fg)]">
                                         {sub.productName || "GPU Subscription"}
                                         {slotLabel && <span className="ml-1 text-xs font-normal text-[var(--muted)]">{slotLabel}</span>}
                                       </h3>
@@ -1267,7 +1267,7 @@ export function DashboardContent() {
               {/* GPU Instances */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-[var(--ink)]">
+                  <h2 className="text-lg font-semibold text-[var(--fg)]">
                     GPU Instances
                     {instancesLoading && <span className="ml-2 text-sm text-zinc-400 font-normal">refreshing...</span>}
                   </h2>
@@ -1288,7 +1288,7 @@ export function DashboardContent() {
                             </svg>
                           </div>
                           <div>
-                            <h3 className="font-medium text-[var(--ink)]">{provisioningGpu.name}</h3>
+                            <h3 className="font-medium text-[var(--fg)]">{provisioningGpu.name}</h3>
                             <p className="text-sm text-[var(--muted)]">Provisioning {provisioningGpu.poolName}...</p>
                           </div>
                         </div>
@@ -1337,7 +1337,7 @@ export function DashboardContent() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-[var(--ink)] mb-2">{emptyState.title}</h3>
+                    <h3 className="text-lg font-medium text-[var(--fg)] mb-2">{emptyState.title}</h3>
                     <p className="text-sm text-[var(--muted)] mb-6">{emptyState.subtitle}</p>
                     {data.can?.["gpu.provision"] && (
                       <button
@@ -1354,7 +1354,7 @@ export function DashboardContent() {
                 {bareMetalNodes.length > 0 && (
                   <div className={poolSubscriptions.length > 0 ? "mt-8" : ""}>
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-[var(--ink)]">
+                      <h2 className="text-lg font-semibold text-[var(--fg)]">
                         Bare Metal
                         <span className="ml-2 text-sm font-normal text-zinc-400">
                           ({bareMetalNodes.length})
@@ -1374,7 +1374,7 @@ export function DashboardContent() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <div className={`w-2 h-2 rounded-full ${node.status === "running" ? "bg-emerald-500" : "bg-amber-400 animate-pulse"}`} />
-                                <h3 className="font-medium text-[var(--ink)]">{node.name || node.gpu}</h3>
+                                <h3 className="font-medium text-[var(--fg)]">{node.name || node.gpu}</h3>
                               </div>
                               <p className="text-sm text-[var(--muted)]">
                                 {node.gpu} x{node.gpuCount} &middot; {node.region}
@@ -1384,7 +1384,7 @@ export function DashboardContent() {
                               )}
                             </div>
                             <div className="text-right">
-                              <div className="text-sm font-semibold text-[var(--ink)]">${(node.hourlyRate / 100).toFixed(2)}/hr</div>
+                              <div className="text-sm font-semibold text-[var(--fg)]">${(node.hourlyRate / 100).toFixed(2)}/hr</div>
                               <div className="text-xs text-zinc-400 capitalize">{node.status}</div>
                             </div>
                           </div>
@@ -1398,7 +1398,7 @@ export function DashboardContent() {
                 {snapshots.length > 0 && (
                   <div className={(poolSubscriptions.length > 0 || bareMetalNodes.length > 0) ? "mt-8" : ""}>
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-[var(--ink)]">
+                      <h2 className="text-lg font-semibold text-[var(--fg)]">
                         Saved Pods
                         <span className="ml-2 text-sm font-normal text-zinc-400">
                           ({snapshots.length})
@@ -1428,7 +1428,7 @@ export function DashboardContent() {
                 {/* GPU Compute Card */}
                 <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-[var(--ink)] flex items-center gap-1.5">
+                    <h3 className="font-semibold text-[var(--fg)] flex items-center gap-1.5">
                       Compute
                       <HelpTooltip {...HELP_CONTENT.tflops} />
                     </h3>
@@ -1449,7 +1449,7 @@ export function DashboardContent() {
                 {/* VRAM Card */}
                 <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-[var(--ink)] flex items-center gap-1.5">
+                    <h3 className="font-semibold text-[var(--fg)] flex items-center gap-1.5">
                       VRAM
                       <HelpTooltip {...HELP_CONTENT.vram} />
                     </h3>
@@ -1476,7 +1476,7 @@ export function DashboardContent() {
                 {data.can?.["billing.view"] && (
                   <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-[var(--ink)]">Billing</h3>
+                      <h3 className="font-semibold text-[var(--fg)]">Billing</h3>
                       <span className="text-xs text-zinc-400">Last 14 days</span>
                     </div>
                     <div className="h-44">
@@ -1488,7 +1488,7 @@ export function DashboardContent() {
                 {/* Activity Log Card */}
                 <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-[var(--ink)]">Activity</h3>
+                    <h3 className="font-semibold text-[var(--fg)]">Activity</h3>
                     {activityEvents.length > 0 && (
                       <button
                         onClick={() => setShowActivityModal(true)}
@@ -1545,7 +1545,7 @@ export function DashboardContent() {
 
           {activeTab === "team" && (
             <div>
-              <h1 className="text-2xl font-bold text-[var(--ink)] mb-6">Team</h1>
+              <h1 className="text-2xl font-bold text-[var(--fg)] mb-6">Team</h1>
               <TeamMembers
                 token={token!}
                 accountId={data.customer.id}
@@ -1574,7 +1574,7 @@ export function DashboardContent() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-[var(--ink)]">Refer a Friend</h1>
+                  <h1 className="text-2xl font-bold text-[var(--fg)]">Refer a Friend</h1>
                   <p className="text-sm text-[var(--muted)]">Share your code and you both get free GPU time!</p>
                 </div>
               </div>
@@ -1608,7 +1608,7 @@ export function DashboardContent() {
           {activeTab === "settings" && (
             <div className="max-w-2xl space-y-6">
               <div>
-                <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">Settings</h1>
+                <h1 className="text-2xl font-bold text-[var(--fg)] mb-2">Settings</h1>
                 <p className="text-sm text-[var(--muted)]">Manage your account settings and security</p>
               </div>
 

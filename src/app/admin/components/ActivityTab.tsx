@@ -179,7 +179,7 @@ export function ActivityTab({
             />
             <button
               type="submit"
-              className="px-4 py-2 text-sm bg-[var(--fg)] text-white rounded-lg hover:bg-[#1a1f2e]"
+              className="px-4 py-2 text-sm bg-[var(--ink-raise)] text-white rounded-lg hover:bg-[#1a1f2e]"
             >
               Search
             </button>

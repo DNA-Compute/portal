@@ -153,7 +153,7 @@ export default function SystemMetricsCard({
           <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <span className="text-sm font-medium text-[var(--ink)]">GPU Hardware Metrics</span>
+          <span className="text-sm font-medium text-[var(--fg)]">GPU Hardware Metrics</span>
           {metrics.netdataRunning && (
             <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-700">Active</span>
           )}
@@ -216,7 +216,7 @@ export default function SystemMetricsCard({
           <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <span className="text-sm font-medium text-[var(--ink)]">GPU Hardware</span>
+          <span className="text-sm font-medium text-[var(--fg)]">GPU Hardware</span>
         </div>
         <div className="flex items-center gap-2">
           {sshHost && (
@@ -243,7 +243,7 @@ export default function SystemMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">GPU Utilization</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {gpu.utilization.toFixed(0)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">%</span>
@@ -260,7 +260,7 @@ export default function SystemMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">VRAM</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {gpu.memoryPercent.toFixed(0)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">%</span>
@@ -294,7 +294,7 @@ export default function SystemMetricsCard({
         <div className="bg-white rounded-lg p-3 border border-zinc-200">
           <div className="text-xs text-[var(--muted)] mb-1">Power Draw</div>
           <div className="flex items-end gap-1">
-            <span className="text-xl font-semibold text-[var(--ink)]">
+            <span className="text-xl font-semibold text-[var(--fg)]">
               {gpu.powerDraw.toFixed(0)}
             </span>
             <span className="text-sm text-[var(--muted)] mb-0.5">W</span>
@@ -332,7 +332,7 @@ export default function SystemMetricsCard({
         <div className="mt-3 pt-3 border-t border-zinc-200">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--ink)]"
+            className="flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--fg)]"
           >
             <svg
               className={`w-3 h-3 transition-transform ${showAdvanced ? "rotate-90" : ""}`}
@@ -352,7 +352,7 @@ export default function SystemMetricsCard({
                 <div className="bg-white rounded-lg p-3 border border-zinc-200">
                   <div className="text-xs text-[var(--muted)] mb-1">SM Activity</div>
                   <div className="flex items-end gap-1">
-                    <span className="text-lg font-semibold text-[var(--ink)]">
+                    <span className="text-lg font-semibold text-[var(--fg)]">
                       {gpu.smActivity.toFixed(0)}
                     </span>
                     <span className="text-sm text-[var(--muted)] mb-0.5">%</span>
@@ -368,7 +368,7 @@ export default function SystemMetricsCard({
                 <div className="bg-white rounded-lg p-3 border border-zinc-200">
                   <div className="text-xs text-[var(--muted)] mb-1">Memory Bandwidth</div>
                   <div className="flex items-end gap-1">
-                    <span className="text-lg font-semibold text-[var(--ink)]">
+                    <span className="text-lg font-semibold text-[var(--fg)]">
                       {gpu.memoryBandwidth.toFixed(0)}
                     </span>
                     <span className="text-sm text-[var(--muted)] mb-0.5">%</span>
@@ -404,7 +404,7 @@ export default function SystemMetricsCard({
                 <div className="bg-white rounded-lg p-3 border border-zinc-200">
                   <div className="text-xs text-[var(--muted)] mb-1">Tensor Cores</div>
                   <div className="flex items-end gap-1">
-                    <span className="text-lg font-semibold text-[var(--ink)]">
+                    <span className="text-lg font-semibold text-[var(--fg)]">
                       {gpu.tensorActivity.toFixed(0)}
                     </span>
                     <span className="text-sm text-[var(--muted)] mb-0.5">%</span>

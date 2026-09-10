@@ -118,7 +118,7 @@ export function CreditModal({
             <button
               type="submit"
               disabled={!creditAmount || !isReasonValid || actionLoading === customer.id}
-              className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg font-medium disabled:opacity-50"
             >
               {actionLoading === customer.id ? "Adjusting..." : "Adjust Credits"}
             </button>

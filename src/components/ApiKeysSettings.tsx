@@ -167,7 +167,7 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
       <div className="px-6 py-5 border-b border-[var(--line)]">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--ink)]">API Keys</h2>
+            <h2 className="text-lg font-semibold text-[var(--fg)]">API Keys</h2>
             <p className="text-sm text-[var(--muted)] mt-1">
               Manage API keys for programmatic access to your account
             </p>
@@ -219,7 +219,7 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-[var(--ink)] truncate">{key.name}</p>
+                    <p className="font-medium text-[var(--fg)] truncate">{key.name}</p>
                     <code className="text-xs bg-zinc-100 px-2 py-0.5 rounded text-zinc-600 font-mono">
                       {key.keyPrefix}...
                     </code>
@@ -294,7 +294,7 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
             {!newKey ? (
               <>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-[var(--ink)]">Create API Key</h3>
+                  <h3 className="text-lg font-semibold text-[var(--fg)]">Create API Key</h3>
                   <button
                     onClick={closeCreateModal}
                     className="text-zinc-400 hover:text-zinc-600 p-1"
@@ -306,7 +306,7 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
                 </div>
 
                 <div className="mb-6">
-                  <label htmlFor="keyName" className="block text-sm font-medium text-[var(--ink)] mb-2">
+                  <label htmlFor="keyName" className="block text-sm font-medium text-[var(--fg)] mb-2">
                     Key Name
                   </label>
                   <input
@@ -329,7 +329,7 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
                 <div className="flex gap-3">
                   <button
                     onClick={closeCreateModal}
-                    className="flex-1 px-4 py-2.5 border border-[var(--line)] text-[var(--ink)] font-medium rounded-xl hover:bg-zinc-50 transition-colors text-sm"
+                    className="flex-1 px-4 py-2.5 border border-[var(--line)] text-[var(--fg)] font-medium rounded-xl hover:bg-zinc-50 transition-colors text-sm"
                   >
                     Cancel
                   </button>
@@ -350,14 +350,14 @@ export function ApiKeysSettings({ token }: ApiKeysSettingsProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-[var(--ink)]">API Key Created</h3>
+                  <h3 className="text-lg font-semibold text-[var(--fg)]">API Key Created</h3>
                   <p className="text-sm text-[var(--muted)] mt-1">
                     Make sure to copy your key now. You won&apos;t be able to see it again!
                   </p>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-[var(--ink)] mb-2">
+                  <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                     Your API Key
                   </label>
                   <div className="relative">

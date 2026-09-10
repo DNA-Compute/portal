@@ -322,7 +322,7 @@ export function NodesSubTab({
                         <button
                           onClick={() => onAction(node.id, "set-live")}
                           disabled={actionLoading === node.id}
-                          className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded disabled:opacity-50"
+                          className="text-xs px-2 py-1 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded disabled:opacity-50"
                         >
                           Set Live
                         </button>
@@ -536,7 +536,7 @@ export function NodesSubTab({
               <button
                 onClick={handlePricingSubmit}
                 disabled={!pricingModal.pricingTierId && !pricingModal.useCustomRate}
-                className={`px-4 py-2 text-sm text-white rounded-lg disabled:opacity-50 ${
+                className={`px-4 py-2 text-sm text-[var(--ink)] rounded-lg disabled:opacity-50 ${
                   pricingModal.mode === "approve"
                     ? "bg-green-600 hover:bg-green-700"
                     : "bg-[var(--acid)] hover:bg-[var(--acid-deep)]"

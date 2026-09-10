@@ -349,7 +349,7 @@ export function AppsTab({ token, subscriptions, onRefresh }: AppsTabProps) {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[var(--ink)]">Apps</h1>
+        <h1 className="text-2xl font-bold text-[var(--fg)]">Apps</h1>
         <p className="text-sm text-[var(--muted)]">Install pre-configured apps on your GPUs with one click</p>
       </div>
 

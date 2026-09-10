@@ -77,7 +77,7 @@ export function OssSupportTab({ token }: OssSupportTabProps) {
       <div className="h-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--ink)]">Support</h1>
+            <h1 className="text-2xl font-bold text-[var(--fg)]">Support</h1>
             <p className="text-sm text-zinc-500 mt-1">We&apos;re here to help</p>
           </div>
         </div>
@@ -88,7 +88,7 @@ export function OssSupportTab({ token }: OssSupportTabProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-[var(--ink)] mb-2">Message sent!</h3>
+          <h3 className="text-xl font-semibold text-[var(--fg)] mb-2">Message sent!</h3>
           <p className="text-zinc-500 mb-8 max-w-sm mx-auto">
             We&apos;ve received your message and will respond via email within a few hours.
           </p>
@@ -108,7 +108,7 @@ export function OssSupportTab({ token }: OssSupportTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ink)]">Support</h1>
+          <h1 className="text-2xl font-bold text-[var(--fg)]">Support</h1>
           <p className="text-sm text-zinc-500 mt-1">We&apos;re here to help</p>
         </div>
       </div>
@@ -123,7 +123,7 @@ export function OssSupportTab({ token }: OssSupportTabProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-[var(--ink)] mb-2">Send us a message</h2>
+            <h2 className="text-xl font-semibold text-[var(--fg)] mb-2">Send us a message</h2>
             <p className="text-sm text-zinc-500 leading-relaxed mb-6">
               We typically respond within a few hours. Describe your issue in as
               much detail as possible and we&apos;ll get back to you via email.

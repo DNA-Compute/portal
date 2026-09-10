@@ -220,7 +220,7 @@ export function UptimeTab() {
               onClick={() => setFilter(f)}
               className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
                 filter === f
-                  ? "bg-[var(--fg)] text-white"
+                  ? "bg-[var(--ink-raise)] text-white"
                   : "text-[var(--fg-muted)] hover:bg-gray-50"
               }`}
             >
@@ -384,7 +384,7 @@ function PodRow({
                       }}
                       className={`px-3 py-1 text-xs font-medium transition-colors ${
                         graphPeriod === p
-                          ? "bg-[var(--fg)] text-white"
+                          ? "bg-[var(--ink-raise)] text-white"
                           : "text-[var(--fg-muted)] hover:bg-gray-50"
                       }`}
                     >
@@ -468,7 +468,7 @@ function UptimeGraph({ daily, period }: { daily: DailyUptime[]; period: number }
       {/* Tooltip */}
       {hoveredIdx !== null && (
         <div
-          className="absolute z-10 bg-[var(--fg)] text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none"
+          className="absolute z-10 bg-[var(--ink-raise)] text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none"
           style={{
             bottom: 56,
             left: `${(hoveredIdx / dates.length) * 100}%`,

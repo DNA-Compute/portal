@@ -205,7 +205,7 @@ export function BusinessTab() {
               onClick={() => setPeriod(p)}
               className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                 period === p
-                  ? "bg-[var(--acid)] text-white"
+                  ? "bg-[var(--acid)] text-[var(--ink)]"
                   : "bg-white border border-[var(--line)] text-[var(--fg-muted)] hover:bg-gray-50"
               }`}
             >

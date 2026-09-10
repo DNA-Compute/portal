@@ -25,7 +25,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
         <div className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold text-[var(--ink)]">
+              <h2 className="text-xl font-bold text-[var(--fg)]">
                 Memory Requirements
               </h2>
               {memoryData && (
@@ -36,7 +36,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
             </div>
             <button
               onClick={onClose}
-              className="text-[var(--muted)] hover:text-[var(--ink)] p-1"
+              className="text-[var(--muted)] hover:text-[var(--fg)] p-1"
             >
               <svg
                 className="w-6 h-6"
@@ -70,7 +70,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
                     <p className="text-xs text-[var(--muted)] uppercase tracking-wider">
                       Total Parameters
                     </p>
-                    <p className="text-2xl font-bold text-[var(--ink)]">
+                    <p className="text-2xl font-bold text-[var(--fg)]">
                       {formatParams(memoryData.totalParams)}
                     </p>
                   </div>
@@ -91,7 +91,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
 
               {/* Data Type Breakdown */}
               <div>
-                <h3 className="text-sm font-semibold text-[var(--ink)] mb-2">
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-2">
                   Data Types
                 </h3>
                 <div className="space-y-2">
@@ -101,7 +101,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
                       className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg"
                     >
                       <div>
-                        <span className="font-mono text-sm font-medium text-[var(--ink)]">
+                        <span className="font-mono text-sm font-medium text-[var(--fg)]">
                           {getDtypeDisplayName(dtype.dtype)}
                         </span>
                         <span className="text-xs text-[var(--muted)] ml-2">
@@ -119,7 +119,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
               {/* Components (for diffusers models) */}
               {memoryData.components.length > 1 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--ink)] mb-2">
+                  <h3 className="text-sm font-semibold text-[var(--fg)] mb-2">
                     Model Components
                   </h3>
                   <div className="space-y-2">
@@ -128,7 +128,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
                         key={component.name}
                         className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg"
                       >
-                        <span className="text-sm text-[var(--ink)]">
+                        <span className="text-sm text-[var(--fg)]">
                           {component.name}
                         </span>
                         <div className="text-right">
@@ -172,7 +172,7 @@ export function MemoryModal({ memoryData, loading, onClose }: MemoryModalProps) 
           <div className="mt-6">
             <button
               onClick={onClose}
-              className="w-full py-2.5 px-4 border border-[var(--line)] rounded-lg text-[var(--ink)] hover:bg-zinc-50 transition-colors font-medium"
+              className="w-full py-2.5 px-4 border border-[var(--line)] rounded-lg text-[var(--fg)] hover:bg-zinc-50 transition-colors font-medium"
             >
               Close
             </button>

@@ -58,7 +58,7 @@ export default function TosConsentModal({
             <BrandLogo src={logoUrl} width={140} height={40} />
           </div>
 
-          <h2 className="text-xl font-semibold text-center text-[var(--ink)] mb-2">
+          <h2 className="text-xl font-semibold text-center text-[var(--fg)] mb-2">
             Updated Terms &amp; Conditions
           </h2>
 
@@ -73,7 +73,7 @@ export default function TosConsentModal({
               href="/terms"
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-3 bg-[var(--bg)] rounded-lg border border-[var(--line)] text-sm text-[var(--ink)] hover:bg-[var(--bg-elevated)] transition-colors"
+              className="block px-4 py-3 bg-[var(--bg)] rounded-lg border border-[var(--line)] text-sm text-[var(--fg)] hover:bg-[var(--bg-elevated)] transition-colors"
             >
               Legal Policies
               <span className="float-right text-[var(--muted)]">&rarr;</span>
@@ -82,7 +82,7 @@ export default function TosConsentModal({
               href="/privacy"
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-3 bg-[var(--bg)] rounded-lg border border-[var(--line)] text-sm text-[var(--ink)] hover:bg-[var(--bg-elevated)] transition-colors"
+              className="block px-4 py-3 bg-[var(--bg)] rounded-lg border border-[var(--line)] text-sm text-[var(--fg)] hover:bg-[var(--bg-elevated)] transition-colors"
             >
               Privacy Policies
               <span className="float-right text-[var(--muted)]">&rarr;</span>
@@ -96,7 +96,7 @@ export default function TosConsentModal({
               onChange={(e) => setChecked(e.target.checked)}
               className="mt-1 w-4 h-4 rounded border-[var(--line)] text-teal-600 focus:ring-teal-500"
             />
-            <span className="text-sm text-[var(--ink)]">
+            <span className="text-sm text-[var(--fg)]">
               I have read and agree to the updated Legal Policies and Privacy Policies
             </span>
           </label>

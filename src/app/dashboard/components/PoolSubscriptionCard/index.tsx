@@ -529,7 +529,7 @@ export function PoolSubscriptionCard({
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder={subscription.pool_name || "GPU Pool"}
-                    className="font-medium text-[var(--ink)] bg-zinc-100 rounded px-2 py-1 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="font-medium text-[var(--fg)] bg-zinc-100 rounded px-2 py-1 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") saveMetadata("displayName", displayName);
@@ -544,7 +544,7 @@ export function PoolSubscriptionCard({
                   </button>
                 </div>
               ) : (
-                <h3 className="font-medium text-[var(--ink)] group flex items-center gap-1.5">
+                <h3 className="font-medium text-[var(--fg)] group flex items-center gap-1.5">
                   <span className="truncate">{displayName || subscription.pool_name || "GPU Pool"}</span>
                   <button onClick={(e) => { e.stopPropagation(); setEditingName(true); }} className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-zinc-600 transition-opacity">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -591,7 +591,7 @@ export function PoolSubscriptionCard({
               {isMonthly && monthlyPriceDisplay ? (
                 <div className="text-sm font-semibold text-teal-600">{monthlyPriceDisplay}</div>
               ) : (
-                <div className="text-sm font-semibold text-[var(--ink)]">{subscription.hourlyRate ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
+                <div className="text-sm font-semibold text-[var(--fg)]">{subscription.hourlyRate ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
               )}
               <div className="flex items-center gap-1.5 justify-end">
                 <StatusDot status={displayStatus.status === "restarting" || displayStatus.status === "scaling" ? "pending" : displayStatus.status} />

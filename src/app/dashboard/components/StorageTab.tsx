@@ -134,7 +134,7 @@ export function StorageTab({ token, canManage = true }: StorageTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ink)]">Storage</h1>
+          <h1 className="text-2xl font-bold text-[var(--fg)]">Storage</h1>
           <p className="text-sm text-[var(--muted)]">
             Manage your persistent storage volumes
           </p>
@@ -152,11 +152,11 @@ export function StorageTab({ token, canManage = true }: StorageTabProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
             <div className="text-xs text-[var(--muted)] mb-1">Total Volumes</div>
-            <div className="text-3xl font-bold text-[var(--ink)]">{volumes.length}</div>
+            <div className="text-3xl font-bold text-[var(--fg)]">{volumes.length}</div>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
             <div className="text-xs text-[var(--muted)] mb-1">Total Storage</div>
-            <div className="text-3xl font-bold text-[var(--ink)]">
+            <div className="text-3xl font-bold text-[var(--fg)]">
               {volumes.reduce((sum, v) => sum + v.size_in_gb, 0)} GB
             </div>
           </div>
@@ -168,7 +168,7 @@ export function StorageTab({ token, canManage = true }: StorageTabProps) {
           </div>
           <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
             <div className="text-xs text-[var(--muted)] mb-1">Storage Cost</div>
-            <div className="text-3xl font-bold text-[var(--ink)]">
+            <div className="text-3xl font-bold text-[var(--fg)]">
               {formatSmartPrice(totalHourlyCost)}
               <span className="text-sm font-normal text-zinc-400">/hr</span>
             </div>
@@ -190,7 +190,7 @@ export function StorageTab({ token, canManage = true }: StorageTabProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-[var(--ink)] mb-2">No Storage Volumes</h3>
+          <h3 className="text-lg font-medium text-[var(--fg)] mb-2">No Storage Volumes</h3>
           <p className="text-sm text-[var(--muted)] max-w-md mx-auto">
             You don&apos;t have any persistent storage volumes yet. Storage is created when you launch a GPU with persistent storage enabled.
           </p>
@@ -216,7 +216,7 @@ export function StorageTab({ token, canManage = true }: StorageTabProps) {
                   {/* Details */}
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-[var(--ink)]">{volume.name}</h3>
+                      <h3 className="font-semibold text-[var(--fg)]">{volume.name}</h3>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         volume.status === "attached"
                           ? "bg-emerald-100 text-emerald-700"

@@ -139,7 +139,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--blue)]">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <h2 className="text-lg font-semibold text-[var(--ink)]">Budget Controls</h2>
+          <h2 className="text-lg font-semibold text-[var(--fg)]">Budget Controls</h2>
         </div>
         <p className="text-sm text-[var(--muted)]">
           Set spending limits and receive alerts before exceeding your budget
@@ -149,11 +149,11 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Spending Limits */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-[var(--ink)]">Spending Limits</h3>
+          <h3 className="text-sm font-medium text-[var(--fg)]">Spending Limits</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                 Monthly Limit
               </label>
               <div className="relative">
@@ -165,14 +165,14 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
                   value={monthlyInput}
                   onChange={(e) => setMonthlyInput(e.target.value)}
                   placeholder="No limit"
-                  className="w-full pl-7 pr-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+                  className="w-full pl-7 pr-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
                 />
               </div>
               <p className="text-xs text-[var(--muted)] mt-1">Leave empty for no limit</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--ink)] mb-1">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-1">
                 Daily Limit
               </label>
               <div className="relative">
@@ -184,7 +184,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
                   value={dailyInput}
                   onChange={(e) => setDailyInput(e.target.value)}
                   placeholder="No limit"
-                  className="w-full pl-7 pr-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+                  className="w-full pl-7 pr-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
                 />
               </div>
               <p className="text-xs text-[var(--muted)] mt-1">Leave empty for no limit</p>
@@ -194,7 +194,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
 
         {/* Alert Preferences */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-[var(--ink)]">Email Alerts</h3>
+          <h3 className="text-sm font-medium text-[var(--fg)]">Email Alerts</h3>
           <p className="text-xs text-[var(--muted)] -mt-2">
             Receive email notifications when approaching your budget limits
           </p>
@@ -207,7 +207,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
                 onChange={(e) => setBudget({ ...budget, alertAt50Percent: e.target.checked })}
                 className="w-4 h-4 rounded border-gray-300 text-[var(--blue)] focus:ring-[var(--blue)]"
               />
-              <span className="text-sm text-[var(--ink)]">Alert at 50% of limit</span>
+              <span className="text-sm text-[var(--fg)]">Alert at 50% of limit</span>
             </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
@@ -217,7 +217,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
                 onChange={(e) => setBudget({ ...budget, alertAt80Percent: e.target.checked })}
                 className="w-4 h-4 rounded border-gray-300 text-[var(--blue)] focus:ring-[var(--blue)]"
               />
-              <span className="text-sm text-[var(--ink)]">Alert at 80% of limit</span>
+              <span className="text-sm text-[var(--fg)]">Alert at 80% of limit</span>
             </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
@@ -227,7 +227,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
                 onChange={(e) => setBudget({ ...budget, alertAt100Percent: e.target.checked })}
                 className="w-4 h-4 rounded border-gray-300 text-[var(--blue)] focus:ring-[var(--blue)]"
               />
-              <span className="text-sm text-[var(--ink)]">Alert at 100% of limit</span>
+              <span className="text-sm text-[var(--fg)]">Alert at 100% of limit</span>
             </label>
           </div>
         </div>
@@ -236,7 +236,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-[var(--ink)]">Auto-Shutdown</h3>
+              <h3 className="text-sm font-medium text-[var(--fg)]">Auto-Shutdown</h3>
               <p className="text-xs text-[var(--muted)]">
                 Automatically stop instances when budget threshold is reached
               </p>
@@ -254,13 +254,13 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
 
           {budget.autoShutdownEnabled && (
             <div className="pl-4 border-l-2 border-[var(--line)]">
-              <label className="block text-sm font-medium text-[var(--ink)] mb-2">
+              <label className="block text-sm font-medium text-[var(--fg)] mb-2">
                 Shutdown at percentage
               </label>
               <select
                 value={budget.autoShutdownThreshold}
                 onChange={(e) => setBudget({ ...budget, autoShutdownThreshold: parseInt(e.target.value) })}
-                className="w-full sm:w-48 px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
+                className="w-full sm:w-48 px-3 py-2 border border-[var(--line)] rounded-lg text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] focus:border-transparent"
               >
                 <option value="50">50% of limit</option>
                 <option value="75">75% of limit</option>

@@ -169,7 +169,7 @@ export default function TokenUsageDashboard({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
           <div>
-            <h2 className="text-lg font-bold text-[var(--ink)]">Token Usage Dashboard</h2>
+            <h2 className="text-lg font-bold text-[var(--fg)]">Token Usage Dashboard</h2>
             <p className="text-sm text-[var(--muted)]">
               Track and analyze your inference token consumption
             </p>
@@ -177,7 +177,7 @@ export default function TokenUsageDashboard({
           {onClose && (
             <button
               onClick={onClose}
-              className="text-[var(--muted)] hover:text-[var(--ink)] p-1.5 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="text-[var(--muted)] hover:text-[var(--fg)] p-1.5 hover:bg-zinc-100 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -290,7 +290,7 @@ export default function TokenUsageDashboard({
             <div className="grid md:grid-cols-2 gap-6">
               {/* Usage Over Time */}
               <div className="bg-white rounded-xl border border-[var(--line)] p-4">
-                <h3 className="text-sm font-semibold text-[var(--ink)] mb-4">Usage Over Time</h3>
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-4">Usage Over Time</h3>
                 {data.byPeriod.length > 0 ? (
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
@@ -341,7 +341,7 @@ export default function TokenUsageDashboard({
 
               {/* Usage by Instance */}
               <div className="bg-white rounded-xl border border-[var(--line)] p-4">
-                <h3 className="text-sm font-semibold text-[var(--ink)] mb-4">By Instance</h3>
+                <h3 className="text-sm font-semibold text-[var(--fg)] mb-4">By Instance</h3>
                 {data.byInstance.length > 0 ? (
                   <div className="h-64 flex items-center">
                     <div className="w-1/2">
@@ -385,7 +385,7 @@ export default function TokenUsageDashboard({
                           <span className="text-[var(--muted)] truncate flex-1" title={instance.displayName}>
                             {instance.displayName}
                           </span>
-                          <span className="text-[var(--ink)] font-medium">
+                          <span className="text-[var(--fg)] font-medium">
                             {formatNumber(instance.totalTokens)}
                           </span>
                         </div>
@@ -404,7 +404,7 @@ export default function TokenUsageDashboard({
             {data.byInstance.length > 0 && (
               <div className="bg-white rounded-xl border border-[var(--line)] overflow-hidden">
                 <div className="px-4 py-3 border-b border-[var(--line)] bg-zinc-50">
-                  <h3 className="text-sm font-semibold text-[var(--ink)]">Detailed Breakdown</h3>
+                  <h3 className="text-sm font-semibold text-[var(--fg)]">Detailed Breakdown</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -421,14 +421,14 @@ export default function TokenUsageDashboard({
                     <tbody>
                       {data.byInstance.map((instance) => (
                         <tr key={instance.subscriptionId} className="border-b border-[var(--line)] hover:bg-zinc-50">
-                          <td className="px-4 py-3 text-[var(--ink)]">{instance.displayName}</td>
+                          <td className="px-4 py-3 text-[var(--fg)]">{instance.displayName}</td>
                           <td className="px-4 py-3 text-right text-[var(--muted)]">
                             {formatNumber(instance.promptTokens)}
                           </td>
                           <td className="px-4 py-3 text-right text-[var(--muted)]">
                             {formatNumber(instance.generationTokens)}
                           </td>
-                          <td className="px-4 py-3 text-right font-medium text-[var(--ink)]">
+                          <td className="px-4 py-3 text-right font-medium text-[var(--fg)]">
                             {formatNumber(instance.totalTokens)}
                           </td>
                           <td className="px-4 py-3 text-right text-emerald-600">

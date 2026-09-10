@@ -266,7 +266,7 @@ export function GpuaasProvisioningModal({
                         : isComplete
                         ? "bg-green-100 text-green-600"
                         : isActive
-                        ? "bg-[var(--acid)] text-white"
+                        ? "bg-[var(--acid)] text-[var(--ink)]"
                         : "bg-gray-100 text-gray-400"
                     }`}
                   >
@@ -418,7 +418,7 @@ export function GpuaasProvisioningModal({
               <button
                 onClick={handleRegister}
                 disabled={actionLoading || !selectedRegionId || !externalServiceIp}
-                className="w-full py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
+                className="w-full py-3 bg-[var(--acid)] text-[var(--ink)] rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
               >
                 {actionLoading ? "Registering..." : "Register Node"}
               </button>
@@ -507,7 +507,7 @@ export function GpuaasProvisioningModal({
               <button
                 onClick={handleInitialize}
                 disabled={actionLoading}
-                className="w-full py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
+                className="w-full py-3 bg-[var(--acid)] text-[var(--ink)] rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
               >
                 {actionLoading ? "Starting..." : "Start Initialization"}
               </button>
@@ -546,7 +546,7 @@ export function GpuaasProvisioningModal({
                 <button
                   onClick={handleInitialize}
                   disabled={actionLoading}
-                  className="flex-1 py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
+                  className="flex-1 py-3 bg-[var(--acid)] text-[var(--ink)] rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
                 >
                   {actionLoading ? "Retrying..." : "Retry Initialization"}
                 </button>
@@ -572,7 +572,7 @@ export function GpuaasProvisioningModal({
                 <button
                   onClick={handleJoinCluster}
                   disabled={actionLoading}
-                  className="py-3 bg-[var(--acid)] text-white rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
+                  className="py-3 bg-[var(--acid)] text-[var(--ink)] rounded-lg font-medium hover:bg-[var(--acid-deep)] disabled:opacity-50"
                 >
                   {actionLoading ? "Joining..." : "Join Cluster"}
                 </button>

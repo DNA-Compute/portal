@@ -560,7 +560,7 @@ function EmailSettingsSection() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid)]/90 text-[var(--ink)] rounded-lg text-sm font-medium disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
@@ -1070,7 +1070,7 @@ export function EmailTemplatesTab() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid)]/90 disabled:opacity-50 flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving..." : "Save Template"}

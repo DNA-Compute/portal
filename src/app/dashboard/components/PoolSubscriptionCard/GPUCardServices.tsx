@@ -160,7 +160,7 @@ export function GPUCardServices({
             <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
             </svg>
-            <span className="text-sm font-medium text-[var(--ink)]">Exposed Services</span>
+            <span className="text-sm font-medium text-[var(--fg)]">Exposed Services</span>
           </div>
           {canProvision && (
             <button
@@ -284,7 +284,7 @@ export function GPUCardServices({
                 <div key={service.id} className="bg-white border border-[var(--line)] rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-[var(--ink)]">{service.service_name}</span>
+                      <span className="text-sm font-medium text-[var(--fg)]">{service.service_name}</span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">
                         {service.type || service.service_type || 'http'}
                       </span>
@@ -316,7 +316,7 @@ export function GPUCardServices({
                   {externalUrl && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <code className="flex-1 text-xs bg-zinc-100 px-2 py-1.5 rounded font-mono text-[var(--ink)] select-all">
+                        <code className="flex-1 text-xs bg-zinc-100 px-2 py-1.5 rounded font-mono text-[var(--fg)] select-all">
                           {externalUrl}
                         </code>
                         <button

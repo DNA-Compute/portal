@@ -133,7 +133,7 @@ export function PodDetailModal({
         {/* Modal Header */}
         <div className="sticky top-0 bg-white border-b border-[var(--line)] px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-[var(--ink)]">{pod.poolName}</h2>
+            <h2 className="text-xl font-bold text-[var(--fg)]">{pod.poolName}</h2>
             <p className="text-sm text-[var(--muted)]">{pod.podName}</p>
           </div>
           <button
@@ -188,7 +188,7 @@ export function PodDetailModal({
             </div>
             <div className="bg-zinc-50 rounded-xl p-4">
               <div className="text-xs text-[var(--muted)] mb-1">Power Draw</div>
-              <div className="text-2xl font-bold text-[var(--ink)]">
+              <div className="text-2xl font-bold text-[var(--fg)]">
                 {pod.gpu ? `${pod.gpu.powerDraw.toFixed(0)}W` : "—"}
               </div>
               {pod.gpu && pod.gpu.powerLimit > 0 && (
@@ -221,7 +221,7 @@ export function PodDetailModal({
             {pod.imageName && (
               <div className="bg-zinc-50 rounded-xl p-4">
                 <div className="text-xs text-[var(--muted)] mb-1">Image</div>
-                <div className="text-sm font-medium text-[var(--ink)] truncate" title={pod.imageName}>
+                <div className="text-sm font-medium text-[var(--fg)] truncate" title={pod.imageName}>
                   {pod.imageName}
                 </div>
               </div>
@@ -230,7 +230,7 @@ export function PodDetailModal({
 
           {/* Time Period Selector */}
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--ink)]">Performance Over Time</h3>
+            <h3 className="font-semibold text-[var(--fg)]">Performance Over Time</h3>
             <div className="flex items-center gap-2">
               {/* Period selector */}
               <div className="flex bg-zinc-100 rounded-lg p-0.5">
@@ -247,7 +247,7 @@ export function PodDetailModal({
                     onClick={() => onPeriodChange(value)}
                     className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                       period === value
-                        ? "bg-white text-[var(--ink)] shadow-sm"
+                        ? "bg-white text-[var(--fg)] shadow-sm"
                         : "text-[var(--muted)] hover:text-zinc-700"
                     }`}
                   >
@@ -264,7 +264,7 @@ export function PodDetailModal({
                       onClick={() => onGranularityChange(gran)}
                       className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                         granularity === gran
-                          ? "bg-white text-[var(--ink)] shadow-sm"
+                          ? "bg-white text-[var(--fg)] shadow-sm"
                           : "text-[var(--muted)] hover:text-zinc-700"
                       }`}
                     >

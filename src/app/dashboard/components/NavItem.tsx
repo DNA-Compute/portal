@@ -24,7 +24,7 @@ export function NavItem({ icon, label, active, onClick, showBadge, badge, badgeV
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-left ${
         active
-          ? "bg-zinc-100 text-[var(--ink)] font-medium"
+          ? "bg-zinc-100 text-[var(--fg)] font-medium"
           : "text-[var(--muted)] hover:bg-zinc-50 hover:text-zinc-700"
       }`}
     >

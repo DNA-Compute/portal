@@ -167,7 +167,7 @@ export function BannersTab() {
         </p>
         <button
           onClick={openCreate}
-          className="px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid-deep)] transition-colors text-sm font-medium"
+          className="px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid-deep)] transition-colors text-sm font-medium"
         >
           Create Banner
         </button>
@@ -381,7 +381,7 @@ export function BannersTab() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid-deep)] disabled:opacity-50 text-sm font-medium transition-colors"
+                  className="flex-1 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid-deep)] disabled:opacity-50 text-sm font-medium transition-colors"
                 >
                   {saving ? "Saving..." : editingId ? "Update Banner" : "Create Banner"}
                 </button>

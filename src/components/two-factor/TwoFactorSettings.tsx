@@ -69,9 +69,9 @@ export default function TwoFactorSettings({
 
   // Theme classes
   const containerBg = isDark ? "bg-zinc-100" : "bg-white";
-  const textPrimary = isDark ? "text-white" : "text-[var(--ink)]";
+  const textPrimary = isDark ? "text-white" : "text-[var(--fg)]";
   const textSecondary = isDark ? "text-zinc-400" : "text-[var(--muted)]";
-  const textStrong = isDark ? "text-zinc-600" : "text-[var(--ink)]";
+  const textStrong = isDark ? "text-zinc-600" : "text-[var(--fg)]";
   const cardBorder = isDark ? "" : "border border-[var(--line)]";
   const cardRounded = isDark ? "rounded-lg" : "rounded-2xl";
   const buttonRounded = isDark ? "rounded-lg" : "rounded-xl";

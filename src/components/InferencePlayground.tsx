@@ -170,7 +170,7 @@ export default function InferencePlayground({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--line)]">
           <div>
-            <h2 className="text-lg font-bold text-[var(--ink)]">
+            <h2 className="text-lg font-bold text-[var(--fg)]">
               Inference Playground
             </h2>
             <p className="text-sm text-[var(--muted)]">
@@ -180,13 +180,13 @@ export default function InferencePlayground({
           <div className="flex items-center gap-2">
             <button
               onClick={clearChat}
-              className="px-3 py-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)] hover:bg-zinc-100 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm text-[var(--muted)] hover:text-[var(--fg)] hover:bg-zinc-100 rounded-lg transition-colors"
             >
               Clear
             </button>
             <button
               onClick={onClose}
-              className="text-[var(--muted)] hover:text-[var(--ink)] p-1.5 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="text-[var(--muted)] hover:text-[var(--fg)] p-1.5 hover:bg-zinc-100 rounded-lg transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -224,7 +224,7 @@ export default function InferencePlayground({
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-[var(--ink)] mb-2">
+              <h3 className="text-lg font-medium text-[var(--fg)] mb-2">
                 Test Your Model
               </h3>
               <p className="text-sm text-[var(--muted)] max-w-sm">
@@ -245,7 +245,7 @@ export default function InferencePlayground({
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.role === "user"
                     ? "bg-blue-500 text-white"
-                    : "bg-zinc-100 text-[var(--ink)]"
+                    : "bg-zinc-100 text-[var(--fg)]"
                 }`}
               >
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">

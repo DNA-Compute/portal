@@ -150,7 +150,7 @@ export function GPUHardwareMetrics({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs text-zinc-500">Utilization</span>
-          <span className="text-sm font-semibold text-[var(--ink)]">
+          <span className="text-sm font-semibold text-[var(--fg)]">
             {metrics.totals.avgUtilization.toFixed(0)}%
           </span>
         </div>
@@ -202,7 +202,7 @@ export function GPUHardwareMetrics({
           onClick={() => hasGpuMetrics && activePodsWithGpu[0] && setSelectedPod(activePodsWithGpu[0])}
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-[var(--ink)]">GPU Load</h3>
+            <h3 className="font-semibold text-[var(--fg)]">GPU Load</h3>
             <span className="text-xs text-zinc-400">Real-time</span>
           </div>
           {hasGpuMetrics ? (
@@ -245,7 +245,7 @@ export function GPUHardwareMetrics({
           onClick={() => hasGpuMetrics && activePodsWithGpu[0] && setSelectedPod(activePodsWithGpu[0])}
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-[var(--ink)]">Hardware</h3>
+            <h3 className="font-semibold text-[var(--fg)]">Hardware</h3>
             <span className="text-xs text-zinc-400">Real-time</span>
           </div>
           {hasGpuMetrics ? (
@@ -348,7 +348,7 @@ export function GPUHardwareMetrics({
       <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--line)] flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-[var(--ink)]">GPU Hardware Metrics</h2>
+            <h2 className="font-semibold text-[var(--fg)]">GPU Hardware Metrics</h2>
             <p className="text-xs text-zinc-500">Real-time hardware data</p>
           </div>
           <div className="flex items-center gap-3">
@@ -439,7 +439,7 @@ export function GPUHardwareMetrics({
                     >
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-medium text-[var(--ink)]">{pod.poolName}</p>
+                          <p className="font-medium text-[var(--fg)]">{pod.poolName}</p>
                           <p className="text-xs text-zinc-400">{pod.podName}</p>
                         </div>
                       </td>
@@ -452,7 +452,7 @@ export function GPUHardwareMetrics({
                                 style={{ width: `${pod.gpu.utilization}%` }}
                               />
                             </div>
-                            <span className="text-sm font-medium text-[var(--ink)] w-12 text-right">
+                            <span className="text-sm font-medium text-[var(--fg)] w-12 text-right">
                               {pod.gpu.utilization.toFixed(0)}%
                             </span>
                           </div>

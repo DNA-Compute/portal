@@ -526,7 +526,7 @@ export function ProviderDetailsModal({
               <button
                 onClick={handleSave}
                 disabled={saving || !editForm.companyName || !editForm.contactName || !editForm.email}
-                className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -563,7 +563,7 @@ export function ProviderDetailsModal({
                   <>
                     <button
                       onClick={onLoginAs}
-                      className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg"
+                      className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg"
                     >
                       Login As Provider
                     </button>

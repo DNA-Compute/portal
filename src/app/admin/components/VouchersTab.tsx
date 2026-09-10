@@ -337,7 +337,7 @@ export function VouchersTab() {
           <h3 className="text-lg font-semibold text-[var(--fg)]">Voucher Codes</h3>
           <button
             onClick={handleCreateClick}
-            className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white text-sm font-medium rounded-lg"
+            className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] text-sm font-medium rounded-lg"
           >
             + Create Voucher
           </button>
@@ -609,7 +609,7 @@ export function VouchersTab() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--acid)] hover:bg-[var(--acid-deep)] text-[var(--ink)] rounded-lg disabled:opacity-50"
                 >
                   {saving ? "Saving..." : editingVoucher ? "Update Voucher" : "Create Voucher"}
                 </button>

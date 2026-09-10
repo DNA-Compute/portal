@@ -41,7 +41,7 @@ export function FilterPanel({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Task Filter */}
         <div>
-          <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--fg)] mb-1.5">
             Task
           </label>
           <select
@@ -73,7 +73,7 @@ export function FilterPanel({
 
         {/* Library Filter */}
         <div>
-          <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--fg)] mb-1.5">
             Library
           </label>
           <select
@@ -100,7 +100,7 @@ export function FilterPanel({
 
         {/* Parameter Size Filter */}
         <div>
-          <label className="block text-sm font-medium text-[var(--ink)] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--fg)] mb-1.5">
             Model Size
           </label>
           <select

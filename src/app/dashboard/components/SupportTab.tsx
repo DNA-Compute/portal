@@ -378,7 +378,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ink)]">Support</h1>
+          <h1 className="text-2xl font-bold text-[var(--fg)]">Support</h1>
           <p className="text-sm text-zinc-500 mt-1">
             {openCount > 0 ? `${openCount} open ticket${openCount !== 1 ? 's' : ''}` : 'We\'re here to help'}
           </p>
@@ -402,7 +402,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-[var(--ink)] mb-2">No support tickets yet</h3>
+          <h3 className="text-xl font-semibold text-[var(--fg)] mb-2">No support tickets yet</h3>
           <p className="text-zinc-500 mb-6 max-w-sm mx-auto">
             Have a question or need help? Our support team typically responds within a few hours.
           </p>
@@ -465,7 +465,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
                   onClick={() => setFilter(f)}
                   className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     filter === f
-                      ? "bg-zinc-100 text-[var(--ink)]"
+                      ? "bg-zinc-100 text-[var(--fg)]"
                       : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50"
                   }`}
                 >
@@ -530,7 +530,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
                               <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
                             )}
                           </div>
-                          <span className={`font-medium block truncate ${isSelected ? 'text-teal-900' : 'text-[var(--ink)]'}`}>
+                          <span className={`font-medium block truncate ${isSelected ? 'text-teal-900' : 'text-[var(--fg)]'}`}>
                             {debouncedSearch ? highlightMatch(displayTitle, debouncedSearch) : displayTitle}
                           </span>
                         </div>
@@ -583,7 +583,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
                           {selectedTicketData.status === "open" ? "Open" : "Resolved"}
                         </span>
                       </div>
-                      <h3 className="text-lg font-semibold text-[var(--ink)] truncate">
+                      <h3 className="text-lg font-semibold text-[var(--fg)] truncate">
                         {selectedTicketData.ticketNumber && selectedTicketData.title.startsWith(selectedTicketData.ticketNumber)
                           ? selectedTicketData.title.slice(selectedTicketData.ticketNumber.length + 2).trim() || "Support Ticket"
                           : selectedTicketData.title}
@@ -742,7 +742,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
               <div>
-                <h3 className="text-xl font-semibold text-[var(--ink)]">New Support Ticket</h3>
+                <h3 className="text-xl font-semibold text-[var(--fg)]">New Support Ticket</h3>
                 <p className="text-sm text-zinc-500 mt-1">We typically respond within a few hours</p>
               </div>
               <button

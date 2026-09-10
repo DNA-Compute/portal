@@ -53,7 +53,7 @@ export function GpuTypesSubTab({
       <div className="mb-4">
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-[var(--acid)] text-white hover:bg-[var(--acid-deep)] rounded-lg font-medium text-sm"
+          className="px-4 py-2 bg-[var(--acid)] text-[var(--ink)] hover:bg-[var(--acid-deep)] rounded-lg font-medium text-sm"
         >
           + Add GPU Type
         </button>
@@ -387,7 +387,7 @@ function GpuTypeModal({
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-[var(--acid)] text-white rounded-lg hover:bg-[var(--acid-deep)] disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--acid)] text-[var(--ink)] rounded-lg hover:bg-[var(--acid-deep)] disabled:opacity-50"
             >
               {saving ? "Saving..." : gpuType ? "Update" : "Create"}
             </button>

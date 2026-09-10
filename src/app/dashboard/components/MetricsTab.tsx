@@ -344,7 +344,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ink)]">Metrics</h1>
+          <h1 className="text-2xl font-bold text-[var(--fg)]">Metrics</h1>
           <p className="text-sm text-[var(--muted)]">
             Monitor your GPU usage and performance
           </p>
@@ -365,7 +365,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">
+          <h2 className="text-lg font-semibold text-[var(--fg)] mb-2">
             No Metrics Available
           </h2>
           <p className="text-sm text-[var(--muted)] mb-4 max-w-md mx-auto">
@@ -401,7 +401,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ink)]">Metrics</h1>
+          <h1 className="text-2xl font-bold text-[var(--fg)]">Metrics</h1>
           <p className="text-sm text-[var(--muted)]">
             Monitor your GPU usage and performance
           </p>
@@ -443,7 +443,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
           <div className="text-xs text-[var(--muted)] mb-1">Active Pods</div>
-          <div className="text-3xl font-bold text-[var(--ink)]">
+          <div className="text-3xl font-bold text-[var(--fg)]">
             {metrics?.totals.activePods || 0}
           </div>
         </div>
@@ -495,7 +495,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
       {metrics?.graph && metrics.graph.data.length > 0 && (
         <div className="bg-white rounded-2xl p-6 border border-[var(--line)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-[var(--ink)]">Usage Over Time</h2>
+            <h2 className="font-semibold text-[var(--fg)]">Usage Over Time</h2>
             <div className="flex items-center gap-2">
               {/* Period selector */}
               <div className="flex bg-zinc-100 rounded-lg p-0.5">
@@ -512,7 +512,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
                     onClick={() => setSelectedPeriod(value)}
                     className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                       selectedPeriod === value
-                        ? "bg-white text-[var(--ink)] shadow-sm"
+                        ? "bg-white text-[var(--fg)] shadow-sm"
                         : "text-[var(--muted)] hover:text-zinc-700"
                     }`}
                   >
@@ -529,7 +529,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
                       onClick={() => setSelectedGranularity(gran)}
                       className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                         selectedGranularity === gran
-                          ? "bg-white text-[var(--ink)] shadow-sm"
+                          ? "bg-white text-[var(--fg)] shadow-sm"
                           : "text-[var(--muted)] hover:text-zinc-700"
                       }`}
                     >
@@ -607,7 +607,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
       {/* Per-Pod Metrics Table */}
       <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--line)]">
-          <h2 className="font-semibold text-[var(--ink)]">Pod Metrics</h2>
+          <h2 className="font-semibold text-[var(--fg)]">Pod Metrics</h2>
         </div>
         {metrics?.pods && metrics.pods.length > 0 ? (
           <div className="overflow-x-auto">
@@ -651,7 +651,7 @@ export function MetricsTab({ token }: MetricsTabProps) {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div>
-                          <p className="font-medium text-[var(--ink)]">{pod.poolName}</p>
+                          <p className="font-medium text-[var(--fg)]">{pod.poolName}</p>
                           <p className="text-xs text-[var(--muted)]">{pod.podName}</p>
                           {pod.imageName && (
                             <p className="text-xs text-zinc-400 mt-0.5 truncate max-w-[200px]">
