@@ -138,6 +138,15 @@ const LIGHT_SURFACES = `() => {
   };
   const rl = (c) => { const v = c.slice(0, 3).map((x) => x / 255).map((x) => (x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
 
+  // The accent fills are deliberately bright - an acid button carries its ink
+  // label at 16:1 and is the most brand-correct thing on the page. Only
+  // surfaces that are light by accident are a bug, so the intended fills are
+  // named here rather than the check being loosened for everything.
+  const intended = ["--acid", "--acid-deep", "--mint"]
+    .map((t) => getComputedStyle(document.documentElement).getPropertyValue(t).trim())
+    .filter(Boolean)
+    .map((v) => parse(v).slice(0, 3).join(","));
+
   const found = [];
   for (const el of document.querySelectorAll("*")) {
     const r = el.getBoundingClientRect();
@@ -147,6 +156,7 @@ const LIGHT_SURFACES = `() => {
     const bg = parse(cs.backgroundColor);
     if (bg[3] < 0.5) continue;
     if (rl(bg) <= 0.5) continue;
+    if (intended.includes(bg.slice(0, 3).join(","))) continue;
     found.push({ tag: el.tagName.toLowerCase(), cls: (el.className || "").toString().slice(0, 70) });
   }
   return found;
