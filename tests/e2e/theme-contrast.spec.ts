@@ -96,7 +96,14 @@ const AUDIT = `() => {
     const cr = ratio(comp(parse(cs.color), bg), bg);
     const size = parseFloat(cs.fontSize);
     const large = size >= 24 || (size >= 18.66 && Number(cs.fontWeight) >= 700);
-    const need = large ? 3 : 4.5;
+    // WCAG 1.4.3 exempts disabled controls, but "exempt" is not the same as
+    // "unreadable": the disabled Continue to Payment button shipped at 1.14:1,
+    // an ink label on a fill that had gone dark, so a customer could not read
+    // what they were being asked to enable. Disabled controls are held to 3:1 -
+    // dim enough to read as disabled, legible enough to read at all.
+    const disabled =
+      el.disabled === true || el.getAttribute("aria-disabled") === "true";
+    const need = disabled ? 3 : large ? 3 : 4.5;
     if (cr >= need) continue;
 
     const key = el.tagName + "|" + txt.slice(0, 30);

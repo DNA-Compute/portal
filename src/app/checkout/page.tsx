@@ -404,7 +404,7 @@ function CheckoutContent() {
           <button
             type="submit"
             disabled={status === "loading" || !selectedProduct || !termsAccepted}
-            className="w-full px-6 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] disabled:bg-[var(--ink-raise)] text-[var(--ink)] font-medium rounded-lg transition-colors"
+            className="w-full px-6 py-3 bg-[var(--acid)] hover:bg-[var(--acid-deep)] disabled:bg-[var(--ink-raise)] text-[var(--ink)] disabled:text-[var(--fg-faint)] font-medium rounded-lg transition-colors"
           >
             {status === "loading" ? (
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
