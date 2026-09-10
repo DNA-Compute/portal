@@ -262,10 +262,10 @@ function AccountContent() {
                     style={{
                       padding: "12px 16px",
                       marginBottom: "16px",
-                      background: "#FEF3C7",
-                      border: "1px solid #F59E0B",
-                      borderRadius: "8px",
-                      color: "#78350F",
+                      background: "rgba(255, 196, 0, 0.08)",
+                      border: "1px solid rgba(255, 196, 0, 0.28)",
+                      borderRadius: "0",
+                      color: "#ffd479",
                       fontSize: "14px",
                       textAlign: "center",
                     }}
