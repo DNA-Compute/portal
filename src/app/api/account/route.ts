@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
+import { isServiceConfigured } from "@/lib/settings";
 import { rateLimit, getClientIp } from "@/lib/ratelimit";
 import { logLoginLinkSent } from "@/lib/admin-activity";
 import {
@@ -41,6 +42,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Email is required" },
         { status: 400 }
+      );
+    }
+
+    // Customer identity on this platform lives in Stripe: both the block below
+    // and sendLoginEmailForCustomer look the account up in stripe.customers.
+    // With no key there is no customer store at all, so sign-in cannot work.
+    //
+    // Say that plainly rather than letting getStripe() throw into the catch at
+    // the end of this route, which turns every cause into the same opaque 500
+    // "Failed to process request". That is exactly what staging returned on
+    // 2026-09-10, and the message gave an operator nothing to act on.
+    if (!(await isServiceConfigured("stripe"))) {
+      console.error(
+        "[Account] Sign-in attempted but STRIPE_SECRET_KEY is not set. " +
+        "Customer accounts are Stripe customers, so sign-in needs it. " +
+        "Configure it in Platform Settings or .env.local."
+      );
+      return NextResponse.json(
+        { error: "Sign-in is unavailable: billing is not configured on this deployment." },
+        { status: 503 }
       );
     }
 
