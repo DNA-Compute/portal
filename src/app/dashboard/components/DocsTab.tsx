@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
-import "swagger-ui-react/swagger-ui.css";
 import {
   GettingStartedDoc,
   HuggingFaceDoc,
@@ -20,18 +18,6 @@ import {
   BrowserIDEDoc,
 } from "./docs";
 
-const SwaggerUI = dynamic(() => import("swagger-ui-react"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center py-24">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
-    </div>
-  ),
-});
-
-interface DocsTabProps {
-  isOwner: boolean;
-}
 
 type DocSection =
   | "getting-started"
@@ -47,8 +33,7 @@ type DocSection =
   | "workspace"
   | "browser-ide"
   | "billing"
-  | "budget-controls"
-  | "api";
+  | "budget-controls";
 
 interface NavItemConfig {
   id: DocSection;
@@ -77,10 +62,9 @@ const navItems: NavItemConfig[] = [
   // Account & Reference
   { id: "billing", label: "Billing", shortLabel: "Billing" },
   { id: "budget-controls", label: "Budget Controls", shortLabel: "Budget", isNew: true },
-  { id: "api", label: "API Reference", shortLabel: "Docs" },
 ];
 
-export function DocsTab({ isOwner }: DocsTabProps) {
+export function DocsTab() {
   const [activeSection, setActiveSection] = useState<DocSection>("getting-started");
 
   const renderDocContent = () => {
@@ -118,37 +102,6 @@ export function DocsTab({ isOwner }: DocsTabProps) {
         return <BillingDoc />;
       case "budget-controls":
         return <BudgetControlsDoc />;
-      case "api":
-        return (
-          <div className="overflow-hidden -m-8">
-            <style jsx global>{`
-              .swagger-ui .topbar { display: none; }
-              .swagger-ui .info { margin: 1.5rem 1.5rem 1rem; }
-              .swagger-ui .info .title { font-family: var(--font-display), system-ui, sans-serif; color: #18181b; font-size: 1.5rem; }
-              .swagger-ui .scheme-container { background: #f9fafb; padding: 1rem; }
-              .swagger-ui .opblock { border-radius: 8px; margin: 0 0 0.5rem; border: 1px solid #e4e4e7; box-shadow: none; }
-              .swagger-ui .opblock .opblock-summary { border-radius: 8px; padding: 0.75rem 1rem; }
-              .swagger-ui .opblock.opblock-get { border-color: #10B981; background: rgba(16, 185, 129, 0.05); }
-              .swagger-ui .opblock.opblock-post { border-color: #3B82F6; background: rgba(59, 130, 246, 0.05); }
-              .swagger-ui .opblock.opblock-delete { border-color: #EF4444; background: rgba(239, 68, 68, 0.05); }
-              .swagger-ui .opblock.opblock-patch { border-color: #F59E0B; background: rgba(245, 158, 11, 0.05); }
-              .swagger-ui .btn { border-radius: 6px; font-weight: 500; }
-              .swagger-ui .btn.execute { background: #0d9488; border-color: #0d9488; }
-              .swagger-ui input[type=text], .swagger-ui textarea { border-radius: 6px; border: 1px solid #e4e4e7; }
-              .swagger-ui .opblock-tag { border-bottom: 1px solid #e4e4e7; padding: 0.75rem 0; }
-              .swagger-ui code { font-family: 'SF Mono', Monaco, monospace; font-size: 13px; }
-              .swagger-ui .markdown code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #18181b; }
-              .swagger-ui .markdown pre { background: #1e293b; border-radius: 8px; padding: 1rem; }
-              .swagger-ui .markdown pre code { background: transparent; color: #e2e8f0; }
-            `}</style>
-            <SwaggerUI
-              url="/api/openapi"
-              docExpansion="list"
-              defaultModelsExpandDepth={0}
-              persistAuthorization={true}
-            />
-          </div>
-        );
       default:
         return <GettingStartedDoc />;
     }
@@ -200,7 +153,6 @@ export function DocsTab({ isOwner }: DocsTabProps) {
           <optgroup label="Account">
             <option value="billing">Billing</option>
             <option value="budget-controls">Budget Controls ✨</option>
-            <option value="api">API Reference</option>
           </optgroup>
         </select>
         {currentItem?.isNew && (

@@ -70,31 +70,31 @@ export function HuggingFaceDoc() {
           <tr>
             <td><code>meta-llama/Llama-3.1-8B-Instruct</code></td>
             <td>8B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Fast general-purpose, coding, chat</td>
           </tr>
           <tr>
             <td><code>meta-llama/Llama-3.1-70B-Instruct</code></td>
             <td>70B</td>
-            <td>4x RTX 4090</td>
+            <td>1x B200</td>
             <td>High-quality reasoning, complex tasks</td>
           </tr>
           <tr>
             <td><code>mistralai/Mistral-7B-Instruct-v0.3</code></td>
             <td>7B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Efficient, fast inference</td>
           </tr>
           <tr>
             <td><code>Qwen/Qwen2.5-7B-Instruct</code></td>
             <td>7B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Multilingual, math, coding</td>
           </tr>
           <tr>
             <td><code>google/gemma-2-9b-it</code></td>
             <td>9B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Instruction following, creative</td>
           </tr>
         </tbody>
@@ -114,19 +114,19 @@ export function HuggingFaceDoc() {
           <tr>
             <td><code>Qwen/Qwen2.5-Coder-7B-Instruct</code></td>
             <td>7B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Code generation, completion</td>
           </tr>
           <tr>
             <td><code>deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct</code></td>
             <td>16B MoE</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Advanced code reasoning</td>
           </tr>
           <tr>
             <td><code>codellama/CodeLlama-7b-Instruct-hf</code></td>
             <td>7B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Code infilling, completion</td>
           </tr>
         </tbody>
@@ -146,13 +146,13 @@ export function HuggingFaceDoc() {
           <tr>
             <td><code>microsoft/Phi-3.5-mini-instruct</code></td>
             <td>3.8B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Ultra-fast, efficient</td>
           </tr>
           <tr>
             <td><code>HuggingFaceH4/zephyr-7b-beta</code></td>
             <td>7B</td>
-            <td>1x RTX 4090</td>
+            <td>1x RTX-6000 Pro</td>
             <td>Chat, assistant</td>
           </tr>
         </tbody>
@@ -172,7 +172,7 @@ export function HuggingFaceDoc() {
           <tr>
             <td><strong>GPU Pool</strong></td>
             <td>Select from available GPU types</td>
-            <td>RTX 4090 for 7B models, A100 for 70B+</td>
+            <td>RTX-6000 Pro for models up to ~30B, B200 for 70B+</td>
           </tr>
           <tr>
             <td><strong>GPU Count</strong></td>
@@ -397,27 +397,27 @@ console.log(response.choices[0].message.content);`}</code>
           <tr>
             <td>1-7B</td>
             <td>~16GB</td>
-            <td>1x RTX 4090 (24GB)</td>
+            <td>1x RTX-6000 Pro (96GB)</td>
           </tr>
           <tr>
             <td>7-15B</td>
             <td>~20-32GB</td>
-            <td>1-2x RTX 4090 or 1x A100 40GB</td>
+            <td>1x RTX-6000 Pro (96GB)</td>
           </tr>
           <tr>
             <td>30-34B</td>
             <td>~40-70GB</td>
-            <td>2x A100 40GB or 4x RTX 4090</td>
+            <td>1x RTX-6000 Pro (96GB)</td>
           </tr>
           <tr>
             <td>65-70B</td>
             <td>~140GB</td>
-            <td>4x A100 40GB or 8x RTX 4090</td>
+            <td>1x B200 (192GB)</td>
           </tr>
           <tr>
             <td>70B+ Quantized</td>
             <td>~40-70GB</td>
-            <td>2x A100 or 4x RTX 4090 with AWQ/GPTQ</td>
+            <td>1x RTX-6000 Pro (96GB) with AWQ/GPTQ</td>
           </tr>
         </tbody>
       </table>

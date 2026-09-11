@@ -43,7 +43,7 @@ export function GettingStartedDoc() {
         <tbody>
           <tr>
             <td><strong>GPU Compute</strong></td>
-            <td>NVIDIA A100, H100, RTX 4090 and more. Scale from 1-8 GPUs per instance.</td>
+            <td>NVIDIA B200 and RTX-6000 Pro, with 96 GB to 192 GB of VRAM per card.</td>
           </tr>
           <tr>
             <td><strong>HuggingFace Integration</strong></td>
@@ -88,9 +88,9 @@ export function GettingStartedDoc() {
           <strong>Select GPU Pool</strong> - Choose from available GPU types and regions.
           Popular options include:
           <ul>
-            <li><strong>RTX 4090</strong> - Great for inference and smaller training jobs</li>
-            <li><strong>A100 40GB</strong> - Ideal for training and large model inference</li>
-            <li><strong>H100</strong> - Maximum performance for demanding workloads</li>
+            <li><strong>RTX-6000 Pro</strong> - 96 GB VRAM. Inference and smaller training jobs.</li>
+            <li><strong>B200</strong> - 192 GB VRAM. Large-model inference and training.</li>
+            <li><strong>B200 Shared</strong> - 192 GB VRAM, shared.</li>
           </ul>
         </li>
         <li>
