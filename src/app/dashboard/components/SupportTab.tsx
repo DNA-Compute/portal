@@ -564,7 +564,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
             {selectedTicket && selectedTicketData ? (
               <>
                 {/* Ticket Header */}
-                <div className="p-5 border-b border-[var(--line)] bg-gradient-to-r from-zinc-50 to-white">
+                <div className="p-5 border-b border-[var(--line)] bg-[var(--panel)]">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
@@ -608,7 +608,7 @@ export function SupportTab({ token, initialTicketId }: SupportTabProps) {
                 </div>
 
                 {/* Messages Area */}
-                <div ref={messagesContainerRef} className="flex-1 p-5 overflow-y-auto bg-gradient-to-b from-zinc-50/50 to-white">
+                <div ref={messagesContainerRef} className="flex-1 p-5 overflow-y-auto bg-[var(--ink)]">
                   {messagesLoading ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent"></div>

@@ -95,7 +95,7 @@ export function OnboardingChecklist({
   const nextStep = steps.find((s) => !s.completed);
 
   return (
-    <div className="mb-8 rounded-2xl border border-[var(--line)] bg-gradient-to-br from-white to-zinc-50 p-6 shadow-sm">
+    <div className="mb-8 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
