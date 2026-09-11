@@ -338,17 +338,29 @@ body:has(.no-animated-bg)::after {
    ========================================================================= */
 
 @layer utilities {
+  /* Every selector below is doubled (.bg-white.bg-white). That is not a style
+     choice - it is what makes these deterministic.
+
+     Tailwind sorts its generated utilities into this same layer, so an authored
+     rule with equal specificity wins or loses on where Tailwind happens to place
+     its own. That went our way for bg-white and to-white and against us for
+     from-white, which is why the dashboard's onboarding banner was still
+     painting a white bar after the ramp pass shipped: the override was in the
+     stylesheet, lost the cascade, and was dropped by the minifier as dead.
+
+     Doubling the class takes specificity to (0,2,0) and settles it regardless of
+     order. */
   /* bg-white is used 434 times for panels and must become the panel surface.
      text-white is used 271 times and must stay white. Both resolve against
      --color-white, so the background case is corrected here instead. */
-  .bg-white {
+  .bg-white.bg-white {
     background-color: var(--panel);
   }
 
   /* Same argument for black: bg-black is used 54 times as a scrim or a dark
      fill and should sit on the page ground rather than punch a hole in it.
      text-black is unused. */
-  .bg-black {
+  .bg-black.bg-black {
     background-color: var(--ink);
   }
 
@@ -359,9 +371,7 @@ body:has(.no-animated-bg)::after {
      Only the high-opacity ones are redirected. bg-white/5 and bg-white/20 are
      faint light washes, which is exactly the right idiom on this ground, and
      they are left alone. */
-  .bg-white\/50,
-  .bg-white\/80,
-  .bg-white\/95 {
+  .bg-white\/50.bg-white\/50, .bg-white\/80.bg-white\/80, .bg-white\/95.bg-white\/95 {
     background-color: var(--panel-veil);
   }
 
@@ -381,115 +391,28 @@ body:has(.no-animated-bg)::after {
        from-zinc-900 / to-zinc-800 was a DARK card in the stock theme. The ramp
        inverts its high shades to white because they are normally text, so the
        wallet card in the sidebar turned white while keeping text-white on it. */
-  .from-white { --tw-gradient-from: var(--panel); }
-  .via-white  { --tw-gradient-via: var(--panel); }
-  .to-white   { --tw-gradient-to: var(--panel); }
+  .from-white.from-white { --tw-gradient-from: var(--panel); }
+  .via-white.via-white { --tw-gradient-via: var(--panel); }
+  .to-white.to-white { --tw-gradient-to: var(--panel); }
 
   /* 900 stays the darker of the pair, as it was before the remap. */
-  .from-zinc-900, .from-gray-900, .from-slate-900 { --tw-gradient-from: var(--ink-soft); }
-  .via-zinc-900, .via-gray-900, .via-slate-900 { --tw-gradient-via: var(--ink-soft); }
-  .to-zinc-900, .to-gray-900, .to-slate-900 { --tw-gradient-to: var(--ink-soft); }
-  .from-zinc-800, .from-gray-800, .from-slate-800 { --tw-gradient-from: var(--ink-raise); }
-  .via-zinc-800, .via-gray-800, .via-slate-800 { --tw-gradient-via: var(--ink-raise); }
-  .to-zinc-800, .to-gray-800, .to-slate-800 { --tw-gradient-to: var(--ink-raise); }
+  .from-zinc-900.from-zinc-900, .from-gray-900.from-gray-900, .from-slate-900.from-slate-900 { --tw-gradient-from: var(--ink-soft); }
+  .via-zinc-900.via-zinc-900, .via-gray-900.via-gray-900, .via-slate-900.via-slate-900 { --tw-gradient-via: var(--ink-soft); }
+  .to-zinc-900.to-zinc-900, .to-gray-900.to-gray-900, .to-slate-900.to-slate-900 { --tw-gradient-to: var(--ink-soft); }
+  .from-zinc-800.from-zinc-800, .from-gray-800.from-gray-800, .from-slate-800.from-slate-800 { --tw-gradient-from: var(--ink-raise); }
+  .via-zinc-800.via-zinc-800, .via-gray-800.via-gray-800, .via-slate-800.via-slate-800 { --tw-gradient-via: var(--ink-raise); }
+  .to-zinc-800.to-zinc-800, .to-gray-800.to-gray-800, .to-slate-800.to-slate-800 { --tw-gradient-to: var(--ink-raise); }
 
   /* The hue ramps' 50 and 100 tints are light washes. As gradient stops they
      are unambiguously surfaces, so they can go dark here without touching the
      flat bg-*-50 / text-*-700 pairs, which still need a call-site decision. */
-  .from-blue-50,
-  .from-blue-100,
-  .from-teal-50,
-  .from-teal-100,
-  .from-green-50,
-  .from-green-100,
-  .from-red-50,
-  .from-red-100,
-  .from-amber-50,
-  .from-amber-100,
-  .from-yellow-50,
-  .from-yellow-100,
-  .from-orange-50,
-  .from-orange-100,
-  .from-purple-50,
-  .from-purple-100,
-  .from-indigo-50,
-  .from-indigo-100,
-  .from-pink-50,
-  .from-pink-100,
-  .from-cyan-50,
-  .from-cyan-100,
-  .from-emerald-50,
-  .from-emerald-100,
-  .from-violet-50,
-  .from-violet-100,
-  .from-rose-50,
-  .from-rose-100,
-  .from-sky-50,
-  .from-sky-100 {
+  .from-blue-50.from-blue-50, .from-blue-100.from-blue-100, .from-teal-50.from-teal-50, .from-teal-100.from-teal-100, .from-green-50.from-green-50, .from-green-100.from-green-100, .from-red-50.from-red-50, .from-red-100.from-red-100, .from-amber-50.from-amber-50, .from-amber-100.from-amber-100, .from-yellow-50.from-yellow-50, .from-yellow-100.from-yellow-100, .from-orange-50.from-orange-50, .from-orange-100.from-orange-100, .from-purple-50.from-purple-50, .from-purple-100.from-purple-100, .from-indigo-50.from-indigo-50, .from-indigo-100.from-indigo-100, .from-pink-50.from-pink-50, .from-pink-100.from-pink-100, .from-cyan-50.from-cyan-50, .from-cyan-100.from-cyan-100, .from-emerald-50.from-emerald-50, .from-emerald-100.from-emerald-100, .from-violet-50.from-violet-50, .from-violet-100.from-violet-100, .from-rose-50.from-rose-50, .from-rose-100.from-rose-100, .from-sky-50.from-sky-50, .from-sky-100.from-sky-100 {
     --tw-gradient-from: var(--ink-raise);
   }
-  .via-blue-50,
-  .via-blue-100,
-  .via-teal-50,
-  .via-teal-100,
-  .via-green-50,
-  .via-green-100,
-  .via-red-50,
-  .via-red-100,
-  .via-amber-50,
-  .via-amber-100,
-  .via-yellow-50,
-  .via-yellow-100,
-  .via-orange-50,
-  .via-orange-100,
-  .via-purple-50,
-  .via-purple-100,
-  .via-indigo-50,
-  .via-indigo-100,
-  .via-pink-50,
-  .via-pink-100,
-  .via-cyan-50,
-  .via-cyan-100,
-  .via-emerald-50,
-  .via-emerald-100,
-  .via-violet-50,
-  .via-violet-100,
-  .via-rose-50,
-  .via-rose-100,
-  .via-sky-50,
-  .via-sky-100 {
+  .via-blue-50.via-blue-50, .via-blue-100.via-blue-100, .via-teal-50.via-teal-50, .via-teal-100.via-teal-100, .via-green-50.via-green-50, .via-green-100.via-green-100, .via-red-50.via-red-50, .via-red-100.via-red-100, .via-amber-50.via-amber-50, .via-amber-100.via-amber-100, .via-yellow-50.via-yellow-50, .via-yellow-100.via-yellow-100, .via-orange-50.via-orange-50, .via-orange-100.via-orange-100, .via-purple-50.via-purple-50, .via-purple-100.via-purple-100, .via-indigo-50.via-indigo-50, .via-indigo-100.via-indigo-100, .via-pink-50.via-pink-50, .via-pink-100.via-pink-100, .via-cyan-50.via-cyan-50, .via-cyan-100.via-cyan-100, .via-emerald-50.via-emerald-50, .via-emerald-100.via-emerald-100, .via-violet-50.via-violet-50, .via-violet-100.via-violet-100, .via-rose-50.via-rose-50, .via-rose-100.via-rose-100, .via-sky-50.via-sky-50, .via-sky-100.via-sky-100 {
     --tw-gradient-via: var(--ink-raise);
   }
-  .to-blue-50,
-  .to-blue-100,
-  .to-teal-50,
-  .to-teal-100,
-  .to-green-50,
-  .to-green-100,
-  .to-red-50,
-  .to-red-100,
-  .to-amber-50,
-  .to-amber-100,
-  .to-yellow-50,
-  .to-yellow-100,
-  .to-orange-50,
-  .to-orange-100,
-  .to-purple-50,
-  .to-purple-100,
-  .to-indigo-50,
-  .to-indigo-100,
-  .to-pink-50,
-  .to-pink-100,
-  .to-cyan-50,
-  .to-cyan-100,
-  .to-emerald-50,
-  .to-emerald-100,
-  .to-violet-50,
-  .to-violet-100,
-  .to-rose-50,
-  .to-rose-100,
-  .to-sky-50,
-  .to-sky-100 {
+  .to-blue-50.to-blue-50, .to-blue-100.to-blue-100, .to-teal-50.to-teal-50, .to-teal-100.to-teal-100, .to-green-50.to-green-50, .to-green-100.to-green-100, .to-red-50.to-red-50, .to-red-100.to-red-100, .to-amber-50.to-amber-50, .to-amber-100.to-amber-100, .to-yellow-50.to-yellow-50, .to-yellow-100.to-yellow-100, .to-orange-50.to-orange-50, .to-orange-100.to-orange-100, .to-purple-50.to-purple-50, .to-purple-100.to-purple-100, .to-indigo-50.to-indigo-50, .to-indigo-100.to-indigo-100, .to-pink-50.to-pink-50, .to-pink-100.to-pink-100, .to-cyan-50.to-cyan-50, .to-cyan-100.to-cyan-100, .to-emerald-50.to-emerald-50, .to-emerald-100.to-emerald-100, .to-violet-50.to-violet-50, .to-violet-100.to-violet-100, .to-rose-50.to-rose-50, .to-rose-100.to-rose-100, .to-sky-50.to-sky-50, .to-sky-100.to-sky-100 {
     --tw-gradient-to: var(--ink-raise);
   }
 
@@ -514,163 +437,163 @@ body:has(.no-animated-bg)::after {
      Surfaces become a wash of the hue's own 500 over the ink, so a warning
      still reads amber and an error still reads red. Text steps up the same
      ramp until it clears 4.5:1 on the panel, measured rather than guessed. */
-  .bg-blue-50 { background-color: rgba(48, 128, 255, 0.1); }
-  .bg-blue-100 { background-color: rgba(48, 128, 255, 0.14); }
-  .bg-blue-200 { background-color: rgba(48, 128, 255, 0.2); }
-  .bg-teal-50 { background-color: rgba(0, 186, 167, 0.1); }
-  .bg-teal-100 { background-color: rgba(0, 186, 167, 0.14); }
-  .bg-teal-200 { background-color: rgba(0, 186, 167, 0.2); }
-  .bg-teal-50\/30 { background-color: rgba(0, 186, 167, 0.03); }
-  .bg-teal-50\/40 { background-color: rgba(0, 186, 167, 0.04); }
-  .bg-teal-50\/50 { background-color: rgba(0, 186, 167, 0.05); }
-  .bg-teal-50\/70 { background-color: rgba(0, 186, 167, 0.07); }
-  .bg-green-50 { background-color: rgba(0, 199, 88, 0.1); }
-  .bg-green-100 { background-color: rgba(0, 199, 88, 0.14); }
-  .bg-green-200 { background-color: rgba(0, 199, 88, 0.2); }
-  .bg-red-50 { background-color: rgba(251, 44, 54, 0.1); }
-  .bg-red-100 { background-color: rgba(251, 44, 54, 0.14); }
-  .bg-red-200 { background-color: rgba(251, 44, 54, 0.2); }
-  .bg-amber-50 { background-color: rgba(249, 156, 0, 0.1); }
-  .bg-amber-100 { background-color: rgba(249, 156, 0, 0.14); }
-  .bg-amber-200 { background-color: rgba(249, 156, 0, 0.2); }
-  .bg-amber-50\/80 { background-color: rgba(249, 156, 0, 0.08); }
-  .bg-yellow-50 { background-color: rgba(237, 178, 0, 0.1); }
-  .bg-yellow-100 { background-color: rgba(237, 178, 0, 0.14); }
-  .bg-yellow-200 { background-color: rgba(237, 178, 0, 0.2); }
-  .bg-orange-50 { background-color: rgba(254, 110, 0, 0.1); }
-  .bg-orange-100 { background-color: rgba(254, 110, 0, 0.14); }
-  .bg-orange-200 { background-color: rgba(254, 110, 0, 0.2); }
-  .bg-purple-50 { background-color: rgba(172, 75, 255, 0.1); }
-  .bg-purple-100 { background-color: rgba(172, 75, 255, 0.14); }
-  .bg-purple-200 { background-color: rgba(172, 75, 255, 0.2); }
-  .bg-indigo-50 { background-color: rgba(98, 95, 255, 0.1); }
-  .bg-indigo-100 { background-color: rgba(98, 95, 255, 0.14); }
-  .bg-indigo-200 { background-color: rgba(98, 95, 255, 0.2); }
-  .bg-indigo-50\/50 { background-color: rgba(98, 95, 255, 0.05); }
-  .bg-pink-50 { background-color: rgba(246, 51, 154, 0.1); }
-  .bg-pink-100 { background-color: rgba(246, 51, 154, 0.14); }
-  .bg-pink-200 { background-color: rgba(246, 51, 154, 0.2); }
-  .bg-cyan-50 { background-color: rgba(0, 183, 215, 0.1); }
-  .bg-cyan-100 { background-color: rgba(0, 183, 215, 0.14); }
-  .bg-cyan-200 { background-color: rgba(0, 183, 215, 0.2); }
-  .bg-emerald-50 { background-color: rgba(0, 187, 127, 0.1); }
-  .bg-emerald-100 { background-color: rgba(0, 187, 127, 0.14); }
-  .bg-emerald-200 { background-color: rgba(0, 187, 127, 0.2); }
-  .bg-violet-50 { background-color: rgba(141, 84, 255, 0.1); }
-  .bg-violet-100 { background-color: rgba(141, 84, 255, 0.14); }
-  .bg-violet-200 { background-color: rgba(141, 84, 255, 0.2); }
-  .bg-rose-50 { background-color: rgba(255, 35, 87, 0.1); }
-  .bg-rose-100 { background-color: rgba(255, 35, 87, 0.14); }
-  .bg-rose-200 { background-color: rgba(255, 35, 87, 0.2); }
-  .bg-rose-50\/50 { background-color: rgba(255, 35, 87, 0.05); }
-  .bg-sky-50 { background-color: rgba(0, 165, 239, 0.1); }
-  .bg-sky-100 { background-color: rgba(0, 165, 239, 0.14); }
-  .bg-sky-200 { background-color: rgba(0, 165, 239, 0.2); }
-  .text-blue-600 { color: #54a2ff; }
-  .text-blue-700 { color: #90c5ff; }
-  .text-blue-800 { color: #90c5ff; }
-  .text-blue-900 { color: #bedbff; }
-  .text-teal-600 { color: #00d3bd; }
-  .text-teal-700 { color: #46ecd5; }
-  .text-teal-800 { color: #46ecd5; }
-  .text-teal-900 { color: #96f7e4; }
-  .text-green-600 { color: #05df72; }
-  .text-green-700 { color: #7bf1a8; }
-  .text-green-800 { color: #7bf1a8; }
-  .text-green-900 { color: #b9f8cf; }
-  .text-red-600 { color: #ff6568; }
-  .text-red-700 { color: #ffa3a3; }
-  .text-red-800 { color: #ffa3a3; }
-  .text-red-900 { color: #ffcaca; }
-  .text-amber-600 { color: #fcbb00; }
-  .text-amber-700 { color: #ffd236; }
-  .text-amber-800 { color: #ffd236; }
-  .text-amber-900 { color: #fee685; }
-  .text-yellow-600 { color: #fac800; }
-  .text-yellow-700 { color: #ffe02a; }
-  .text-yellow-800 { color: #ffe02a; }
-  .text-yellow-900 { color: #fff085; }
-  .text-orange-600 { color: #ff8b1a; }
-  .text-orange-700 { color: #ffb96d; }
-  .text-orange-800 { color: #ffb96d; }
-  .text-orange-900 { color: #ffd7a8; }
-  .text-purple-600 { color: #c07eff; }
-  .text-purple-700 { color: #d9b3ff; }
-  .text-purple-800 { color: #d9b3ff; }
-  .text-purple-900 { color: #e9d5ff; }
-  .text-indigo-600 { color: #7d87ff; }
-  .text-indigo-700 { color: #a4b3ff; }
-  .text-indigo-800 { color: #a4b3ff; }
-  .text-indigo-900 { color: #c7d2ff; }
-  .text-pink-600 { color: #fb64b6; }
-  .text-pink-700 { color: #fda5d5; }
-  .text-pink-800 { color: #fda5d5; }
-  .text-pink-900 { color: #fccee8; }
-  .text-cyan-600 { color: #00d2ef; }
-  .text-cyan-700 { color: #53eafd; }
-  .text-cyan-800 { color: #53eafd; }
-  .text-cyan-900 { color: #a2f4fd; }
-  .text-emerald-600 { color: #00d294; }
-  .text-emerald-700 { color: #5ee9b5; }
-  .text-emerald-800 { color: #5ee9b5; }
-  .text-emerald-900 { color: #a4f4cf; }
-  .text-violet-600 { color: #a685ff; }
-  .text-violet-700 { color: #c4b4ff; }
-  .text-violet-800 { color: #c4b4ff; }
-  .text-violet-900 { color: #ddd6ff; }
-  .text-rose-600 { color: #ff667f; }
-  .text-rose-700 { color: #ffa2ae; }
-  .text-rose-800 { color: #ffa2ae; }
-  .text-rose-900 { color: #ffccd3; }
-  .text-sky-600 { color: #00bcfe; }
-  .text-sky-700 { color: #77d4ff; }
-  .text-sky-800 { color: #77d4ff; }
-  .text-sky-900 { color: #b8e6fe; }
-  .border-blue-100 { border-color: rgba(48, 128, 255, 0.30); }
-  .border-blue-200 { border-color: rgba(48, 128, 255, 0.30); }
-  .border-blue-300 { border-color: rgba(48, 128, 255, 0.30); }
-  .border-teal-100 { border-color: rgba(0, 186, 167, 0.30); }
-  .border-teal-200 { border-color: rgba(0, 186, 167, 0.30); }
-  .border-teal-300 { border-color: rgba(0, 186, 167, 0.30); }
-  .border-green-100 { border-color: rgba(0, 199, 88, 0.30); }
-  .border-green-200 { border-color: rgba(0, 199, 88, 0.30); }
-  .border-green-300 { border-color: rgba(0, 199, 88, 0.30); }
-  .border-red-100 { border-color: rgba(251, 44, 54, 0.30); }
-  .border-red-200 { border-color: rgba(251, 44, 54, 0.30); }
-  .border-red-300 { border-color: rgba(251, 44, 54, 0.30); }
-  .border-amber-100 { border-color: rgba(249, 156, 0, 0.30); }
-  .border-amber-200 { border-color: rgba(249, 156, 0, 0.30); }
-  .border-amber-300 { border-color: rgba(249, 156, 0, 0.30); }
-  .border-yellow-100 { border-color: rgba(237, 178, 0, 0.30); }
-  .border-yellow-200 { border-color: rgba(237, 178, 0, 0.30); }
-  .border-yellow-300 { border-color: rgba(237, 178, 0, 0.30); }
-  .border-orange-100 { border-color: rgba(254, 110, 0, 0.30); }
-  .border-orange-200 { border-color: rgba(254, 110, 0, 0.30); }
-  .border-orange-300 { border-color: rgba(254, 110, 0, 0.30); }
-  .border-purple-100 { border-color: rgba(172, 75, 255, 0.30); }
-  .border-purple-200 { border-color: rgba(172, 75, 255, 0.30); }
-  .border-purple-300 { border-color: rgba(172, 75, 255, 0.30); }
-  .border-indigo-100 { border-color: rgba(98, 95, 255, 0.30); }
-  .border-indigo-200 { border-color: rgba(98, 95, 255, 0.30); }
-  .border-indigo-300 { border-color: rgba(98, 95, 255, 0.30); }
-  .border-pink-100 { border-color: rgba(246, 51, 154, 0.30); }
-  .border-pink-200 { border-color: rgba(246, 51, 154, 0.30); }
-  .border-pink-300 { border-color: rgba(246, 51, 154, 0.30); }
-  .border-cyan-100 { border-color: rgba(0, 183, 215, 0.30); }
-  .border-cyan-200 { border-color: rgba(0, 183, 215, 0.30); }
-  .border-cyan-300 { border-color: rgba(0, 183, 215, 0.30); }
-  .border-emerald-100 { border-color: rgba(0, 187, 127, 0.30); }
-  .border-emerald-200 { border-color: rgba(0, 187, 127, 0.30); }
-  .border-emerald-300 { border-color: rgba(0, 187, 127, 0.30); }
-  .border-violet-100 { border-color: rgba(141, 84, 255, 0.30); }
-  .border-violet-200 { border-color: rgba(141, 84, 255, 0.30); }
-  .border-violet-300 { border-color: rgba(141, 84, 255, 0.30); }
-  .border-rose-100 { border-color: rgba(255, 35, 87, 0.30); }
-  .border-rose-200 { border-color: rgba(255, 35, 87, 0.30); }
-  .border-rose-300 { border-color: rgba(255, 35, 87, 0.30); }
-  .border-sky-100 { border-color: rgba(0, 165, 239, 0.30); }
-  .border-sky-200 { border-color: rgba(0, 165, 239, 0.30); }
-  .border-sky-300 { border-color: rgba(0, 165, 239, 0.30); }
+  .bg-blue-50.bg-blue-50 { background-color: rgba(48, 128, 255, 0.1); }
+  .bg-blue-100.bg-blue-100 { background-color: rgba(48, 128, 255, 0.14); }
+  .bg-blue-200.bg-blue-200 { background-color: rgba(48, 128, 255, 0.2); }
+  .bg-teal-50.bg-teal-50 { background-color: rgba(0, 186, 167, 0.1); }
+  .bg-teal-100.bg-teal-100 { background-color: rgba(0, 186, 167, 0.14); }
+  .bg-teal-200.bg-teal-200 { background-color: rgba(0, 186, 167, 0.2); }
+  .bg-teal-50\/30.bg-teal-50\/30 { background-color: rgba(0, 186, 167, 0.03); }
+  .bg-teal-50\/40.bg-teal-50\/40 { background-color: rgba(0, 186, 167, 0.04); }
+  .bg-teal-50\/50.bg-teal-50\/50 { background-color: rgba(0, 186, 167, 0.05); }
+  .bg-teal-50\/70.bg-teal-50\/70 { background-color: rgba(0, 186, 167, 0.07); }
+  .bg-green-50.bg-green-50 { background-color: rgba(0, 199, 88, 0.1); }
+  .bg-green-100.bg-green-100 { background-color: rgba(0, 199, 88, 0.14); }
+  .bg-green-200.bg-green-200 { background-color: rgba(0, 199, 88, 0.2); }
+  .bg-red-50.bg-red-50 { background-color: rgba(251, 44, 54, 0.1); }
+  .bg-red-100.bg-red-100 { background-color: rgba(251, 44, 54, 0.14); }
+  .bg-red-200.bg-red-200 { background-color: rgba(251, 44, 54, 0.2); }
+  .bg-amber-50.bg-amber-50 { background-color: rgba(249, 156, 0, 0.1); }
+  .bg-amber-100.bg-amber-100 { background-color: rgba(249, 156, 0, 0.14); }
+  .bg-amber-200.bg-amber-200 { background-color: rgba(249, 156, 0, 0.2); }
+  .bg-amber-50\/80.bg-amber-50\/80 { background-color: rgba(249, 156, 0, 0.08); }
+  .bg-yellow-50.bg-yellow-50 { background-color: rgba(237, 178, 0, 0.1); }
+  .bg-yellow-100.bg-yellow-100 { background-color: rgba(237, 178, 0, 0.14); }
+  .bg-yellow-200.bg-yellow-200 { background-color: rgba(237, 178, 0, 0.2); }
+  .bg-orange-50.bg-orange-50 { background-color: rgba(254, 110, 0, 0.1); }
+  .bg-orange-100.bg-orange-100 { background-color: rgba(254, 110, 0, 0.14); }
+  .bg-orange-200.bg-orange-200 { background-color: rgba(254, 110, 0, 0.2); }
+  .bg-purple-50.bg-purple-50 { background-color: rgba(172, 75, 255, 0.1); }
+  .bg-purple-100.bg-purple-100 { background-color: rgba(172, 75, 255, 0.14); }
+  .bg-purple-200.bg-purple-200 { background-color: rgba(172, 75, 255, 0.2); }
+  .bg-indigo-50.bg-indigo-50 { background-color: rgba(98, 95, 255, 0.1); }
+  .bg-indigo-100.bg-indigo-100 { background-color: rgba(98, 95, 255, 0.14); }
+  .bg-indigo-200.bg-indigo-200 { background-color: rgba(98, 95, 255, 0.2); }
+  .bg-indigo-50\/50.bg-indigo-50\/50 { background-color: rgba(98, 95, 255, 0.05); }
+  .bg-pink-50.bg-pink-50 { background-color: rgba(246, 51, 154, 0.1); }
+  .bg-pink-100.bg-pink-100 { background-color: rgba(246, 51, 154, 0.14); }
+  .bg-pink-200.bg-pink-200 { background-color: rgba(246, 51, 154, 0.2); }
+  .bg-cyan-50.bg-cyan-50 { background-color: rgba(0, 183, 215, 0.1); }
+  .bg-cyan-100.bg-cyan-100 { background-color: rgba(0, 183, 215, 0.14); }
+  .bg-cyan-200.bg-cyan-200 { background-color: rgba(0, 183, 215, 0.2); }
+  .bg-emerald-50.bg-emerald-50 { background-color: rgba(0, 187, 127, 0.1); }
+  .bg-emerald-100.bg-emerald-100 { background-color: rgba(0, 187, 127, 0.14); }
+  .bg-emerald-200.bg-emerald-200 { background-color: rgba(0, 187, 127, 0.2); }
+  .bg-violet-50.bg-violet-50 { background-color: rgba(141, 84, 255, 0.1); }
+  .bg-violet-100.bg-violet-100 { background-color: rgba(141, 84, 255, 0.14); }
+  .bg-violet-200.bg-violet-200 { background-color: rgba(141, 84, 255, 0.2); }
+  .bg-rose-50.bg-rose-50 { background-color: rgba(255, 35, 87, 0.1); }
+  .bg-rose-100.bg-rose-100 { background-color: rgba(255, 35, 87, 0.14); }
+  .bg-rose-200.bg-rose-200 { background-color: rgba(255, 35, 87, 0.2); }
+  .bg-rose-50\/50.bg-rose-50\/50 { background-color: rgba(255, 35, 87, 0.05); }
+  .bg-sky-50.bg-sky-50 { background-color: rgba(0, 165, 239, 0.1); }
+  .bg-sky-100.bg-sky-100 { background-color: rgba(0, 165, 239, 0.14); }
+  .bg-sky-200.bg-sky-200 { background-color: rgba(0, 165, 239, 0.2); }
+  .text-blue-600.text-blue-600 { color: #54a2ff; }
+  .text-blue-700.text-blue-700 { color: #90c5ff; }
+  .text-blue-800.text-blue-800 { color: #90c5ff; }
+  .text-blue-900.text-blue-900 { color: #bedbff; }
+  .text-teal-600.text-teal-600 { color: #00d3bd; }
+  .text-teal-700.text-teal-700 { color: #46ecd5; }
+  .text-teal-800.text-teal-800 { color: #46ecd5; }
+  .text-teal-900.text-teal-900 { color: #96f7e4; }
+  .text-green-600.text-green-600 { color: #05df72; }
+  .text-green-700.text-green-700 { color: #7bf1a8; }
+  .text-green-800.text-green-800 { color: #7bf1a8; }
+  .text-green-900.text-green-900 { color: #b9f8cf; }
+  .text-red-600.text-red-600 { color: #ff6568; }
+  .text-red-700.text-red-700 { color: #ffa3a3; }
+  .text-red-800.text-red-800 { color: #ffa3a3; }
+  .text-red-900.text-red-900 { color: #ffcaca; }
+  .text-amber-600.text-amber-600 { color: #fcbb00; }
+  .text-amber-700.text-amber-700 { color: #ffd236; }
+  .text-amber-800.text-amber-800 { color: #ffd236; }
+  .text-amber-900.text-amber-900 { color: #fee685; }
+  .text-yellow-600.text-yellow-600 { color: #fac800; }
+  .text-yellow-700.text-yellow-700 { color: #ffe02a; }
+  .text-yellow-800.text-yellow-800 { color: #ffe02a; }
+  .text-yellow-900.text-yellow-900 { color: #fff085; }
+  .text-orange-600.text-orange-600 { color: #ff8b1a; }
+  .text-orange-700.text-orange-700 { color: #ffb96d; }
+  .text-orange-800.text-orange-800 { color: #ffb96d; }
+  .text-orange-900.text-orange-900 { color: #ffd7a8; }
+  .text-purple-600.text-purple-600 { color: #c07eff; }
+  .text-purple-700.text-purple-700 { color: #d9b3ff; }
+  .text-purple-800.text-purple-800 { color: #d9b3ff; }
+  .text-purple-900.text-purple-900 { color: #e9d5ff; }
+  .text-indigo-600.text-indigo-600 { color: #7d87ff; }
+  .text-indigo-700.text-indigo-700 { color: #a4b3ff; }
+  .text-indigo-800.text-indigo-800 { color: #a4b3ff; }
+  .text-indigo-900.text-indigo-900 { color: #c7d2ff; }
+  .text-pink-600.text-pink-600 { color: #fb64b6; }
+  .text-pink-700.text-pink-700 { color: #fda5d5; }
+  .text-pink-800.text-pink-800 { color: #fda5d5; }
+  .text-pink-900.text-pink-900 { color: #fccee8; }
+  .text-cyan-600.text-cyan-600 { color: #00d2ef; }
+  .text-cyan-700.text-cyan-700 { color: #53eafd; }
+  .text-cyan-800.text-cyan-800 { color: #53eafd; }
+  .text-cyan-900.text-cyan-900 { color: #a2f4fd; }
+  .text-emerald-600.text-emerald-600 { color: #00d294; }
+  .text-emerald-700.text-emerald-700 { color: #5ee9b5; }
+  .text-emerald-800.text-emerald-800 { color: #5ee9b5; }
+  .text-emerald-900.text-emerald-900 { color: #a4f4cf; }
+  .text-violet-600.text-violet-600 { color: #a685ff; }
+  .text-violet-700.text-violet-700 { color: #c4b4ff; }
+  .text-violet-800.text-violet-800 { color: #c4b4ff; }
+  .text-violet-900.text-violet-900 { color: #ddd6ff; }
+  .text-rose-600.text-rose-600 { color: #ff667f; }
+  .text-rose-700.text-rose-700 { color: #ffa2ae; }
+  .text-rose-800.text-rose-800 { color: #ffa2ae; }
+  .text-rose-900.text-rose-900 { color: #ffccd3; }
+  .text-sky-600.text-sky-600 { color: #00bcfe; }
+  .text-sky-700.text-sky-700 { color: #77d4ff; }
+  .text-sky-800.text-sky-800 { color: #77d4ff; }
+  .text-sky-900.text-sky-900 { color: #b8e6fe; }
+  .border-blue-100.border-blue-100 { border-color: rgba(48, 128, 255, 0.30); }
+  .border-blue-200.border-blue-200 { border-color: rgba(48, 128, 255, 0.30); }
+  .border-blue-300.border-blue-300 { border-color: rgba(48, 128, 255, 0.30); }
+  .border-teal-100.border-teal-100 { border-color: rgba(0, 186, 167, 0.30); }
+  .border-teal-200.border-teal-200 { border-color: rgba(0, 186, 167, 0.30); }
+  .border-teal-300.border-teal-300 { border-color: rgba(0, 186, 167, 0.30); }
+  .border-green-100.border-green-100 { border-color: rgba(0, 199, 88, 0.30); }
+  .border-green-200.border-green-200 { border-color: rgba(0, 199, 88, 0.30); }
+  .border-green-300.border-green-300 { border-color: rgba(0, 199, 88, 0.30); }
+  .border-red-100.border-red-100 { border-color: rgba(251, 44, 54, 0.30); }
+  .border-red-200.border-red-200 { border-color: rgba(251, 44, 54, 0.30); }
+  .border-red-300.border-red-300 { border-color: rgba(251, 44, 54, 0.30); }
+  .border-amber-100.border-amber-100 { border-color: rgba(249, 156, 0, 0.30); }
+  .border-amber-200.border-amber-200 { border-color: rgba(249, 156, 0, 0.30); }
+  .border-amber-300.border-amber-300 { border-color: rgba(249, 156, 0, 0.30); }
+  .border-yellow-100.border-yellow-100 { border-color: rgba(237, 178, 0, 0.30); }
+  .border-yellow-200.border-yellow-200 { border-color: rgba(237, 178, 0, 0.30); }
+  .border-yellow-300.border-yellow-300 { border-color: rgba(237, 178, 0, 0.30); }
+  .border-orange-100.border-orange-100 { border-color: rgba(254, 110, 0, 0.30); }
+  .border-orange-200.border-orange-200 { border-color: rgba(254, 110, 0, 0.30); }
+  .border-orange-300.border-orange-300 { border-color: rgba(254, 110, 0, 0.30); }
+  .border-purple-100.border-purple-100 { border-color: rgba(172, 75, 255, 0.30); }
+  .border-purple-200.border-purple-200 { border-color: rgba(172, 75, 255, 0.30); }
+  .border-purple-300.border-purple-300 { border-color: rgba(172, 75, 255, 0.30); }
+  .border-indigo-100.border-indigo-100 { border-color: rgba(98, 95, 255, 0.30); }
+  .border-indigo-200.border-indigo-200 { border-color: rgba(98, 95, 255, 0.30); }
+  .border-indigo-300.border-indigo-300 { border-color: rgba(98, 95, 255, 0.30); }
+  .border-pink-100.border-pink-100 { border-color: rgba(246, 51, 154, 0.30); }
+  .border-pink-200.border-pink-200 { border-color: rgba(246, 51, 154, 0.30); }
+  .border-pink-300.border-pink-300 { border-color: rgba(246, 51, 154, 0.30); }
+  .border-cyan-100.border-cyan-100 { border-color: rgba(0, 183, 215, 0.30); }
+  .border-cyan-200.border-cyan-200 { border-color: rgba(0, 183, 215, 0.30); }
+  .border-cyan-300.border-cyan-300 { border-color: rgba(0, 183, 215, 0.30); }
+  .border-emerald-100.border-emerald-100 { border-color: rgba(0, 187, 127, 0.30); }
+  .border-emerald-200.border-emerald-200 { border-color: rgba(0, 187, 127, 0.30); }
+  .border-emerald-300.border-emerald-300 { border-color: rgba(0, 187, 127, 0.30); }
+  .border-violet-100.border-violet-100 { border-color: rgba(141, 84, 255, 0.30); }
+  .border-violet-200.border-violet-200 { border-color: rgba(141, 84, 255, 0.30); }
+  .border-violet-300.border-violet-300 { border-color: rgba(141, 84, 255, 0.30); }
+  .border-rose-100.border-rose-100 { border-color: rgba(255, 35, 87, 0.30); }
+  .border-rose-200.border-rose-200 { border-color: rgba(255, 35, 87, 0.30); }
+  .border-rose-300.border-rose-300 { border-color: rgba(255, 35, 87, 0.30); }
+  .border-sky-100.border-sky-100 { border-color: rgba(0, 165, 239, 0.30); }
+  .border-sky-200.border-sky-200 { border-color: rgba(0, 165, 239, 0.30); }
+  .border-sky-300.border-sky-300 { border-color: rgba(0, 165, 239, 0.30); }
 }
 
 /* ============================================================================
