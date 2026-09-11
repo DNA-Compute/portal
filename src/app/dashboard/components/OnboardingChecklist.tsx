@@ -135,7 +135,7 @@ export function OnboardingChecklist({
               onClick={!step.completed && step.action ? step.action : undefined}
               className={`relative text-left rounded-xl p-3.5 transition-all ${
                 step.completed
-                  ? "bg-teal-50/60 border border-teal-100"
+                  ? "bg-[var(--ok-fill)] border border-[var(--ok-line)]"
                   : isNext
                     ? "bg-white border-2 border-teal-500 shadow-sm shadow-teal-500/10"
                     : "bg-white border border-zinc-100"
@@ -159,19 +159,19 @@ export function OnboardingChecklist({
               </div>
 
               <div className={`text-xs font-medium mb-0.5 ${
-                step.completed ? "text-teal-700" : "text-[var(--fg)]"
+                step.completed ? "text-[var(--ok)]" : "text-[var(--fg)]"
               }`}>
                 {step.label}
               </div>
               <div className={`text-[11px] ${
-                step.completed ? "text-teal-600/60" : "text-[var(--muted)]"
+                step.completed ? "text-[var(--fg-muted)]" : "text-[var(--muted)]"
               }`}>
                 {step.description}
               </div>
 
               {/* CTA for next step */}
               {isNext && step.action && (
-                <div className="mt-2.5 text-[11px] font-semibold text-teal-600 flex items-center gap-1">
+                <div className="mt-2.5 text-[11px] font-semibold text-[var(--acid)] flex items-center gap-1">
                   {step.actionLabel}
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

@@ -575,11 +575,12 @@ function AccountContent() {
         }
         .account-headline {
           font-family: var(--font-display);
-          font-size: var(--heading-hero);
+          font-size: clamp(34px, 4.6vw, 68px);
           font-weight: 550;
           letter-spacing: var(--track-hero);
           line-height: 1.02;
           margin: 0 0 24px;
+          text-wrap: balance;
         }
         .account-subheadline {
           font-size: var(--copy-lead);
@@ -920,7 +921,6 @@ function AccountContent() {
             margin-bottom: 14px;
           }
           .account-headline {
-            font-size: 34px;
             line-height: 1.06;
           }
           .account-subheadline {
