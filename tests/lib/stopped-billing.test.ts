@@ -17,12 +17,12 @@ import { computeStoppedCharge, wasStoppedBilledRecently } from "@/lib/stopped-bi
 describe("computeStoppedCharge", () => {
   it("charges a single stopped GPU the stopped % of ITS OWN rate (not a fleet avg)", () => {
     // $100/hr GPU, 50%, 30 min → $25 (half of the $50 running charge).
-    const r = computeStoppedCharge([{ gpuCount: 1, perGpuRateCents: 10000 }], 50, 30);
+    const r = computeStoppedCharge([{ gpuCount: 1, hourlyRateCents: 10000 }], 50, 30);
     expect(r).toEqual({ stoppedGpuCount: 1, stoppedCostCents: 2500 });
   });
 
   it("at 100% equals the running charge for the interval", () => {
-    const r = computeStoppedCharge([{ gpuCount: 1, perGpuRateCents: 10000 }], 100, 30);
+    const r = computeStoppedCharge([{ gpuCount: 1, hourlyRateCents: 10000 }], 100, 30);
     expect(r.stoppedCostCents).toBe(5000); // $50, same as running 1 GPU @ $100/hr x 30min
   });
 
@@ -32,8 +32,8 @@ describe("computeStoppedCharge", () => {
     // The old fleet-average logic would have produced a different (wrong) number.
     const r = computeStoppedCharge(
       [
-        { gpuCount: 1, perGpuRateCents: 10000 },
-        { gpuCount: 8, perGpuRateCents: 75000 },
+        { gpuCount: 1, hourlyRateCents: 10000 },
+        { gpuCount: 8, hourlyRateCents: 75000 },
       ],
       50,
       30,
@@ -44,7 +44,7 @@ describe("computeStoppedCharge", () => {
   it("a cheap stopped pod's charge is unaffected by an expensive one (the actual bug)", () => {
     // The reported bug: one stopped $100/hr GPU billed $751.90 because pricier
     // pods polluted the average. Here the cheap pod alone is always exactly $25.
-    const cheapAlone = computeStoppedCharge([{ gpuCount: 1, perGpuRateCents: 10000 }], 50, 30);
+    const cheapAlone = computeStoppedCharge([{ gpuCount: 1, hourlyRateCents: 10000 }], 50, 30);
     expect(cheapAlone.stoppedCostCents).toBe(2500);
     expect(cheapAlone.stoppedCostCents).toBeLessThan(5000); // always < running
   });
@@ -52,8 +52,8 @@ describe("computeStoppedCharge", () => {
   it("skips pods with no known rate instead of guessing (no avg fallback)", () => {
     const r = computeStoppedCharge(
       [
-        { gpuCount: 1, perGpuRateCents: 0 }, // unpriced → not billed, not counted
-        { gpuCount: 2, perGpuRateCents: 20000 },
+        { gpuCount: 1, hourlyRateCents: 0 }, // unpriced → not billed, not counted
+        { gpuCount: 2, hourlyRateCents: 20000 },
       ],
       50,
       30,
@@ -67,19 +67,19 @@ describe("computeStoppedCharge", () => {
   });
 
   it("returns zero cost when the stopped rate is 0%", () => {
-    const r = computeStoppedCharge([{ gpuCount: 1, perGpuRateCents: 10000 }], 0, 30);
+    const r = computeStoppedCharge([{ gpuCount: 1, hourlyRateCents: 10000 }], 0, 30);
     expect(r.stoppedCostCents).toBe(0);
     expect(r.stoppedGpuCount).toBe(1);
   });
 
   it("rounds to the nearest cent", () => {
     // 3333 × 0.25 × 0.5 = 416.625 → 417
-    const r = computeStoppedCharge([{ gpuCount: 1, perGpuRateCents: 3333 }], 25, 30);
+    const r = computeStoppedCharge([{ gpuCount: 1, hourlyRateCents: 3333 }], 25, 30);
     expect(r.stoppedCostCents).toBe(417);
   });
 
   it("treats a fractional/zero gpuCount as at least 1 GPU", () => {
-    const r = computeStoppedCharge([{ gpuCount: 0, perGpuRateCents: 10000 }], 100, 30);
+    const r = computeStoppedCharge([{ gpuCount: 0, hourlyRateCents: 10000 }], 100, 30);
     expect(r).toEqual({ stoppedGpuCount: 1, stoppedCostCents: 5000 });
   });
 });

@@ -13,6 +13,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import type * as Wallet from "@/lib/wallet";
 
 const { mockAuditCreate } = vi.hoisted(() => ({ mockAuditCreate: vi.fn() }));
 
@@ -24,10 +25,14 @@ vi.mock("@/lib/auth/helpers", () => ({
   getAuthenticatedCustomer: vi.fn(),
 }));
 
-vi.mock("@/lib/wallet", () => ({
-  getWalletTransactions: vi.fn(),
-  formatCentsForUser: vi.fn((c: number) => `$${(c / 100).toFixed(2)}`),
-}));
+vi.mock("@/lib/wallet", async (importOriginal) => {
+  const actual = await importOriginal<typeof Wallet>();
+  return {
+    getWalletTransactions: vi.fn(),
+    formatCentsForUser: vi.fn((c: number) => `$${(c / 100).toFixed(2)}`),
+    isUserFacingWalletTransaction: actual.isUserFacingWalletTransaction,
+  };
+});
 
 import { GET } from "@/app/api/billing/history/route";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";

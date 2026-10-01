@@ -379,7 +379,7 @@ body:has(.no-animated-bg)::after {
      A gradient stop is always a surface - there is no text-gradient utility in
      this codebase - so unlike the flat ramps these can be mapped for surfaces
      with no ambiguity. bg-*-600 and text-*-600 pull in opposite directions and
-     have to be decided per call site; from-*/via-*/to-* never do.
+     have to be decided per call site; gradient-stop utilities never do.
 
      Two faults on the signed-in dashboard came from here:
 

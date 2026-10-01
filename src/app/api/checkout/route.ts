@@ -8,7 +8,7 @@ import {
   createTeam,
   createOneTimeLogin,
   syncTeamsToDefaultPolicy,
-  ensureDefaultPolicies,
+  getDefaultPolicies,
   ensureRoles,
 } from "@/lib/hostedai";
 import { generateCustomerToken } from "@/lib/customer-auth";
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       let team: { id: string; name: string };
       try {
         const [policies, roles] = await Promise.all([
-          ensureDefaultPolicies(),
+          getDefaultPolicies(),
           ensureRoles(),
         ]);
 

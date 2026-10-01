@@ -8,6 +8,7 @@ import {
   BillingStats,
   Instance,
   PoolSubscription,
+  PodMetadata,
   HfDeploymentInfo,
   PodSnapshot,
 } from "../types";
@@ -30,13 +31,14 @@ export interface DashboardDataState {
   // Instances & Subscriptions
   instances: Instance[];
   poolSubscriptions: PoolSubscription[];
-  podMetadata: Record<string, { displayName: string | null; notes: string | null; hourlyRate?: number; startupScriptStatus?: string | null; stripeSubscriptionId?: string; billingType?: string; deployStatus?: string | null; deployStatusReason?: string | null }>;
+  podMetadata: Record<string, PodMetadata>;
   hfDeployments: Record<string, HfDeploymentInfo>;
   instancesLoading: boolean;
 
   // Activity & Billing
   activityEvents: ActivityEvent[];
   billingStats: BillingStats | null;
+  billingStatsError: string | null;
 
   // Snapshots
   snapshots: PodSnapshot[];
@@ -100,13 +102,14 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
   // Instances & subscriptions
   const [instances, setInstances] = useState<Instance[]>([]);
   const [poolSubscriptions, setPoolSubscriptions] = useState<PoolSubscription[]>([]);
-  const [podMetadata, setPodMetadata] = useState<Record<string, { displayName: string | null; notes: string | null; hourlyRate?: number; startupScriptStatus?: string | null; stripeSubscriptionId?: string; billingType?: string; deployStatus?: string | null; deployStatusReason?: string | null }>>({});
+  const [podMetadata, setPodMetadata] = useState<Record<string, PodMetadata>>({});
   const [hfDeployments, setHfDeployments] = useState<Record<string, HfDeploymentInfo>>({});
   const [instancesLoading, setInstancesLoading] = useState(false);
 
   // Activity & billing
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [billingStats, setBillingStats] = useState<BillingStats | null>(null);
+  const [billingStatsError, setBillingStatsError] = useState<string | null>(null);
 
   // Snapshots
   const [snapshots, setSnapshots] = useState<PodSnapshot[]>([]);
@@ -132,12 +135,25 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
       if (response.ok) {
         const result = await response.json();
         setInstances(result.instances || []);
-        // Merge hourlyRate from podMetadata into poolSubscriptions
-        const metadata = result.podMetadata || {};
-        const subscriptions = (result.poolSubscriptions || []).map((sub: PoolSubscription) => ({
-          ...sub,
-          hourlyRate: metadata[String(sub.id)]?.hourlyRate ?? sub.hourlyRate,
-        }));
+        // Normalize saved per-GPU rates once; configured totals already include every GPU.
+        const metadata: Record<string, PodMetadata> = result.podMetadata || {};
+        const subscriptions = (result.poolSubscriptions || []).map((sub: PoolSubscription) => {
+          const meta = metadata[String(sub.id)];
+          const gpuCount = meta?.gpuCount ?? sub.per_pod_info?.vgpu_count ?? sub.pods?.[0]?.gpu_count ?? 1;
+          const basis = meta?.hourlyRateBasis ?? sub.hourlyRateBasis;
+          const savedRate = meta ? meta.hourlyRate : sub.hourlyRate;
+          const hourlyRate = meta?.billingType === "monthly" ? undefined : savedRate === undefined
+            ? undefined : savedRate * (basis === "per_instance" ? 1 : Math.max(1, Math.ceil(gpuCount)));
+          return {
+            ...sub,
+            gpuCount,
+            hourlyRate,
+            hourlyRateBasis: basis,
+            billingType: meta?.billingType ?? sub.billingType,
+            stoppedHourlyRate: meta?.stoppedHourlyRate,
+            stoppedRatePercent: meta?.stoppedRatePercent,
+          };
+        });
         setPoolSubscriptions(subscriptions);
         setPodMetadata(metadata);
         setHfDeployments(result.hfDeployments || {});
@@ -165,14 +181,16 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
 
   const fetchBillingStats = useCallback(async () => {
     if (!token) return;
+    setBillingStatsError(null);
     try {
       const response = await fetch("/api/account/billing-stats", { headers: { Authorization: `Bearer ${token}` } });
-      if (response.ok) {
-        const result = await response.json();
-        setBillingStats(result);
-      }
+      if (!response.ok) throw new Error(`Billing statistics returned ${response.status}`);
+      const result: BillingStats = await response.json();
+      setBillingStats(result);
     } catch (error) {
       console.error("Failed to fetch billing stats:", error);
+      setBillingStats(null);
+      setBillingStatsError("Wallet charge data is unavailable.");
     }
   }, [token]);
 
@@ -359,6 +377,7 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
     instancesLoading,
     activityEvents,
     billingStats,
+    billingStatsError,
     snapshots,
     provisioningGpu,
     greeting,

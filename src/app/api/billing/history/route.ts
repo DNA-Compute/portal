@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
-import { getWalletTransactions, formatCentsForUser } from "@/lib/wallet";
+import { getWalletTransactions, formatCentsForUser, isUserFacingWalletTransaction } from "@/lib/wallet";
 
 /**
  * GET /api/billing/history
@@ -34,14 +34,7 @@ export async function GET(request: NextRequest) {
     // wallet this route read before the gate was added (no data-selection change).
     const allRaw = await getWalletTransactions(auth.payload.customerId);
 
-    // Apply the same bookkeeping filter as /api/account/verify
-    const userFacing = allRaw.filter((txn) => {
-      const metaType = txn.metadata?.type;
-      if (metaType === "invoice_balance_hold" || metaType === "invoice_balance_restore") return false;
-      const desc = (txn.description || "").toLowerCase();
-      if (desc.includes("temporary hold for invoice") || desc.includes("restore after invoice")) return false;
-      return true;
-    });
+    const userFacing = allRaw.filter(isUserFacingWalletTransaction);
 
     // Compute all-time aggregates from the raw Stripe amounts:
     // positive amount = debit (customer spent), negative = credit (customer received)

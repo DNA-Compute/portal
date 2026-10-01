@@ -55,7 +55,7 @@ vi.mock("@/lib/hostedai", () => ({
   changeTeamPackage: vi.fn(),
   syncTeamsToDefaultPolicy: vi.fn(),
   unsubscribeFromPool: vi.fn(),
-  ensureDefaultPolicies: vi.fn(),
+  getDefaultPolicies: vi.fn(),
   ensureRoles: vi.fn(),
 }));
 vi.mock("@/lib/email", () => ({ sendWelcomeEmail: vi.fn() }));

@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { validateSSHParams } from "@/lib/ssh-validation";
+import { getConnectionInfo } from "@/lib/hostedai";
+import { exposeService } from "@/lib/hostedai/services";
+import { getStartupScriptPreset } from "@/lib/startup-scripts";
+import { getSSHCredentials } from "@/lib/huggingface-status";
+import { spawn } from "child_process";
+import { setTimeout as delay } from "node:timers/promises";
 
 /**
  * ASCII banner written to the pod's MOTD so users see it on SSH login.
@@ -30,10 +36,12 @@ export async function runStartupScript(
   script: string,
   presetId?: string
 ): Promise<void> {
-  const { getConnectionInfo } = await import("@/lib/hostedai");
-  const { exposeService } = await import("@/lib/hostedai/services");
-  const { getStartupScriptPreset } = await import("@/lib/startup-scripts");
-  const { spawn } = await import("child_process");
+  const metadata = await prisma.podMetadata.findFirst({
+    where: { OR: [{ subscriptionId }, { instanceId: subscriptionId }, { subscriptionId: `instance-${subscriptionId}` }] },
+    select: { id: true, instanceId: true },
+  });
+  if (!metadata) throw new Error("Startup execution requires persisted instance metadata.");
+  const metadataWhere = { id: metadata.id };
 
   const MAX_ATTEMPTS = 20; // Try for ~10 minutes (30s intervals)
   const RETRY_DELAY = 30000; // 30 seconds
@@ -43,7 +51,7 @@ export async function runStartupScript(
   // Update status to pending
   try {
     await prisma.podMetadata.update({
-      where: { subscriptionId },
+      where: metadataWhere,
       data: { startupScriptStatus: "pending" },
     });
   } catch {
@@ -55,6 +63,15 @@ export async function runStartupScript(
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
+      if (metadata.instanceId) {
+        const creds = await getSSHCredentials(metadata.instanceId, 0);
+        if (creds) {
+          pod = { ssh_info: { cmd: `ssh ${creds.username}@${creds.host} -p ${creds.port}`, pass: creds.password }, pod_status: "running", pod_name: metadata.instanceId };
+          break;
+        }
+        if (attempt < MAX_ATTEMPTS) await delay(RETRY_DELAY);
+        continue;
+      }
       const connectionInfo = await getConnectionInfo(teamId);
       const conn = connectionInfo.find((c) => String(c.id) === subscriptionId);
       const podInfo = conn?.pods?.[0];
@@ -78,7 +95,7 @@ export async function runStartupScript(
   if (!pod?.ssh_info?.cmd || !pod?.ssh_info?.pass) {
     console.error(`[Startup] Pod ${subscriptionId} never became ready, giving up`);
     await prisma.podMetadata.update({
-      where: { subscriptionId },
+      where: metadataWhere,
       data: {
         startupScriptStatus: "failed",
         startupScriptOutput: "Pod did not become ready in time",
@@ -99,7 +116,7 @@ export async function runStartupScript(
 
   // Update status to running
   await prisma.podMetadata.update({
-    where: { subscriptionId },
+    where: metadataWhere,
     data: { startupScriptStatus: "running" },
   }).catch(() => {});
 
@@ -116,6 +133,7 @@ export async function runStartupScript(
 
   // Execute via SSH
   return new Promise((resolve) => {
+    let finished = false;
     const args = [
       "-e",
       "ssh",
@@ -145,13 +163,16 @@ export async function runStartupScript(
     });
 
     proc.on("close", async (code) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
       const success = code === 0;
       console.log(`[Startup] Script execution completed for ${subscriptionId} with code ${code}`);
 
       // Update metadata with result
       try {
         await prisma.podMetadata.update({
-          where: { subscriptionId },
+          where: metadataWhere,
           data: {
             startupScriptStatus: success ? "completed" : "failed",
             startupScriptOutput: output.slice(0, 10000),
@@ -177,7 +198,7 @@ export async function runStartupScript(
                   console.log(`[Startup] Exposing port ${portConfig.port} (${portConfig.name}) on pod ${podName}`);
                   await exposeService({
                     pod_name: podName,
-                    pool_subscription_id: Number(subscriptionId),
+                    ...(metadata.instanceId ? {} : { pool_subscription_id: Number(subscriptionId) }),
                     port: portConfig.port,
                     service_name: portConfig.name,
                     protocol: "TCP",
@@ -200,10 +221,13 @@ export async function runStartupScript(
     });
 
     proc.on("error", async (err) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
       console.error(`[Startup] SSH error running startup script on ${subscriptionId}:`, err);
       try {
         await prisma.podMetadata.update({
-          where: { subscriptionId },
+          where: metadataWhere,
           data: {
             startupScriptStatus: "failed",
             startupScriptOutput: `SSH error: ${err.message}`,
@@ -216,11 +240,13 @@ export async function runStartupScript(
     });
 
     // Timeout after 10 minutes
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
+      if (finished) return;
+      finished = true;
       proc.kill();
       console.error(`[Startup] Timeout running startup script on ${subscriptionId}`);
       prisma.podMetadata.update({
-        where: { subscriptionId },
+        where: metadataWhere,
         data: {
           startupScriptStatus: "failed",
           startupScriptOutput: output.slice(0, 10000) + "\n\n[TIMEOUT after 10 minutes]",

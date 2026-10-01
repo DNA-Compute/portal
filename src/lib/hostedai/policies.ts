@@ -7,15 +7,7 @@
  */
 
 import { hostedaiRequest } from "./client";
-import { getDefaultPoliciesSync } from "./default-policies";
-
-// Helper to get DEFAULT_POLICIES synchronously
-const DEFAULT_POLICIES = new Proxy({} as { resource: string }, {
-  get(_target, prop: string) {
-    const policies = getDefaultPoliciesSync();
-    return policies[prop as keyof typeof policies];
-  }
-});
+import { getDefaultPolicies } from "./default-policies";
 
 export interface ResourcePolicyRegion {
   region_id: number;
@@ -71,7 +63,8 @@ export async function getResourcePolicy(policyId: string): Promise<ResourcePolic
  * Get the default resource policy used for customer teams
  */
 export async function getDefaultResourcePolicy(): Promise<ResourcePolicy> {
-  return getResourcePolicy(DEFAULT_POLICIES.resource);
+  const { resource } = await getDefaultPolicies();
+  return getResourcePolicy(resource);
 }
 
 /**
@@ -159,7 +152,8 @@ export async function addRegionToDefaultPolicy(
   regionId: number,
   teamIds?: string[]
 ): Promise<boolean> {
-  return addRegionToResourcePolicy(DEFAULT_POLICIES.resource, regionId, teamIds);
+  const { resource } = await getDefaultPolicies();
+  return addRegionToResourcePolicy(resource, regionId, teamIds);
 }
 
 /**
@@ -169,14 +163,15 @@ export async function addRegionToDefaultPolicy(
  * Used when provisioning new servers or fixing access issues.
  */
 export async function syncTeamsToDefaultPolicy(teamIds: string[]): Promise<void> {
-  const policy = await getResourcePolicy(DEFAULT_POLICIES.resource);
+  const { resource } = await getDefaultPolicies();
+  const policy = await getResourcePolicy(resource);
 
   // Combine existing teams with new teams (deduplicated)
   const existingTeamIds = (policy.teams || []).map((t) => t.id);
   const allTeamIds = [...new Set([...existingTeamIds, ...teamIds])];
 
   // Update policy with teams
-  await updateResourcePolicy(DEFAULT_POLICIES.resource, {
+  await updateResourcePolicy(resource, {
     name: policy.name,
     regions: policy.regions.map((r) => ({
       region_id: r.region_details?.id || 0,

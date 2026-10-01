@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import type {
   CatalogItem,
   SearchResult,
-  LaunchOptions,
   FilterOptions,
   TabType,
-  DeploymentStatus,
 } from "./types";
 import { ItemCard } from "./ItemCard";
-import { ProgressModal } from "./ProgressModal";
-import { LaunchGPUModal, type DeployContext } from "@/app/dashboard/components/LaunchGPUModal";
+import { LaunchConfigurator } from "@/app/dashboard/components/LaunchConfigurator";
+import { ExistingInstanceInstallDialog } from "@/components/huggingface-tab/ExistingInstanceInstallDialog";
 import { FilterPanel } from "./FilterPanel";
 
 function HuggingFacePageContent() {
@@ -46,24 +44,8 @@ function HuggingFacePageContent() {
   // Deploy modal
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CatalogItem | SearchResult | null>(null);
-  const [launchOptions, setLaunchOptions] = useState<LaunchOptions | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState<number | null>(null);
-  const [gpuCount, setGpuCount] = useState(1);
-  const [hfToken, setHfToken] = useState("");
-  const [deploying, setDeploying] = useState(false);
-  const [deployError, setDeployError] = useState<string | null>(null);
-
-  // Progress modal
-  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [existingInstallItem, setExistingInstallItem] = useState<CatalogItem | SearchResult | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [deploymentSubscriptionId, setDeploymentSubscriptionId] = useState<string | null>(null);
-  const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus>("not_started");
-  const [deploymentLogs, setDeploymentLogs] = useState<string>("");
-  const [deploymentMessage, setDeploymentMessage] = useState<string>("");
-  const [apiEndpoint, setApiEndpoint] = useState<string | null>(null);
-  const [notifyRequested, setNotifyRequested] = useState(false);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check auth on mount
   useEffect(() => {
@@ -138,164 +120,17 @@ function HuggingFacePageContent() {
     setShowFilters(false);
   };
 
-  const openDeployModal = async (item: CatalogItem | SearchResult) => {
+  const openDeployModal = (item: CatalogItem | SearchResult) => {
     setSelectedItem(item);
     setShowDeployModal(true);
-    setDeployError(null);
-    setGpuCount(1);
-
-    try {
-      const res = await fetch("/api/instances/launch-options", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const products = data.products || [];
-        setLaunchOptions({
-          categories: data.categories || [],
-          products,
-          walletBalanceCents: data.walletBalanceCents || 0,
-        });
-        if (products.length > 0) {
-          const firstAvailable = products.find((p: { available: boolean }) => p.available);
-          const pick = firstAvailable || products[0];
-          if (pick) {
-            setSelectedProduct(pick.id);
-            if (pick.regions?.length > 0) {
-              setSelectedRegion(pick.regions[0].id);
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching launch options:", err);
-    }
   };
 
   const closeDeployModal = () => {
     setShowDeployModal(false);
     setSelectedItem(null);
-    setDeployError(null);
-    setHfToken("");
   };
 
-  // Polling for deployment status
-  const pollDeploymentStatus = useCallback(async () => {
-    if (!deploymentSubscriptionId || !token) return;
-    try {
-      const res = await fetch(
-        `/api/huggingface/deploy-status?subscriptionId=${deploymentSubscriptionId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setDeploymentStatus(data.status);
-        setDeploymentMessage(data.message);
-        if (data.logs) setDeploymentLogs(data.logs);
-        if (data.apiEndpoint) setApiEndpoint(data.apiEndpoint);
 
-        if (data.status === "running" || data.status === "failed") {
-          if (pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Status poll error:", err);
-    }
-  }, [deploymentSubscriptionId, token]);
-
-  useEffect(() => {
-    if (showProgressModal && deploymentSubscriptionId) {
-      pollDeploymentStatus();
-      pollingRef.current = setInterval(pollDeploymentStatus, 5000);
-    }
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [showProgressModal, deploymentSubscriptionId, pollDeploymentStatus]);
-
-  const closeProgressModal = () => {
-    setShowProgressModal(false);
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  };
-
-  const requestEmailNotification = async () => {
-    if (!deploymentSubscriptionId || !token || notifyRequested) return;
-    try {
-      const res = await fetch("/api/huggingface/notify-complete", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subscriptionId: deploymentSubscriptionId,
-          modelName: selectedItem?.name,
-        }),
-      });
-      if (res.ok) setNotifyRequested(true);
-    } catch (err) {
-      console.error("Notification request error:", err);
-    }
-  };
-
-  const handleDeploy = async () => {
-    if (!selectedItem) return;
-    setDeploying(true);
-    setDeployError(null);
-
-    try {
-      const body: Record<string, unknown> = {
-        hfItemId: selectedItem.id,
-        gpuCount,
-        product_id: selectedProduct || undefined,
-        region_id: selectedRegion || undefined,
-      };
-      if (hfToken) body.hfToken = hfToken;
-
-      const res = await fetch("/api/huggingface/deploy", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.requiresToken) {
-          setDeployError(
-            `This model requires a HuggingFace token. Get yours at huggingface.co/settings/tokens`
-          );
-        } else {
-          setDeployError(data.error || "Failed to deploy");
-        }
-        return;
-      }
-
-      const subId = data.deployment?.subscriptionId || data.subscriptionId;
-      if (subId) {
-        setDeploymentSubscriptionId(String(subId));
-        setDeploymentStatus(data.installing ? "installing" : "starting");
-        setDeploymentMessage(data.message || "Deployment started...");
-        setDeploymentLogs(data.logs || "");
-        setNotifyRequested(false);
-        setApiEndpoint(null);
-        closeDeployModal();
-        setShowProgressModal(true);
-      } else {
-        router.push(`/dashboard?token=${token}&hf_deploy=${data.deployment?.id || "new"}`);
-      }
-    } catch (err) {
-      console.error("Deploy error:", err);
-      setDeployError("Failed to start deployment");
-    } finally {
-      setDeploying(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -423,7 +258,7 @@ function HuggingFacePageContent() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {searchResults.map((item) => (
-                <ItemCard key={item.id} item={item} onDeploy={openDeployModal} />
+                <ItemCard key={item.id} item={item} onDeploy={openDeployModal} onInstallExisting={setExistingInstallItem} />
               ))}
             </div>
           </div>
@@ -460,7 +295,7 @@ function HuggingFacePageContent() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {catalogItems.map((item) => (
-                  <ItemCard key={item.id} item={item} onDeploy={openDeployModal} />
+                  <ItemCard key={item.id} item={item} onDeploy={openDeployModal} onInstallExisting={setExistingInstallItem} />
                 ))}
               </div>
             )}
@@ -468,16 +303,16 @@ function HuggingFacePageContent() {
         )}
       </main>
 
-      {/* Deploy Modal — shared LaunchGPUModal with HF deploy context */}
+      {/* Launch the model with the complete reviewed resource configuration. */}
       {showDeployModal && selectedItem && (
-        <LaunchGPUModal
+        <LaunchConfigurator
           isOpen={showDeployModal}
           onClose={closeDeployModal}
           token={token || ""}
           onSuccess={() => {
             closeDeployModal();
+            router.push(`/dashboard?token=${encodeURIComponent(token || "")}&tab=huggingface`);
           }}
-          onError={(msg) => setDeployError(msg)}
           deployContext={{
             type: "huggingface",
             title: `Deploy ${selectedItem.name}`,
@@ -485,60 +320,20 @@ function HuggingFacePageContent() {
             modelId: selectedItem.id,
             isGated: "gated" in selectedItem && selectedItem.gated,
             vramGb: "vramGb" in selectedItem ? selectedItem.vramGb : undefined,
-            onDeploy: async (params) => {
-              const body: Record<string, unknown> = {
-                hfItemId: selectedItem.id,
-                gpuCount: 1,
-                product_id: params.product_id,
-                region_id: params.region_id,
-              };
-              if (params.hfToken) body.hfToken = params.hfToken;
-
-              const res = await fetch("/api/huggingface/deploy", {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(body),
-              });
-              const data = await res.json();
-
-              if (!res.ok) {
-                throw new Error(data.error || "Failed to deploy");
-              }
-
-              const subId = data.deployment?.subscriptionId || data.subscriptionId;
-              if (subId) {
-                setDeploymentSubscriptionId(String(subId));
-                setDeploymentStatus(data.installing ? "installing" : "starting");
-                setDeploymentMessage(data.message || "Deployment started...");
-                setDeploymentLogs(data.logs || "");
-                setNotifyRequested(false);
-                setApiEndpoint(null);
-                setShowProgressModal(true);
-              } else if (data.deployment?.id) {
-                router.push(`/dashboard?token=${token}&hf_deploy=${data.deployment.id}`);
-              }
-            },
           }}
         />
       )}
 
-      {/* Progress Modal */}
-      {showProgressModal && (
-        <ProgressModal
-          modelName={selectedItem?.name || "Model"}
-          status={deploymentStatus}
-          message={deploymentMessage}
-          logs={deploymentLogs}
-          apiEndpoint={apiEndpoint}
-          notifyRequested={notifyRequested}
-          token={token || ""}
-          onClose={closeProgressModal}
-          onRequestNotification={requestEmailNotification}
+      {existingInstallItem && token && (
+        <ExistingInstanceInstallDialog
+          key={`${token}:${existingInstallItem.id}`}
+          token={token}
+          item={existingInstallItem}
+          onClose={() => setExistingInstallItem(null)}
+          onInstallationStarted={() => router.push(`/dashboard?token=${encodeURIComponent(token)}&tab=instances`)}
         />
       )}
+
     </div>
   );
 }

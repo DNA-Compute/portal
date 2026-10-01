@@ -1,3 +1,5 @@
+import type { ConfigurationPricing } from "@/lib/launch-config";
+
 export interface Stats {
   totalCustomers: number;
   activePods: number;
@@ -296,6 +298,7 @@ export interface GpuProduct {
   billingType: "hourly" | "monthly";
   pricePerHourCents: number;
   pricePerMonthCents: number | null;
+  configurationPricing: ConfigurationPricing | null;
   stripeProductId: string | null;
   stripePriceId: string | null;
   poolIds: number[];

@@ -320,8 +320,8 @@ export async function getTeamWorkspaces(
 // Create a new instance
 export async function createInstance(
   params: CreateInstanceParams
-): Promise<Instance> {
-  return hostedaiRequest<Instance>("POST", "/service/i/create-instance", params as unknown as Record<string, unknown>);
+): Promise<Instance | string> {
+  return hostedaiRequest<Instance | string>("POST", "/service/i/create-instance", params as unknown as Record<string, unknown>);
 }
 
 // Start an instance
@@ -526,6 +526,9 @@ export async function getServiceCompatibleGPUPools(
   gpu_model?: string;
   available_vgpus?: number;
   total_vgpus?: number;
+  pool_source?: string;
+  rootfs_persistence_capable?: boolean;
+  shared_storage_capable?: boolean;
 }>> {
   return hostedaiRequest(
     "GET",
@@ -543,6 +546,60 @@ export async function getServiceProvisioningInfo(
     "GET",
     `/service/i/provisioning-info?service_id=${serviceId}&team_id=${teamId}&region_id=${regionId}`
   );
+}
+
+/** Native launch endpoints are dependency-scoped, not global object inventories. */
+export interface LaunchServiceQuery {
+  service_id: string;
+  team_id: string;
+  region_id: number;
+  requested_gpu_count?: number;
+  pool_id?: number;
+  model_id?: string;
+  image_hash?: string;
+  instance_type?: string;
+}
+
+function launchQuery(params: Record<string, string | number | undefined>): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) query.set(key, String(value));
+  }
+  return query.toString();
+}
+
+export async function getTeamAccessibleScenarios(teamId: string): Promise<unknown> {
+  return hostedaiRequest("GET", `/service/i/team-accessible-scenarios?${launchQuery({ team_id: teamId })}`);
+}
+
+export async function getTeamAccessibleLaunchRegions(teamId: string): Promise<unknown> {
+  return hostedaiRequest("GET", `/service/i/team-accessible-regions?${launchQuery({ team_id: teamId })}`);
+}
+
+export async function getServiceCompatibleGpuModels(query: LaunchServiceQuery): Promise<unknown> {
+  return hostedaiRequest("GET", `/service/i/compatible-gpu-models?${launchQuery({ ...query })}`);
+}
+
+export async function getServicePoolMaxVgpus(query: LaunchServiceQuery, tqSlices: number): Promise<unknown> {
+  return hostedaiRequest("GET", `/service/i/pool-max-vgpus-at-tq-slice?${launchQuery({ ...query, tq_slices: tqSlices })}`);
+}
+
+export async function getLaunchServiceResources(
+  resource: "compatible-images" | "instance-types" | "storage-blocks" | "shared-volumes",
+  query: LaunchServiceQuery,
+): Promise<unknown> {
+  // Match the native creation flow instead of forwarding later-step selections.
+  const params: Record<string, string | number | undefined> = {
+    service_id: query.service_id,
+    team_id: query.team_id,
+    region_id: query.region_id,
+    requested_gpu_count: query.requested_gpu_count,
+    pool_id: query.pool_id,
+  };
+  if (resource !== "shared-volumes") params.model_id = query.model_id;
+  if (resource === "instance-types" || resource === "storage-blocks") params.image_hash = query.image_hash;
+  if (resource === "storage-blocks") params.instance_type = query.instance_type;
+  return hostedaiRequest("GET", `/service/i/${resource}?${launchQuery(params)}`);
 }
 
 // Get a HAI service by ID (returns the full service object including gpu_config)

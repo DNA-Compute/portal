@@ -13,8 +13,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 // Stub heavy children so we only exercise the tab's own render branches.
-vi.mock("@/app/dashboard/components/LaunchGPUModal", () => ({
-  LaunchGPUModal: () => null,
+vi.mock("@/app/dashboard/components/LaunchConfigurator", () => ({
+  LaunchConfigurator: () => null,
 }));
 vi.mock("@/components/huggingface-tab/ItemCard", () => ({
   ItemCard: ({ item }: { item: { id: string } }) => (

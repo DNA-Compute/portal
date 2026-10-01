@@ -52,7 +52,7 @@ const {
     changeTeamPackage: vi.fn(),
     syncTeamsToDefaultPolicy: vi.fn(),
     unsubscribeFromPool: vi.fn(),
-    ensureDefaultPolicies: vi.fn(),
+    getDefaultPolicies: vi.fn(),
     ensureRoles: vi.fn(),
   },
   lifecycleMock: {
@@ -166,7 +166,7 @@ beforeEach(() => {
   hostedaiMock.createTeam.mockResolvedValue(TEAM);
   hostedaiMock.createOneTimeLogin.mockResolvedValue({ url: "https://otl.example/x" });
   hostedaiMock.syncTeamsToDefaultPolicy.mockResolvedValue(undefined);
-  hostedaiMock.ensureDefaultPolicies.mockResolvedValue({
+  hostedaiMock.getDefaultPolicies.mockResolvedValue({
     pricing: "pol-pricing",
     resource: "pol-resource",
     service: "pol-service",

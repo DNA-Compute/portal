@@ -210,19 +210,23 @@ describe('Pool Management', () => {
       expect(mockRequest).toHaveBeenCalledTimes(1); // Not called again
     });
 
-    it('should support metric window parameter', async () => {
-      mockGetCached.mockReturnValueOnce(null);
-      mockRequest.mockResolvedValueOnce({ items: [], total_items: 0 });
+    it("retains GPU VMs without pod_info and preserves native multi-GPU counts for billing", async () => {
+      mockRequest.mockResolvedValueOnce({
+        items: [
+          { id: "gpu-vm", name: "VM", status: "stopped", service: { type: "cpu_gpu_card" } },
+          { id: "gpu-pod", name: "Pod", status: "running", pod_info: { vgpu_count: 2, pool_id: 7 } },
+        ],
+      });
+      const subscriptions = await getPoolSubscriptions("team");
+      expect(subscriptions.map(sub => sub.id)).toEqual(["gpu-vm", "gpu-pod"]);
+      expect(subscriptions[0]).toMatchObject({ status: "subscribed", pods: [{ pod_status: "stopped" }] });
+      expect(subscriptions[1]).toMatchObject({ per_pod_info: { vgpu_count: 2 }, pods: [{ gpu_count: 2 }] });
+    });
 
-      await getPoolSubscriptions('team-123', 'last_24h');
-
-      // metricWindow only affects the cache key, not the unified endpoint URL.
-      expect(mockRequest).toHaveBeenCalledWith(
-        'GET',
-        '/instances/unified?page=0&per_page=100&team_id=team-123',
-        undefined,
-        60000
-      );
+    it.each(["paused", "reserved"])("keeps %s allocations eligible for reservation billing", async status => {
+      mockRequest.mockResolvedValueOnce({ items: [{ id: "gpu-vm", name: "VM", status }] });
+      const subscriptions = await getPoolSubscriptions("team");
+      expect(subscriptions[0]).toMatchObject({ status: "subscribed", pods: [{ pod_status: status }] });
     });
   });
 

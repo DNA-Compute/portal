@@ -2,49 +2,26 @@
 
 import { useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import type { ChartDataPoint } from "./types";
+import type { BillingStats } from "./types";
 
 interface UsageChartProps {
-  transactions: Array<{ created: number; amount: number; type: string }>;
+  charges: BillingStats["dailyCharges"] | null;
+  error?: string | null;
 }
 
-export function UsageChart({ transactions }: UsageChartProps) {
-  const chartData = useMemo(() => {
-    const days: ChartDataPoint[] = [];
-    const now = new Date();
+export function UsageChart({ charges, error }: UsageChartProps) {
+  const chartData = useMemo(() => (charges ?? []).map(charge => ({
+    fullDate: new Date(`${charge.date}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }),
+    spend: charge.amountCents / 100,
+  })), [charges]);
 
-    for (let i = 13; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      date.setHours(0, 0, 0, 0);
-      days.push({
-        date: date.getDate().toString(),
-        fullDate: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        spend: 0,
-        hours: 0,
-      });
-    }
-
-    transactions.forEach((txn) => {
-      if (txn.type !== "debit") return;
-      const txnDate = new Date(txn.created * 1000);
-      txnDate.setHours(0, 0, 0, 0);
-
-      for (let i = 0; i < days.length; i++) {
-        const dayDate = new Date(now);
-        dayDate.setDate(dayDate.getDate() - (13 - i));
-        dayDate.setHours(0, 0, 0, 0);
-
-        if (txnDate.getTime() === dayDate.getTime()) {
-          days[i].spend += Math.abs(txn.amount) / 100;
-          days[i].hours += Math.abs(txn.amount) / 100 / 2;
-          break;
-        }
-      }
-    });
-
-    return days;
-  }, [transactions]);
+  if (!charges || error) {
+    return (
+      <div className="h-full flex items-center justify-center text-zinc-400 text-sm">
+        {error ? "Wallet charges unavailable" : "Loading wallet charges…"}
+      </div>
+    );
+  }
 
   const maxSpend = Math.max(...chartData.map((d) => d.spend), 0.5);
   // Width needed to fit the largest Y-axis label (e.g. "$10000") without clipping.
@@ -55,7 +32,7 @@ export function UsageChart({ transactions }: UsageChartProps) {
   if (!hasData) {
     return (
       <div className="h-full flex items-center justify-center text-zinc-400 text-sm">
-        No usage data yet
+        No wallet charges in this period
       </div>
     );
   }
@@ -97,7 +74,7 @@ export function UsageChart({ transactions }: UsageChartProps) {
           }}
           formatter={(value) => {
             const numValue = typeof value === "number" ? value : 0;
-            return [`$${numValue.toFixed(2)}`, "Spend"];
+            return [`$${numValue.toFixed(2)}`, "Wallet charges"];
           }}
           labelFormatter={(label) => label}
           labelStyle={{ color: "#a1a1aa", marginBottom: "4px" }}

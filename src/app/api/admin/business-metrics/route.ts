@@ -3,6 +3,7 @@ import { verifySessionToken } from "@/lib/admin";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { readPoolOverviewCache } from "@/lib/pool-overview";
+import { getPodHourlyRateCents } from "@/lib/pod-billing";
 import Stripe from "stripe";
 
 // Helper to get start of day in Unix timestamp
@@ -311,8 +312,9 @@ export async function GET(request: NextRequest) {
       const hoursInPeriod = (endMs - effectiveStart) / (1000 * 60 * 60);
       totalHoursUsed += hoursInPeriod;
 
-      if (pod.hourlyRateCents) {
-        totalUsageCost += hoursInPeriod * pod.hourlyRateCents;
+      const hourlyRateCents = getPodHourlyRateCents(pod, 1);
+      if (hourlyRateCents !== null) {
+        totalUsageCost += hoursInPeriod * hourlyRateCents;
       }
     }
 

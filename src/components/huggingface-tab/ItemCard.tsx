@@ -10,15 +10,15 @@
 
 import type { CatalogItem, SearchResult } from "./types";
 import { getCompatibilityBadge } from "./helpers";
-import { STANDARD_EPHEMERAL_STORAGE_GB } from "@/lib/huggingface-api";
 
 interface ItemCardProps {
   item: CatalogItem | SearchResult;
   onDeploy: (item: CatalogItem | SearchResult) => void;
+  onInstallExisting: (item: CatalogItem | SearchResult) => void;
   onOpenMemoryModal: (modelId: string) => void;
 }
 
-export function ItemCard({ item, onDeploy, onOpenMemoryModal }: ItemCardProps) {
+export function ItemCard({ item, onDeploy, onInstallExisting, onOpenMemoryModal }: ItemCardProps) {
   const isGated = "gated" in item && item.gated;
   const vramGb =
     "vramGb" in item
@@ -34,8 +34,6 @@ export function ItemCard({ item, onDeploy, onOpenMemoryModal }: ItemCardProps) {
       : "estimatedDiskSizeGb" in item
       ? item.estimatedDiskSizeGb
       : 0;
-  const exceedsStorageLimit =
-    diskSizeGb !== undefined && diskSizeGb > 0 && diskSizeGb > STANDARD_EPHEMERAL_STORAGE_GB;
 
   return (
     <div className="bg-white rounded-xl border border-[var(--line)] p-5 hover:shadow-lg transition-shadow">
@@ -117,24 +115,23 @@ export function ItemCard({ item, onDeploy, onOpenMemoryModal }: ItemCardProps) {
         ))}
       </div>
 
-      {exceedsStorageLimit && (
-        <div
-          className="mb-3 flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
-          title={`This model requires ~${diskSizeGb}GB of storage. Standard pods have ${STANDARD_EPHEMERAL_STORAGE_GB}GB ephemeral storage.`}
-        >
-          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-          </svg>
-          Requires ~{diskSizeGb}GB — exceeds {STANDARD_EPHEMERAL_STORAGE_GB}GB pod limit
-        </div>
+      {diskSizeGb !== undefined && diskSizeGb > 0 && (
+        <p className="mb-3 text-xs text-zinc-500">
+          Estimated model storage: ~{diskSizeGb} GB. Choose enough root or persistent storage when configuring your GPU.
+        </p>
       )}
       <button
         onClick={() => onDeploy(item)}
-        disabled={exceedsStorageLimit}
-        className="w-full py-2 px-4 bg-[var(--blue)] text-white rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity text-sm font-medium"
-        title={exceedsStorageLimit ? `Model too large for standard pods (requires ~${diskSizeGb}GB)` : undefined}
+        className="w-full py-2 px-4 bg-[var(--blue)] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
       >
-        Deploy to GPU
+        Launch new GPU
+      </button>
+      <button
+        type="button"
+        onClick={() => onInstallExisting(item)}
+        className="mt-2 w-full py-2 px-4 border border-[var(--line)] text-[var(--fg)] rounded-lg hover:bg-zinc-50 transition-colors text-sm font-medium"
+      >
+        Install on existing GPU
       </button>
     </div>
   );

@@ -17,6 +17,7 @@ export interface DeployScriptParams {
   quantization?: "none" | "int8" | "int4" | "awq" | "gptq";
   openWebUI?: boolean;
   netdata?: boolean;
+  sharedModelStorage?: boolean;
 }
 
 /**
@@ -102,7 +103,7 @@ export function generateDeployScript(
  * - Calculates safe max-model-len to avoid OOM
  */
 function generateVLLMNativeScript(params: DeployScriptParams): string {
-  const { modelId, port = 8000, hfToken, gpuCount = 1, openWebUI = false, netdata = false } = params;
+  const { modelId, port = 8000, hfToken, gpuCount = 1, openWebUI = false, netdata = false, sharedModelStorage = false } = params;
 
   if (!modelId) {
     throw new Error("modelId is required");
@@ -130,6 +131,19 @@ pkill -f "hf-stub-server" 2>/dev/null || true
 # Use home directory for workspace
 WORKSPACE="$HOME/hf-workspace"
 mkdir -p "$WORKSPACE" "$WORKSPACE/cache"
+${sharedModelStorage ? `
+# Keep logs on root for status checks; put model weights on the selected shared volume.
+SHARE_PATH=$(ls -d /data/share* 2>/dev/null | head -1)
+if [ -z "$SHARE_PATH" ] || [ ! -d "$SHARE_PATH" ]; then
+  echo "Selected shared model storage is not mounted" >&2
+  exit 1
+fi
+mkdir -p "$SHARE_PATH/hf-cache"
+rmdir "$WORKSPACE/cache" 2>/dev/null || true
+if [ ! -L "$WORKSPACE/cache" ]; then
+  ln -s "$SHARE_PATH/hf-cache" "$WORKSPACE/cache" || exit 1
+fi
+` : ""}
 cd "$WORKSPACE"
 
 # ============================================

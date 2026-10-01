@@ -13,7 +13,6 @@ export * from "./types";
 export * from "./helpers";
 
 // Components
-export { DeployModal } from "./DeployModal";
 export { MemoryModal } from "./MemoryModal";
 export { ItemCard } from "./ItemCard";
 export { FilterPanel } from "./FilterPanel";

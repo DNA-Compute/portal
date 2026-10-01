@@ -10,6 +10,11 @@
 export async function register() {
   // Only run on the server, not during build or in Edge runtime
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Node crypto is unavailable to the Edge instrumentation bundle.
+    const { getTenantEncryptionKeyError } = await import("@/lib/crypto");
+    const encryptionError = getTenantEncryptionKeyError();
+    if (encryptionError) console.warn("[Instrumentation]", encryptionError);
+
     const { startCronScheduler } = await import("@/lib/cron-scheduler");
     startCronScheduler();
 
@@ -19,8 +24,8 @@ export async function register() {
       console.error("[Instrumentation] Failed to warm settings cache:", error);
     });
 
-    // Initialize default policies and roles from hosted.ai API
-    // Awaited so the cache is warm before any request handler runs
+    // Attempt policy and role warm-up before serving requests.
+    // Provisioning must still await verified policies when warm-up fails.
     const { initializeDefaultPolicies, initializeRoles } = await import("@/lib/hostedai");
     await Promise.all([
       initializeDefaultPolicies().catch((error) => {

@@ -83,6 +83,12 @@ export {
   getServiceCompatibleRegions,
   getServiceCompatibleGPUPools,
   getServiceProvisioningInfo,
+  getTeamAccessibleScenarios,
+  getTeamAccessibleLaunchRegions,
+  getServiceCompatibleGpuModels,
+  getServicePoolMaxVgpus,
+  getLaunchServiceResources,
+  type LaunchServiceQuery,
   getHAIService,
   updateHAIService,
   getTeamWorkspaces,
@@ -171,12 +177,8 @@ export type {
 // Re-export default policies functions
 export {
   getDefaultPolicies,
-  getDefaultPoliciesSync,
   clearDefaultPoliciesCache,
   initializeDefaultPolicies,
-  ensureDefaultPolicies,
-  DEFAULT_POLICIES,
-  FALLBACK_POLICIES,
 } from "./default-policies";
 
 // Re-export default roles functions

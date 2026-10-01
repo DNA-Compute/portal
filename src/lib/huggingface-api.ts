@@ -273,7 +273,7 @@ export async function getModelInfo(modelId: string): Promise<HFModel | null> {
   if (cached) return cached;
 
   try {
-    const response = await fetch(`${HF_API_BASE}/models/${modelId}`);
+    const response = await fetch(`${HF_API_BASE}/models/${modelId}?blobs=true`);
     if (!response.ok) {
       if (response.status === 404) return null;
       throw new Error(`HF API error: ${response.status}`);
@@ -363,12 +363,6 @@ export function estimateDiskSizeFromModel(model: HFModel): number {
   const totalBytes = model.siblings.reduce((sum, s) => sum + (s.size || 0), 0);
   return totalBytes > 0 ? Math.ceil(totalBytes / (1024 * 1024 * 1024)) : 0;
 }
-
-/**
- * Standard ephemeral storage limit for GPU pods in GB.
- * Models exceeding this cannot be deployed on standard pods.
- */
-export const STANDARD_EPHEMERAL_STORAGE_GB = 150;
 
 /**
  * Estimate VRAM requirement from model metadata

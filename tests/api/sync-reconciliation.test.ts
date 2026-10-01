@@ -23,11 +23,14 @@ const mockUpdatePodMetadata = vi.fn();
 const mockFindUniquePodMetadata = vi.fn();
 const mockUpdateCustomerCache = vi.fn();
 const mockFindManyProduct = vi.fn();
+const mockStripeCharge = vi.fn().mockResolvedValue({});
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    walletTransaction: { create: vi.fn().mockResolvedValue({}) },
     customerCache: {
       findFirst: (...args: unknown[]) => mockFindFirstCustomer(...args),
+      findMany: vi.fn().mockResolvedValue([]),
       update: (...args: unknown[]) => mockUpdateCustomerCache(...args),
     },
     podMetadata: {
@@ -61,6 +64,8 @@ vi.mock('@/lib/stripe', () => ({
     customers: {
       update: (...args: unknown[]) => mockStripeUpdate(...args),
       retrieve: (...args: unknown[]) => mockStripeRetrieve(...args),
+      createBalanceTransaction: (...args: unknown[]) => mockStripeCharge(...args),
+      listBalanceTransactions: vi.fn().mockResolvedValue({ data: [] }),
     },
   }),
 }));
@@ -311,6 +316,108 @@ describe('/api/sync — reconciliation', () => {
     // Force-flip suppressed by the monthly claim
     expect(mockStripeUpdate).not.toHaveBeenCalled();
     expect(mockUpdateCustomerCache).not.toHaveBeenCalled();
+  });
+  it.each(["per_instance", "per_gpu"])("does not backfill a missing configured price (%s)", async (basis) => {
+    mockReadPoolOverviewCache.mockReturnValue({
+      pools: [{ id: POOL_ID, name: POOL_NAME, pods: [{ teamId: TEAM_ID, status: "active" }] }],
+    });
+    mockFindFirstCustomer.mockResolvedValue({
+      id: TEAM_OWNER_ID, teamId: TEAM_ID, email: "owner@example.com", billingType: "hourly",
+    });
+    mockGetPoolSubscriptions.mockResolvedValue([{
+      id: HAI_INSTANCE_ID, status: "active", pool_id: POOL_ID, pool_name: POOL_NAME,
+    }]);
+    mockFindManyPodMetadata.mockImplementation(({ where }: { where?: Record<string, unknown> }) =>
+      where?.hourlyRateCents ? [] : [{
+        subscriptionId: HAI_INSTANCE_ID,
+        stripeCustomerId: TEAM_OWNER_ID,
+        hourlyRateCents: null,
+        hourlyRateBasis: basis,
+        launchConfiguration: { gpuCount: 2 },
+        billingType: "hourly",
+      }],
+    );
+    const res = await POST(makeSyncRequest());
+    expect(res.status).toBe(200);
+    expect(mockCreatePodMetadata).not.toHaveBeenCalled();
+    expect(mockUpdatePodMetadata).not.toHaveBeenCalled();
+  });
+
+  it("does not invent a GPU-only rate for an orphan in a configurable product pool", async () => {
+    mockReadPoolOverviewCache.mockReturnValue({
+      pools: [{ id: POOL_ID, name: POOL_NAME, pods: [{ teamId: TEAM_ID, status: "active" }] }],
+    });
+    mockFindFirstCustomer.mockResolvedValue({
+      id: TEAM_OWNER_ID, teamId: TEAM_ID, email: "owner@example.com", billingType: "hourly",
+    });
+    mockGetPoolSubscriptions.mockResolvedValue([{
+      id: HAI_INSTANCE_ID, status: "active", pool_id: POOL_ID, pool_name: POOL_NAME,
+    }]);
+    mockFindManyProduct.mockResolvedValue([{
+      id: HOURLY_PRODUCT_ID, poolIds: JSON.stringify([POOL_ID]), pricePerHourCents: 92,
+      configurationPricing: { cpuCoreHourCents: 1, ramGbHourCents: 1, rootGbHourCents: 0.1 },
+    }]);
+    const res = await POST(makeSyncRequest());
+    expect(res.status).toBe(200);
+    expect(mockCreatePodMetadata).not.toHaveBeenCalled();
+    expect(mockUpdatePodMetadata).not.toHaveBeenCalled();
+  });
+  it.each([
+    { basis: "per_instance", expectedCents: 600 },
+    { basis: "per_gpu", expectedCents: 1200 },
+    { basis: null, expectedCents: 1200 },
+  ])("bills two running GPUs using $basis rather than multiplying a configuration total", async ({ basis, expectedCents }) => {
+    mockReadPoolOverviewCache.mockReturnValue(null);
+    mockStripeRetrieve.mockResolvedValue({
+      id: TEAM_OWNER_ID, email: "owner@example.com", metadata: { hostedai_team_id: TEAM_ID },
+    });
+    mockGetPoolSubscriptions.mockResolvedValue([{
+      id: HAI_INSTANCE_ID, status: "active", pool_id: POOL_ID,
+      per_pod_info: { vgpu_count: 2 }, pods: [{ pod_status: "running" }],
+    }]);
+    mockFindManyPodMetadata.mockImplementation(({ where }: { where?: Record<string, unknown> }) =>
+      where?.AND ? [{
+        subscriptionId: `instance-${HAI_INSTANCE_ID}`, instanceId: HAI_INSTANCE_ID,
+        stripeCustomerId: TEAM_OWNER_ID, poolId: String(POOL_ID),
+        hourlyRateCents: 1200, hourlyRateBasis: basis,
+        prepaidUntil: new Date(testClock - 1000),
+        rateSnapshot: basis === "per_instance" ? {
+          version: 1, basis: "per_instance", instanceHourlyCents: 1200,
+          sharedStorageHourlyCents: 100, totalHourlyCents: 1300,
+        } : null,
+      }] : [],
+    );
+    const res = await POST(makeSyncRequest());
+    expect(res.status).toBe(200);
+    expect(mockStripeCharge).toHaveBeenCalledTimes(1);
+    expect(mockStripeCharge).toHaveBeenCalledWith(TEAM_OWNER_ID, expect.objectContaining({ amount: expectedCents }));
+  });
+  it("bills one captured reservation for a configured instance with multiple stopped pods", async () => {
+    mockReadPoolOverviewCache.mockReturnValue(null);
+    mockStripeRetrieve.mockResolvedValue({
+      id: TEAM_OWNER_ID, balance: 0, email: "owner@example.com",
+      metadata: { hostedai_team_id: TEAM_ID, billing_type: "hourly" },
+    });
+    mockGetPoolSubscriptions.mockResolvedValue([{
+      id: HAI_INSTANCE_ID, status: "active", pool_id: POOL_ID,
+      per_pod_info: { vgpu_count: 2 },
+      pods: [{ pod_name: "a", pod_status: "stopped" }, { pod_name: "b", pod_status: "stopped" }],
+    }]);
+    const metadata = {
+      subscriptionId: `instance-${HAI_INSTANCE_ID}`, instanceId: HAI_INSTANCE_ID,
+      stripeCustomerId: TEAM_OWNER_ID, poolId: String(POOL_ID),
+      hourlyRateCents: 1200, hourlyRateBasis: "per_instance", billingType: "hourly",
+      prepaidUntil: new Date(testClock - 1000),
+      rateSnapshot: {
+        version: 1, basis: "per_instance", instanceHourlyCents: 1200,
+        stoppedInstanceHourlyCents: 300, stoppedRatePercent: 25,
+      },
+    };
+    mockFindManyPodMetadata.mockResolvedValue([metadata]);
+    const res = await POST(makeSyncRequest());
+    expect(res.status).toBe(200);
+    expect(mockStripeCharge).toHaveBeenCalledTimes(1);
+    expect(mockStripeCharge).toHaveBeenCalledWith(TEAM_OWNER_ID, expect.objectContaining({ amount: 150 }));
   });
 });
 

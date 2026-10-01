@@ -13,6 +13,8 @@ import {
   executeRemoteScript,
   getSSHCredentials,
 } from "@/lib/huggingface-status";
+import { redactHuggingFaceSecrets } from "@/lib/launch-software";
+import { launchConfigurationSchema } from "@/lib/launch-config";
 
 /**
  * POST /api/huggingface/deploy-existing
@@ -115,7 +117,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gpuCount = 1;
+    const metadata = await prisma.podMetadata.findFirst({
+      where: { stripeCustomerId: accountId, OR: [{ instanceId }, { subscriptionId: instanceId }, { subscriptionId: `instance-${instanceId}` }] },
+      select: { launchConfiguration: true },
+    });
+    const savedConfiguration = launchConfigurationSchema.strip().safeParse(metadata?.launchConfiguration);
+    if (metadata?.launchConfiguration != null && !savedConfiguration.success) {
+      return NextResponse.json({ error: "The saved instance allocation is invalid. Contact support before installing software." }, { status: 409 });
+    }
+    const gpuCount = savedConfiguration.success ? savedConfiguration.data.gpuCount : instance.pod_info?.vgpu_count;
+    if (!gpuCount || !Number.isInteger(gpuCount) || gpuCount < 1) {
+      return NextResponse.json({ error: "Could not determine this instance's GPU count." }, { status: 400 });
+    }
 
     // Generate and run deploy script
     console.log(`[HF Deploy] Running deploy script for ${hfItemId} on instance ${instanceId} with ${gpuCount} GPUs`);
@@ -129,6 +142,7 @@ export async function POST(request: NextRequest) {
       gpuCount,
       openWebUI: openWebUI || false,
       netdata: netdata || false,
+      sharedModelStorage: savedConfiguration.success && savedConfiguration.data.storage.mode !== "none",
     });
 
     const result = await executeRemoteScript(
@@ -138,6 +152,7 @@ export async function POST(request: NextRequest) {
       creds.password,
       script
     );
+    result.output = redactHuggingFaceSecrets(result.output);
 
     if (!result.success) {
       console.error(`[HF Deploy] Script failed:`, result.output);

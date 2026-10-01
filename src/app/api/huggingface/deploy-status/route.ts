@@ -6,24 +6,16 @@ import { prisma } from "@/lib/prisma";
 import { sendHfDeploymentEmail } from "@/lib/email";
 import { generateCustomerToken } from "@/lib/customer-auth";
 import { logActivity } from "@/lib/activity";
-import {
-  generateDeployScript,
-  getDefaultPort,
-} from "@/lib/huggingface-deploy-scripts";
-import { getCatalogItem, DeployScriptType } from "@/lib/huggingface-catalog";
+import { startPendingHuggingFaceDeployment, redactHuggingFaceSecrets } from "@/lib/launch-software";
 import {
   executeRemoteCommand,
-  executeRemoteScript,
   parseStatusOutput,
   getSSHCredentials,
   ERROR_MESSAGES,
   STATUS_CHECK_SCRIPT,
   type DeploymentStatus,
-  type SSHCredentials,
 } from "@/lib/huggingface-status";
 
-// Track in-flight deploy triggers to prevent duplicate script executions
-const deployTriggersInFlight = new Set<string>();
 
 // Simple view - what most users need
 interface SimpleStatus {
@@ -63,68 +55,6 @@ interface StatusResponse extends SimpleStatus {
   advanced?: AdvancedStatus;
 }
 
-/**
- * Trigger the deploy script on a running instance via SSH.
- * Fire-and-forget: runs in background, updates DB on completion.
- */
-function triggerDeployScript(
-  instanceId: string,
-  deployment: { id: string; hfItemId: string; hfItemType: string; hfItemName: string; deployScript: string; servicePort: number | null; hfToken: string | null; openWebUI: boolean; netdata: boolean },
-  creds: SSHCredentials
-) {
-  if (deployTriggersInFlight.has(instanceId)) return;
-  deployTriggersInFlight.add(instanceId);
-
-  console.log(`[HF Status] Triggering deploy script for ${deployment.hfItemName} (deployment ${deployment.id})`);
-
-  (async () => {
-    try {
-      const catalogItem = getCatalogItem(deployment.hfItemId);
-      const deployScriptType = deployment.deployScript as DeployScriptType;
-
-      const script = generateDeployScript(deployScriptType, {
-        modelId: deployment.hfItemType !== "docker" ? deployment.hfItemId : undefined,
-        dockerImage: catalogItem?.dockerImage,
-        port: deployment.servicePort || getDefaultPort(deployScriptType),
-        hfToken: deployment.hfToken || undefined,
-        gpuCount: 1,
-        openWebUI: deployment.openWebUI || false,
-        netdata: deployment.netdata || false,
-      });
-
-      await prisma.huggingFaceDeployment.update({
-        where: { id: deployment.id },
-        data: { status: "deploying", errorMessage: null },
-      });
-
-      const scriptResult = await executeRemoteScript(
-        creds.host, creds.port, creds.username, creds.password, script,
-      );
-
-      if (scriptResult.success) {
-        console.log(`[HF Status] Deploy script started successfully for ${deployment.hfItemName}`);
-        await prisma.huggingFaceDeployment.update({
-          where: { id: deployment.id },
-          data: { status: "deploying", deployOutput: scriptResult.output.slice(-5000) },
-        });
-      } else {
-        console.error(`[HF Status] Deploy script failed (exit ${scriptResult.exitCode}): ${scriptResult.output.slice(-500)}`);
-        await prisma.huggingFaceDeployment.update({
-          where: { id: deployment.id },
-          data: {
-            status: "failed",
-            errorMessage: `Deploy script failed with exit code ${scriptResult.exitCode}`,
-            deployOutput: scriptResult.output.slice(-5000),
-          },
-        });
-      }
-    } catch (triggerErr) {
-      console.error(`[HF Status] Deploy trigger error:`, triggerErr);
-    } finally {
-      deployTriggersInFlight.delete(instanceId);
-    }
-  })();
-}
 
 /**
  * GET /api/huggingface/deploy-status
@@ -212,6 +142,17 @@ export async function GET(request: NextRequest) {
         message: `Pod status: ${instance.status}. Waiting for it to start...`,
       });
     }
+    const savedDeployment = await prisma.huggingFaceDeployment.findFirst({
+      where: { subscriptionId: instanceId, stripeCustomerId: auth.accountId },
+      orderBy: { createdAt: "desc" },
+    });
+    if (savedDeployment?.status === "failed") {
+      return NextResponse.json<StatusResponse>({
+        status: "failed",
+        message: redactHuggingFaceSecrets(savedDeployment.errorMessage || "Model installation failed. Retry installation explicitly."),
+        logs: savedDeployment.deployOutput ? redactHuggingFaceSecrets(savedDeployment.deployOutput) : undefined,
+      });
+    }
 
     // HAI 2.2: Get SSH credentials via instance credentials API
     // Use 0 retries since this endpoint is polled every 5s — implicit retry via polling
@@ -224,44 +165,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // DEPLOY TRIGGER: Check if there's a pending deployment that needs its script kicked off.
-    // This runs BEFORE the SSH status check so that an SSH status-check failure
-    // doesn't block the deploy trigger indefinitely. The trigger fires once
-    // (guarded by deployTriggersInFlight) and the next poll will pick up the status.
-    // Retrigger eligibility: pending/failed always; "deploying" only if stale
-    // (>10min since last update — longer than the 5min script timeout, so we
-    // never restart an actively-running deploy). The install.log probe below
-    // is the real guard against retriggering a successful deploy.
-    const STALE_DEPLOYING_MS = 10 * 60 * 1000;
-    const pendingDeployment = await prisma.huggingFaceDeployment.findFirst({
-      where: {
-        subscriptionId: instanceId,
-        OR: [
-          { status: { in: ["pending", "failed"] } },
-          {
-            status: "deploying",
-            updatedAt: { lt: new Date(Date.now() - STALE_DEPLOYING_MS) },
-          },
-        ],
-      },
-      orderBy: { createdAt: "desc" },
+    // Claim only pending work; a failed installation is never silently restarted by polling.
+    void startPendingHuggingFaceDeployment(instanceId, creds).catch(() => {
+      console.error("[HF Status] Could not initiate pending installation", instanceId);
     });
-
-    if (pendingDeployment && !deployTriggersInFlight.has(instanceId)) {
-      // Only trigger if deploy hasn't been started yet — check for install.log via a quick SSH probe
-      try {
-        const probe = await executeRemoteCommand(
-          creds.host, creds.port, creds.username, creds.password,
-          `test -f "$HOME/hf-workspace/install.log" && echo "EXISTS" || echo "MISSING"`,
-          10000
-        );
-        if (probe.success && probe.output.includes("MISSING")) {
-          triggerDeployScript(instanceId, pendingDeployment, creds);
-        }
-      } catch {
-        // Probe failed — deploy trigger will retry on next poll
-      }
-    }
 
     // Check status by examining install.log and server status
     const statusCommand = STATUS_CHECK_SCRIPT + `
@@ -297,6 +204,7 @@ export async function GET(request: NextRequest) {
       creds.password,
       statusCommand
     );
+    result.output = redactHuggingFaceSecrets(result.output);
 
     if (!result.success) {
       console.log(`[HF Status] SSH status check failed for ${instance.name}: ${result.output.slice(-200)}`);

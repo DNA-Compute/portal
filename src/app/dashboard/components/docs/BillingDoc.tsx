@@ -147,6 +147,18 @@ export function BillingDoc() {
         Your wallet is a prepaid balance managed through Stripe. It powers all
         hourly GPU usage and persistent storage charges.
       </p>
+      <p>
+        Wallet charges are the debits recorded in your wallet, including GPU and
+        storage charges. Funding, vouchers, and refunds appear separately as
+        credits; they are not subtracted from the gross charge totals. Monthly
+        subscription payments are also shown separately.
+      </p>
+      <p>
+        Monthly summaries and daily charge charts use UTC. Billing history includes
+        all recorded wallet transactions, not just the recent activity preview.
+        If the charge ledger cannot be loaded, reports show that it is unavailable
+        rather than displaying zero charges.
+      </p>
 
       <h3>Adding Funds</h3>
       <p>Top up from your dashboard. Available amounts:</p>

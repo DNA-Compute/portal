@@ -8,7 +8,7 @@ import {
   SESSION_COOKIE_NAME,
 } from "@/lib/auth/customer-session";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
-import { getWalletTransactions, formatCents, formatCentsForUser } from "@/lib/wallet";
+import { getWalletTransactions, formatCents, formatCentsForUser, isUserFacingWalletTransaction } from "@/lib/wallet";
 import { createOneTimeLogin, ensureRoles } from "@/lib/hostedai";
 import { getTwoFactorStatus } from "@/lib/two-factor";
 import { logCustomerLogin } from "@/lib/admin-activity";
@@ -126,13 +126,7 @@ export async function POST(request: NextRequest) {
         currency: "usd",
       };
 
-      const userFacingTxns = walletTxns.filter((txn) => {
-        const metaType = txn.metadata?.type;
-        if (metaType === "invoice_balance_hold" || metaType === "invoice_balance_restore") return false;
-        const desc = (txn.description || "").toLowerCase();
-        if (desc.includes("temporary hold for invoice") || desc.includes("restore after invoice")) return false;
-        return true;
-      });
+      const userFacingTxns = walletTxns.filter(isUserFacingWalletTransaction);
 
       transactions = userFacingTxns.map((txn) => ({
         id: txn.id,

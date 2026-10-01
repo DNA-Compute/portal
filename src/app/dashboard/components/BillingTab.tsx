@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { UsageChart } from "./UsageChart";
+import type { BillingStats } from "./types";
 
 interface Transaction {
   id: string;
@@ -33,12 +34,12 @@ interface Subscription {
 interface AllTimeStats {
   totalSpent: number;
   totalCredits: number;
-  netSpend: number;
   transactionCount: number;
 }
 
 interface BillingTabProps {
-  transactions: Transaction[];
+  billingStats: BillingStats | null;
+  billingStatsError: string | null;
   walletBalance: string;
   onTopUp: () => void;
   formatDateTime: (timestamp: number) => string;
@@ -53,7 +54,8 @@ type PeriodType = "day" | "week" | "month" | "year" | "all";
 type FilterType = "all" | "credits" | "debits";
 
 export function BillingTab({
-  transactions,
+  billingStats,
+  billingStatsError,
   walletBalance,
   onTopUp,
   formatDateTime,
@@ -67,32 +69,45 @@ export function BillingTab({
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Lazy-load accurate all-time stats from the server (full Stripe pagination).
-  // The transactions prop is capped at 100 for fast initial page load, so
-  // client-side totals would under-count for customers with more history.
-  const [serverAllTimeStats, setServerAllTimeStats] = useState<AllTimeStats | null>(null);
-  const [allTimeStatsLoading, setAllTimeStatsLoading] = useState(true);
+  // Every period report uses complete wallet history, never the account preview page.
+  const [history, setHistory] = useState<{
+    token: string;
+    data: { transactions: Transaction[]; allTimeStats: AllTimeStats } | null;
+    error: string | null;
+  } | null>(null);
+  const currentHistory = history?.token === token ? history : null;
+  const historyData = currentHistory?.data;
+  const historyStatus = currentHistory?.error ?? "Loading wallet history…";
+  const transactions = useMemo(() => historyData?.transactions ?? [], [historyData]);
 
   useEffect(() => {
+    const controller = new AbortController();
     fetch("/api/billing/history", {
       headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
     })
-      .then((r) => r.json())
-      .then((data: { allTimeStats?: AllTimeStats }) => {
-        if (data.allTimeStats) setServerAllTimeStats(data.allTimeStats);
+      .then(async response => {
+        if (!response.ok) throw new Error(`Wallet history returned ${response.status}`);
+        const data: { transactions: Transaction[]; allTimeStats: AllTimeStats } = await response.json();
+        if (!Array.isArray(data.transactions) || !data.allTimeStats) throw new Error("Incomplete wallet history");
+        if (!controller.signal.aborted) setHistory({ token, data, error: null });
       })
-      .catch((err) => console.error("[BillingTab] Failed to fetch all-time stats:", err))
-      .finally(() => setAllTimeStatsLoading(false));
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        console.error("[BillingTab] Failed to fetch wallet history:", error);
+        setHistory({ token, data: null, error: "Wallet history is unavailable." });
+      });
+    return () => controller.abort();
   }, [token]);
 
   // Calculate period boundaries
   const periodBoundaries = useMemo(() => {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const startOfWeek = new Date(startOfDay);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    startOfWeek.setUTCDate(startOfWeek.getUTCDate() - startOfWeek.getUTCDay());
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
 
     return {
       day: startOfDay.getTime(),
@@ -132,75 +147,14 @@ export function BillingTab({
   const stats = useMemo(() => {
     let totalCredits = 0;
     let totalDebits = 0;
-    let gpuHours = 0;
-    let gpuSpend = 0;
-    let storageSpend = 0;
-    let refunds = 0;
-
-    filteredTransactions.forEach((txn) => {
+    for (const txn of filteredTransactions) {
       const amount = Math.abs(txn.amount) / 100;
-
-      if (txn.type === "credit") {
-        totalCredits += amount;
-        if (txn.description.toLowerCase().includes("refund") || txn.description.toLowerCase().includes("credit")) {
-          refunds += amount;
-        }
-      } else {
-        totalDebits += amount;
-
-        // Extract hours from description if present
-        const hoursMatch = txn.description.match(/(\d+\.?\d*)\s*hours?/i);
-        if (hoursMatch) {
-          gpuHours += parseFloat(hoursMatch[1]);
-        }
-
-        // Categorize spend
-        if (txn.description.toLowerCase().includes("storage")) {
-          storageSpend += amount;
-        } else {
-          gpuSpend += amount;
-        }
-      }
-    });
-
-    // Calculate approximate hours from spend if not found in descriptions
-    // Assuming ~$0.66/hr average rate
-    if (gpuHours === 0 && gpuSpend > 0) {
-      gpuHours = gpuSpend / 0.66;
+      if (txn.type === "credit") totalCredits += amount;
+      else totalDebits += amount;
     }
-
-    return {
-      totalCredits,
-      totalDebits,
-      netSpend: totalDebits - totalCredits,
-      gpuHours,
-      gpuSpend,
-      storageSpend,
-      refunds,
-      transactionCount: filteredTransactions.length,
-    };
+    return { totalCredits, totalDebits, transactionCount: filteredTransactions.length };
   }, [filteredTransactions]);
 
-  // Calculate all-time statistics
-  const allTimeStats = useMemo(() => {
-    let totalSpent = 0;
-    let totalCredits = 0;
-
-    transactions.forEach((txn) => {
-      const amount = Math.abs(txn.amount) / 100;
-      if (txn.type === "debit") {
-        totalSpent += amount;
-      } else {
-        totalCredits += amount;
-      }
-    });
-
-    return {
-      totalSpent,
-      totalCredits,
-      netSpend: totalSpent - totalCredits,
-    };
-  }, [transactions]);
 
   // Calculate total card payments
   const totalPaid = useMemo(() => {
@@ -278,38 +232,32 @@ export function BillingTab({
           <div className="text-2xl font-bold text-[var(--fg)]">{walletBalance}</div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
-          <div className="text-xs text-[var(--muted)] mb-1">All-Time Spend</div>
-          {allTimeStatsLoading ? (
-            <div className="text-2xl font-bold text-zinc-600 animate-pulse">$—</div>
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-[var(--fg)]">
-                ${(serverAllTimeStats ?? allTimeStats).netSpend.toFixed(2)}
-              </div>
-              <div className="text-xs text-zinc-400">
-                ${(serverAllTimeStats ?? allTimeStats).totalSpent.toFixed(2)} - ${(serverAllTimeStats ?? allTimeStats).totalCredits.toFixed(2)} credits
-              </div>
-            </>
-          )}
+        <div role="group" aria-label="All-time wallet charges" className="bg-white rounded-2xl p-5 border border-[var(--line)]">
+          <div className="text-xs text-[var(--muted)] mb-1">All-Time Wallet Charges</div>
+          <div className="text-2xl font-bold text-[var(--fg)]">
+            {historyData ? `$${historyData.allTimeStats.totalSpent.toFixed(2)}` : "—"}
+          </div>
+          <div className="text-xs text-zinc-400">
+            {historyData ? `$${historyData.allTimeStats.totalCredits.toFixed(2)} credits shown separately` : historyStatus}
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
           <div className="text-xs text-[var(--muted)] mb-1">Total Transactions</div>
-          <div className="text-2xl font-bold text-[var(--fg)]">{stats.transactionCount}</div>
-          <div className="text-xs text-zinc-400">{period !== "all" ? `${periodLabels[period]}` : "all time"}</div>
+          <div className="text-2xl font-bold text-[var(--fg)]">{historyData ? stats.transactionCount : "—"}</div>
+          <div className="text-xs text-zinc-400">{historyData ? `${periodLabels[period]} (UTC)` : historyStatus}</div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
-          <div className="text-xs text-[var(--muted)] mb-1">GPU Hours</div>
-          <div className="text-2xl font-bold text-emerald-600">{stats.gpuHours.toFixed(1)}h</div>
-          <div className="text-xs text-zinc-400">${stats.gpuSpend.toFixed(2)} compute</div>
+          <div className="text-xs text-[var(--muted)] mb-1">Period Wallet Charges</div>
+          <div className="text-2xl font-bold text-[var(--fg)]">{historyData ? `$${stats.totalDebits.toFixed(2)}` : "—"}</div>
+          <div className="text-xs text-zinc-400">{historyData ? "Selected period and filters (UTC)" : historyStatus}</div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
-          <div className="text-xs text-[var(--muted)] mb-1">Total Paid</div>
+          <div className="text-xs text-[var(--muted)] mb-1">Card Payments Shown</div>
           <div className="text-2xl font-bold text-emerald-600">${totalPaid.toFixed(2)}</div>
-          <div className="text-xs text-zinc-400">{payments.length} payment{payments.length !== 1 ? "s" : ""}</div>
+          <div className="text-xs text-zinc-400">{payments.length} recent payment{payments.length !== 1 ? "s" : ""}</div>
         </div>
       </div>
 
@@ -445,11 +393,11 @@ export function BillingTab({
       {/* Spend Chart */}
       <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-[var(--fg)]">Spend Over Time</h3>
-          <span className="text-xs text-zinc-400">Last 14 days</span>
+          <h3 className="font-semibold text-[var(--fg)]">Wallet Charges Over Time</h3>
+          <span className="text-xs text-zinc-400">Last 14 days (UTC)</span>
         </div>
         <div className="h-48">
-          <UsageChart transactions={transactions} />
+          <UsageChart charges={billingStats?.dailyCharges ?? null} error={billingStatsError} />
         </div>
       </div>
 
@@ -517,7 +465,7 @@ export function BillingTab({
           <h3 className="font-semibold text-[var(--fg)]">
             Transactions
             <span className="ml-2 text-sm font-normal text-zinc-400">
-              ({filteredTransactions.length} of {transactions.length})
+              {historyData ? `(${filteredTransactions.length} of ${transactions.length})` : "—"}
             </span>
           </h3>
           {filteredTransactions.length > 0 && (
@@ -586,6 +534,8 @@ export function BillingTab({
               </div>
             ))}
           </div>
+        ) : !historyData ? (
+          <div role="status" className="px-6 py-16 text-center text-zinc-500 text-sm">{historyStatus}</div>
         ) : (
           <div className="px-6 py-16 text-center">
             <div className="w-12 h-12 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">

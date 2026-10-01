@@ -6,6 +6,8 @@ import type { GpuProduct, GpuCategory } from "../types";
 import { isPro } from "@/lib/edition";
 import { ServicePickerDialog } from "./ServicePickerDialog";
 import dynamic from "next/dynamic";
+import { configurationPricingSchema } from "@/lib/launch-config";
+import type { ConfigurationPricing } from "@/lib/launch-config";
 
 // Token Factory pricing is a premium feature — excluded in OSS build
 const TokenFactoryPricingSection = isPro()
@@ -70,6 +72,10 @@ export function ProductsTab() {
     name: "",
     description: "",
     billingType: "hourly" as "hourly" | "monthly",
+    configurable: false,
+    cpuCoreHourCents: "",
+    ramGbHourCents: "",
+    rootGbHourCents: "",
     pricePerHour: "",
     pricePerMonth: "",
     stripeProductId: "" as string,
@@ -86,6 +92,7 @@ export function ProductsTab() {
     categoryIds: [] as string[],
   });
   const [servicePickerOpen, setServicePickerOpen] = useState(false);
+  const [poolsEdited, setPoolsEdited] = useState(false);
 
   // Load products, pools, and storage pricing
   const loadData = async () => {
@@ -162,6 +169,7 @@ export function ProductsTab() {
     const categoryNameById = new Map(categories.map(c => [c.id, c.name]));
     const fullHeaders = [
       "id", "name", "gpuFamily", "billingType",
+      "resourcePricing", "cpuCoreHourCents", "ramGbHourCents", "rootGbHourCents",
       "pricePerHour", "pricePerMonth", "vramGb", "cudaCores",
       "active", "featured", "badgeText", "displayOrder",
       "stripeProductId", "stripePriceId", "serviceId", "poolIds",
@@ -169,6 +177,7 @@ export function ProductsTab() {
     ];
     const marketingHeaders = [
       "name", "gpuFamily", "billingType",
+      "resourcePricing", "cpuCoreHourCents", "ramGbHourCents", "rootGbHourCents",
       "pricePerHour", "pricePerMonth",
       "vramGb", "active", "featured", "badgeText", "description",
     ];
@@ -179,6 +188,10 @@ export function ProductsTab() {
         name: p.name,
         gpuFamily: p.gpuFamily ?? "",
         billingType: p.billingType,
+        resourcePricing: p.configurationPricing ? "GPU base plus resource rates" : "Bundled defaults only",
+        cpuCoreHourCents: p.configurationPricing?.cpuCoreHourCents ?? "",
+        ramGbHourCents: p.configurationPricing?.ramGbHourCents ?? "",
+        rootGbHourCents: p.configurationPricing?.rootGbHourCents ?? "",
         pricePerHour: (p.pricePerHourCents / 100).toFixed(2),
         pricePerMonth: p.pricePerMonthCents != null ? (p.pricePerMonthCents / 100).toFixed(2) : "",
         vramGb: p.vramGb ?? "",
@@ -244,6 +257,7 @@ export function ProductsTab() {
     const categoryNameById = new Map(categories.map(c => [c.id, c.name]));
     const fullCols = [
       "name", "gpuFamily", "billingType",
+      "resourcePricing", "cpuCoreHourCents", "ramGbHourCents", "rootGbHourCents",
       "pricePerHour", "pricePerMonth", "vramGb", "cudaCores",
       "active", "featured", "badgeText", "displayOrder",
       "stripeProductId", "stripePriceId", "serviceId", "poolIds",
@@ -251,6 +265,7 @@ export function ProductsTab() {
     ];
     const marketingCols = [
       "name", "gpuFamily", "billingType",
+      "resourcePricing", "cpuCoreHourCents", "ramGbHourCents", "rootGbHourCents",
       "pricePerHour", "pricePerMonth",
       "vramGb", "active", "featured", "badgeText", "description",
     ];
@@ -282,6 +297,12 @@ export function ProductsTab() {
             return `<td style="${cellStyle(`background:${family.bg};color:${family.fg};font-weight:600;`)}">${esc(p.gpuFamily ?? "")}</td>`;
           case "billingType":
             return `<td style="${cellStyle(`background:${billingBg};color:${billingFg};font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;`)}">${esc(p.billingType)}</td>`;
+          case "resourcePricing":
+            return `<td style="${cellStyle()}">${p.configurationPricing ? "GPU base plus resource rates" : "Bundled defaults only"}</td>`;
+          case "cpuCoreHourCents":
+          case "ramGbHourCents":
+          case "rootGbHourCents":
+            return `<td style="${cellStyle()}">${p.configurationPricing?.[c] ?? ""}</td>`;
           case "pricePerHour":
             return `<td style="${cellStyle("font-family:ui-monospace,Menlo,monospace;color:#0b0f1c;")}">$${(p.pricePerHourCents / 100).toFixed(2)}</td>`;
           case "pricePerMonth":
@@ -367,10 +388,15 @@ export function ProductsTab() {
   };
 
   const resetForm = () => {
+    setPoolsEdited(false);
     setFormData({
       name: "",
       description: "",
       billingType: "hourly",
+      configurable: false,
+      cpuCoreHourCents: "",
+      ramGbHourCents: "",
+      rootGbHourCents: "",
       pricePerHour: "",
       pricePerMonth: "",
       stripeProductId: "",
@@ -389,12 +415,17 @@ export function ProductsTab() {
   };
 
   const openEditModal = (product: GpuProduct) => {
+    setPoolsEdited(false);
     setFormData({
       name: product.name,
       description: product.description || "",
       billingType: product.billingType || "hourly",
+      configurable: product.configurationPricing != null,
+      cpuCoreHourCents: product.configurationPricing?.cpuCoreHourCents.toString() ?? "",
+      ramGbHourCents: product.configurationPricing?.ramGbHourCents.toString() ?? "",
+      rootGbHourCents: product.configurationPricing?.rootGbHourCents.toString() ?? "",
       pricePerHour: (product.pricePerHourCents / 100).toFixed(2),
-      pricePerMonth: product.pricePerMonthCents ? (product.pricePerMonthCents / 100).toFixed(2) : "",
+      pricePerMonth: product.pricePerMonthCents != null ? (product.pricePerMonthCents / 100).toFixed(2) : "",
       stripeProductId: product.stripeProductId || "",
       stripePriceId: product.stripePriceId || "",
       poolIds: product.poolIds,
@@ -434,6 +465,28 @@ export function ProductsTab() {
       alert("HAI Service is required");
       return;
     }
+    const price = Number(isMonthly ? formData.pricePerMonth : formData.pricePerHour);
+    if (!Number.isFinite(price) || price < 0) {
+      alert("Price must be a nonnegative amount in USD.");
+      return;
+    }
+    let configurationPricing: ConfigurationPricing | null = null;
+    if (formData.configurable) {
+      if (isMonthly) {
+        alert("Monthly products must remain fixed entitlements.");
+        return;
+      }
+      const parsed = configurationPricingSchema.safeParse({
+        cpuCoreHourCents: formData.cpuCoreHourCents.trim() === "" ? undefined : Number(formData.cpuCoreHourCents),
+        ramGbHourCents: formData.ramGbHourCents.trim() === "" ? undefined : Number(formData.ramGbHourCents),
+        rootGbHourCents: formData.rootGbHourCents.trim() === "" ? undefined : Number(formData.rootGbHourCents),
+      });
+      if (!parsed.success) {
+        alert("Enter all three nonnegative resource rates in cents. Explicit zero is allowed; blank rates are not.");
+        return;
+      }
+      configurationPricing = parsed.data;
+    }
 
     setSaving(true);
     try {
@@ -443,11 +496,12 @@ export function ProductsTab() {
         name: formData.name,
         description: formData.description || null,
         billingType: formData.billingType,
-        pricePerHourCents: isMonthly ? 0 : Math.round(parseFloat(formData.pricePerHour) * 100),
-        pricePerMonthCents: isMonthly && formData.pricePerMonth ? Math.round(parseFloat(formData.pricePerMonth) * 100) : null,
+        pricePerHourCents: isMonthly ? 0 : Math.round(price * 100),
+        pricePerMonthCents: isMonthly ? Math.round(price * 100) : null,
+        configurationPricing,
         stripeProductId: isMonthly && formData.stripeProductId ? formData.stripeProductId : null,
         stripePriceId: isMonthly && formData.stripePriceId ? formData.stripePriceId : null,
-        poolIds: formData.poolIds,
+        ...(poolsEdited ? { poolIds: formData.poolIds } : {}),
         displayOrder: formData.displayOrder,
         active: formData.active,
         featured: formData.featured,
@@ -551,6 +605,7 @@ export function ProductsTab() {
   };
 
   const togglePoolAssignment = (poolId: number) => {
+    setPoolsEdited(true);
     setFormData((prev) => {
       const newPoolIds = prev.poolIds.includes(poolId)
         ? prev.poolIds.filter((id) => id !== poolId)
@@ -995,7 +1050,7 @@ export function ProductsTab() {
                 </td>
               </tr>
             ) : (
-              products.map((product, index) => (
+              products.map(product => (
                 <tr key={product.id} className="hover:bg-[var(--ink)]/50">
                   <td className="px-4 py-3">
                     <GripVertical className="w-4 h-4 text-[var(--fg-muted)]/50" />
@@ -1034,12 +1089,12 @@ export function ProductsTab() {
                           ? "bg-indigo-100 text-indigo-700"
                           : "bg-sky-100 text-sky-700"
                       }`}>
-                        {product.billingType === "monthly" ? "Monthly" : "Hourly"}
+                        {product.configurationPricing ? "GPU base + resources" : product.billingType === "monthly" ? "Monthly" : "Bundled defaults only"}
                       </span>
                       <span className="font-mono text-[var(--fg)]">
-                        {product.billingType === "monthly" && product.pricePerMonthCents
+                        {product.billingType === "monthly" && product.pricePerMonthCents != null
                           ? `$${(product.pricePerMonthCents / 100).toFixed(2)}/mo`
-                          : `$${(product.pricePerHourCents / 100).toFixed(2)}/hr`}
+                          : `$${(product.pricePerHourCents / 100).toFixed(2)}/${product.configurationPricing ? "GPU-hr + resources" : "hr"}`}
                       </span>
                     </div>
                   </td>
@@ -1157,7 +1212,7 @@ export function ProductsTab() {
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({ ...formData, billingType: "monthly" });
+                      setFormData({ ...formData, billingType: "monthly", configurable: false });
                       if (stripeProducts.length === 0) loadStripeProducts();
                     }}
                     className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
@@ -1175,6 +1230,55 @@ export function ProductsTab() {
                     : "Monthly products use a Stripe recurring subscription."}
                 </p>
               </div>
+
+              {formData.billingType === "hourly" && (
+                <div className="rounded-lg border border-[var(--line)] p-4 space-y-3">
+                  <label className="block text-sm font-medium text-[var(--fg)]" htmlFor="resource-pricing">
+                    Resource pricing
+                  </label>
+                  <select
+                    id="resource-pricing"
+                    value={formData.configurable ? "rates" : "bundled"}
+                    onChange={(e) => setFormData({ ...formData, configurable: e.target.value === "rates" })}
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-lg bg-white"
+                  >
+                    <option value="bundled">Bundled defaults only</option>
+                    <option value="rates">GPU base plus resource rates</option>
+                  </select>
+                  <p className="text-xs text-[var(--fg-muted)]">
+                    {formData.configurable
+                      ? "Customers choose provider-supported resources within this offering's GPU binding; HAI locks are unchanged. The hourly base price is per whole GPU, excluding CPU, RAM, and root disk, which use the rates below."
+                      : "Provider-supported resources can be discovered and selected, but only the original included bundle can be quoted without resource rates. Add explicit rates to price upgrades. This choice removes the additive rate card; it does not change HAI resource locks."}
+                  </p>
+                  {formData.configurable && (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {([
+                          ["cpuCoreHourCents", "vCPU-hour (cents)"],
+                          ["ramGbHourCents", "GB RAM-hour (cents)"],
+                          ["rootGbHourCents", "GB root disk-hour (cents)"],
+                        ] as const).map(([field, label]) => (
+                          <label key={field} className="block text-xs font-medium text-[var(--fg)]">
+                            {label} *
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              required
+                              value={formData[field]}
+                              onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                              className="mt-1 w-full px-3 py-2 border border-[var(--line)] rounded-lg bg-white"
+                            />
+                          </label>
+                        ))}
+                      </div>
+                      <p className="text-xs text-[var(--fg-muted)]">
+                        Resource rates are in cents, not dollars: 1 cent = $0.01. Fractional cents and explicit zero are allowed; every rate is required. Shared storage uses the separate global storage rate, not the root disk rate.
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
@@ -1196,7 +1300,7 @@ export function ProductsTab() {
                   {formData.billingType === "hourly" ? (
                     <>
                       <label className="block text-sm font-medium text-[var(--fg)] mb-1">
-                        Price per Hour ($) *
+                        {formData.configurable ? "GPU-only Base / GPU-hour ($) *" : "Bundled Price per Hour ($) *"}
                       </label>
                       <input
                         type="number"
@@ -1438,7 +1542,7 @@ export function ProductsTab() {
                   Assign Pools
                 </label>
                 <p className="text-xs text-[var(--fg-muted)] mb-3">
-                  Select pools to include in this product. Pools can be shared across multiple products.
+                  For GPU pods, select only this offering&apos;s priced GPU pools. Leave empty only when HAI defines exactly one default pool; that default is preserved. GPU VM offerings use the service&apos;s default GPU model. Pool edits never change HAI lock policy.
                 </p>
                 <div className="border border-[var(--line)] rounded-lg max-h-48 overflow-y-auto">
                   {pools.length === 0 ? (
@@ -1491,7 +1595,9 @@ export function ProductsTab() {
                   HAI Service *
                 </label>
                 <p className="text-xs text-[var(--fg-muted)] mb-3">
-                  Link to a HAI 2.2 service for unified instance creation. Products with a service use the new deployment path.
+                  {formData.billingType === "hourly"
+                    ? "Choose an enabled GPU pod or GPU VM service, with or without resource rates. GPU VMs require a default GPU model and automatic assignment of both networks in HAI. Provider resource locks are preserved."
+                    : "Monthly offerings require an enabled GPU pod service with locked CPU/RAM, root disk, and image defaults. The subscription covers that included bundle only."}
                 </p>
                 <div className="flex items-center gap-2">
                   {formData.serviceId ? (
@@ -1547,6 +1653,7 @@ export function ProductsTab() {
           setServicePickerOpen(false);
         }}
         currentServiceId={formData.serviceId || undefined}
+        billingType={formData.billingType}
       />
     </div>
   );

@@ -2,7 +2,7 @@
  * Storage Blocks API — Available block sizes for creating shared volumes
  *
  * Returns the storage block options (sizes) available in a given region.
- * Used by the LaunchGPUModal to let users pick persistent storage size.
+ * Used by the instance storage controls to select persistent storage size.
  */
 
 import { NextRequest, NextResponse } from "next/server";

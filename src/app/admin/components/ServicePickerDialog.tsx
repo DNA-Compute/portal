@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface HAIService {
   id: string;
@@ -19,20 +19,24 @@ interface ServicePickerDialogProps {
   onClose: () => void;
   onSelect: (serviceId: string, serviceName: string) => void;
   currentServiceId?: string | null;
+  billingType: "hourly" | "monthly";
 }
 
-export function ServicePickerDialog({ open, onClose, onSelect, currentServiceId }: ServicePickerDialogProps) {
+export function ServicePickerDialog({ open, onClose, onSelect, currentServiceId, billingType }: ServicePickerDialogProps) {
   const [services, setServices] = useState<HAIService[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchServices = async (query: string) => {
+  const fetchServices = useCallback(async (query: string) => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ per_page: "50" });
+      const params = new URLSearchParams({
+        per_page: "50",
+        offering_mode: billingType === "hourly" ? "configurable" : "fixed",
+      });
       if (query) params.set("search", query);
       const res = await fetch(`/api/admin/hai-services?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch");
@@ -44,13 +48,13 @@ export function ServicePickerDialog({ open, onClose, onSelect, currentServiceId 
     } finally {
       setLoading(false);
     }
-  };
+  }, [billingType]);
 
   useEffect(() => {
     if (open) {
       fetchServices("");
     }
-  }, [open]);
+  }, [open, fetchServices]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -70,7 +74,11 @@ export function ServicePickerDialog({ open, onClose, onSelect, currentServiceId 
         {/* Header */}
         <div className="px-6 py-4 border-b border-zinc-200">
           <h2 className="text-lg font-semibold text-zinc-900">Select HAI Service</h2>
-          <p className="text-sm text-zinc-500 mt-1">Choose a service from the HAI admin panel to link</p>
+          <p className="text-sm text-zinc-500 mt-1">
+            {billingType === "hourly"
+              ? "Enabled GPU pod or GPU VM services, whether or not resource rates are configured. Existing HAI locks are preserved; upgrades need explicit rates."
+              : "Monthly offerings require enabled GPU pod services with locked CPU/RAM, root disk, and image defaults in HAI."}
+          </p>
         </div>
 
         {/* Search */}

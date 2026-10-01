@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import {
   PoolSubscription,
   ConnectionInfo,
@@ -85,12 +85,17 @@ export function PoolSubscriptionCard({
   const [pollingHfStatus, setPollingHfStatus] = useState(false);
 
   // Service exposure state
-  const [exposedServices, setExposedServices] = useState<any[]>([]);
+  const [exposedServices, setExposedServices] = useState<ComponentProps<typeof GPUCardServices>["exposedServices"]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [exposingVllmApi, setExposingVllmApi] = useState(false);
 
-  // Stopped instance rate for cost warnings
-  const [stoppedInstanceRate, setStoppedInstanceRate] = useState<number>(25); // Default 25%
+  // Only legacy rows use today's global percentage; configured rows use their quote.
+  const [stoppedInstanceRate, setStoppedInstanceRate] = useState<number | null>(null);
+  const reservationPercent = subscription.stoppedRatePercent
+    ?? (subscription.hourlyRateBasis === "per_instance" ? null : stoppedInstanceRate);
+  const reservationRate = subscription.stoppedHourlyRate
+    ?? (subscription.hourlyRate !== undefined && reservationPercent !== null
+      ? subscription.hourlyRate * reservationPercent / 100 : undefined);
 
   // Sync state when metadata prop changes (skip if user is actively editing)
   useEffect(() => {
@@ -100,6 +105,7 @@ export function PoolSubscriptionCard({
 
   // Fetch stopped instance rate for cost warnings
   useEffect(() => {
+    if (isMonthly || subscription.hourlyRateBasis === "per_instance") return;
     async function fetchPricingConfig() {
       try {
         const response = await fetch("/api/account/billing-stats", {
@@ -107,7 +113,7 @@ export function PoolSubscriptionCard({
         });
         if (response.ok) {
           const data = await response.json();
-          if (data.stoppedInstanceRatePercent) {
+          if (typeof data.stoppedInstanceRatePercent === "number") {
             setStoppedInstanceRate(data.stoppedInstanceRatePercent);
           }
         }
@@ -116,7 +122,7 @@ export function PoolSubscriptionCard({
       }
     }
     fetchPricingConfig();
-  }, [token]);
+  }, [token, isMonthly, subscription.hourlyRateBasis]);
 
   // Poll HF deployment status
   const isDeploymentActive = hfDeployment && ["pending", "deploying", "installing", "starting"].includes(hfDeployment.status);
@@ -290,15 +296,12 @@ export function PoolSubscriptionCard({
   };
 
   const handleStop = async () => {
-    // Calculate the reduced hourly rate for stopped instances
-    // Use hourlyRate from subscription (from GpuProduct pricing)
-    const hourlyRate = subscription.hourlyRate || 0;
-    const reducedRate = hourlyRate > 0 ? (hourlyRate * stoppedInstanceRate / 100).toFixed(2) : "N/A";
-    const fullRate = hourlyRate > 0 ? hourlyRate.toFixed(2) : "N/A";
-
-    const confirmMessage = `Stop this GPU?\n\n` +
-      `While stopped, you will still be charged $${reducedRate}/hr (${stoppedInstanceRate}% of the full $${fullRate}/hr rate) to reserve your GPU.\n\n` +
-      `You can start it again anytime, or terminate it to stop all charges.`;
+    const reservationMessage = isMonthly
+      ? "Your monthly subscription remains active while this instance is stopped."
+      : reservationRate !== undefined
+        ? `While stopped, this instance costs $${reservationRate.toFixed(2)}/hr to reserve${reservationPercent !== null ? ` (${reservationPercent}% of its running rate)` : ""}.`
+        : "The reservation price is currently unavailable.";
+    const confirmMessage = `Stop this GPU?\n\n${reservationMessage}\n\nYou can start it again anytime. Shared storage continues to be billed separately.`;
 
     if (!confirm(confirmMessage)) return;
     setLoading("stop");
@@ -436,7 +439,7 @@ export function PoolSubscriptionCard({
     // Only show "setting up" if script is actively pending/running AND we don't have SSH yet
     // This prevents getting stuck if the runner crashes or PM2 restarts
     const scriptStatus = metadata?.startupScriptStatus;
-    const hasSshAvailable = connectionInfo?.pods?.some((p: any) => p.ssh_info);
+    const hasSshAvailable = connectionInfo?.pods?.some((p) => p.ssh_info);
     if (isActive && scriptStatus === "pending" && !hasSshAvailable) return { status: "setting-up", label: "Setting up..." };
     if (isActive && scriptStatus === "running") return { status: "setting-up", label: "Setting up..." };
     // Only show "setup-failed" if SSH is NOT available - if SSH works, the pod is functional
@@ -446,7 +449,7 @@ export function PoolSubscriptionCard({
     // Don't show green/running until connection info (SSH) is actually available.
     // For viewers without gpu.access (Finance Manager) we never fetch SSH info,
     // so trust the pod's own status from HAI directly.
-    const hasSshInfo = connectionInfo?.pods?.some((p: any) => p.ssh_info);
+    const hasSshInfo = connectionInfo?.pods?.some((p) => p.ssh_info);
     if (canSsh && isActive && (loadingConnection || (!hasSshInfo && !connectionInfo))) {
       return { status: "starting", label: "Connecting..." };
     }
@@ -458,7 +461,7 @@ export function PoolSubscriptionCard({
   const displayStatus = getDisplayStatus();
   // Don't show running quip when terminating - show termination status instead
   const runningQuip = isActive && !isTerminating ? getRunningTimeQuip(subscription.created_at) : null;
-  const gpuCount = subscription.pods?.[0]?.gpu_count || 1;
+  const gpuCount = subscription.gpuCount ?? subscription.per_pod_info?.vgpu_count ?? subscription.pods?.[0]?.gpu_count ?? 1;
 
   // Get pods for SSH info display (deduplicated by pod_name to prevent transient backend duplicates)
   const podsForSSH = (connectionInfo?.pods || subscription.pods || []).map((pod, idx) => ({
@@ -491,7 +494,7 @@ export function PoolSubscriptionCard({
             {displayStatus.label}
           </span>
         </div>
-        <div className="text-2xl font-bold text-white">{subscription.hourlyRate ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
+        <div className="text-2xl font-bold text-white">{isMonthly ? monthlyPriceDisplay || "Monthly" : subscription.hourlyRate !== undefined ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
         <div className="text-xs text-white/70 mt-1">{gpuCount} GPU</div>
       </div>
     );
@@ -588,10 +591,10 @@ export function PoolSubscriptionCard({
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              {isMonthly && monthlyPriceDisplay ? (
-                <div className="text-sm font-semibold text-teal-600">{monthlyPriceDisplay}</div>
+              {isMonthly ? (
+                <div className="text-sm font-semibold text-teal-600">{monthlyPriceDisplay || "Monthly subscription"}</div>
               ) : (
-                <div className="text-sm font-semibold text-[var(--fg)]">{subscription.hourlyRate ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
+                <div className="text-sm font-semibold text-[var(--fg)]">{subscription.hourlyRate !== undefined ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
               )}
               <div className="flex items-center gap-1.5 justify-end">
                 <StatusDot status={displayStatus.status === "restarting" || displayStatus.status === "scaling" ? "pending" : displayStatus.status} />
@@ -611,7 +614,7 @@ export function PoolSubscriptionCard({
           {canSsh && (
             <button
               onClick={() => setShowTerminal(true)}
-              disabled={!!loading || !connectionInfo?.pods?.some((p: any) => p.ssh_info)}
+              disabled={!!loading || !connectionInfo?.pods?.some((p) => p.ssh_info)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -723,7 +726,7 @@ export function PoolSubscriptionCard({
             </button>
           )}
           <span className="text-xs text-zinc-500">
-            Paused • ${((subscription.hourlyRate || 0) * stoppedInstanceRate / 100).toFixed(2)}/hr to reserve
+            Paused • {isMonthly ? "Monthly subscription continues" : reservationRate !== undefined ? `$${reservationRate.toFixed(2)}/hr to reserve` : "Reservation price unavailable"}
           </span>
           <div className="flex-1" />
           <button

@@ -19,13 +19,13 @@ import {
   getImagePolicies,
   getGPUaaSImages,
   getStorageBlocks,
+  type AddDiskPricing,
+  type AddDiskParams,
 } from '@/lib/hostedai/instances';
 import type {
   Instance,
   CreateInstanceParams,
   VNCSession,
-  AddDiskPricing,
-  AddDiskParams,
   CompatibleScenariosResponse,
   InstanceType,
   Image,
@@ -82,8 +82,8 @@ describe('Instance Management', () => {
         name: 'New Instance',
         service_id: 'service-1',
         instance_type_id: 'type-1',
-        image_hash_id: 'image-123',
-        storage_block_id: 'storage-1',
+        image_hash: 'image-123',
+        root_storage_type_id: 'storage-1',
         team_id: 'team-abc',
       };
 
@@ -110,8 +110,8 @@ describe('Instance Management', () => {
         name: '',
         service_id: 'service-1',
         instance_type_id: 'type-1',
-        image_hash_id: 'image-123',
-        storage_block_id: 'storage-1',
+        image_hash: 'image-123',
+        root_storage_type_id: 'storage-1',
         team_id: 'team-abc',
       };
 

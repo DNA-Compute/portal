@@ -5,6 +5,7 @@ import { resolveOperatingContext } from "@/lib/auth/account-resolver";
 import { scalePoolSubscription, getPoolSubscriptions } from "@/lib/hostedai";
 import { logGPUScaled } from "@/lib/activity";
 import Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
 
 // Working values from the subscribe endpoint
 const WORKING_INSTANCE_TYPE = "a961c0a0-7aca-47a7-9ba2-24cbe84bed9d";
@@ -60,6 +61,17 @@ export async function POST(
       extra: { subscriptionId, action: "scale" },
     });
     if (denial) return denial;
+
+    const metadata = await prisma.podMetadata.findFirst({
+      where: { OR: [{ instanceId: subscriptionId }, { subscriptionId }, { subscriptionId: `instance-${subscriptionId}` }] },
+      select: { hourlyRateBasis: true, launchConfiguration: true, rateSnapshot: true },
+    });
+    if (metadata && (metadata.hourlyRateBasis === "per_instance" || metadata.launchConfiguration || metadata.rateSnapshot)) {
+      return NextResponse.json({
+        error: "Changing this allocation requires a new configuration quote. Launch a newly quoted instance instead.",
+        code: "REQUOTE_REQUIRED",
+      }, { status: 409 });
+    }
 
     const body = await request.json();
     const { vgpus, pool_id } = body;

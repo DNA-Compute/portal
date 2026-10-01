@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { getSharedVolumes, getPoolSubscriptions, deleteSharedVolume } from "@/lib/hostedai";
+import { getSharedVolumes, getPoolSubscriptions, deleteSharedVolume, type SharedVolume } from "@/lib/hostedai";
 import { checkAndRefillWallet, WALLET_CONFIG } from "@/lib/wallet";
 import { getStoragePricePerGBHourCents, getStoppedInstanceRatePercent } from "@/lib/pricing";
 import { computeStorageCharge } from "@/lib/storage-billing";
 import { computeStoppedCharge, wasStoppedBilledRecently, type StoppedPodInput } from "@/lib/stopped-billing";
 import { getProductByPoolId } from "@/lib/products";
+import { canBackfillPodRate, getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents } from "@/lib/pod-billing";
 import { prisma } from "@/lib/prisma";
 import { sendNegativeBalanceShutdownEmail } from "@/lib/email";
 import { cacheCustomer } from "@/lib/customer-cache";
@@ -152,6 +153,10 @@ export async function POST(request: NextRequest) {
                 stripeCustomerId: true,
                 hourlyRateCents: true,
                 billingType: true,
+                hourlyRateBasis: true,
+                rateSnapshot: true,
+                launchConfiguration: true,
+                productId: true,
               },
             });
 
@@ -201,11 +206,10 @@ export async function POST(request: NextRequest) {
                     || m.subscriptionId === subId
                     || m.subscriptionId === `instance-${subId}`)
                   && m.stripeCustomerId === customerCache.id
-                  && m.billingType !== "monthly"
-                  && !m.hourlyRateCents
+                  && canBackfillPodRate(m)
                 );
                 if (own) {
-                  const product = await getProductByPoolId(sub.pool_id);
+                  const product = await getProductByPoolId(sub.pool_id, own.productId);
                   const rateCents = product?.hourly_rate_cents || 0;
                   if (rateCents > 0) {
                     const fullExisting = await prisma.podMetadata.findUnique({ where: { subscriptionId: own.subscriptionId } });
@@ -280,6 +284,7 @@ export async function POST(request: NextRequest) {
           { prepaidUntil: null }, // Pods that were never properly initialized for billing
         ],
         hourlyRateCents: { gt: 0 }, // Must have a rate configured
+        AND: [{ OR: [{ billingType: null }, { billingType: { not: "monthly" } }] }],
       },
     });
 
@@ -347,12 +352,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Check if pod is actually running — stopped/paused pods are billed separately at reduced rate
+        // Configured allocations prepay running or stopped coverage on this same cursor.
         // Ref: Confluence HP/600178689 — billable-at-full-rate statuses
         const FULL_RATE_STATUSES = ["running", "active", "restarting", "stopping", "resizing", "succeeded"];
         const podStatuses = (subscription.pods || []).map((p: { pod_status?: string }) => (p.pod_status || "").toLowerCase());
         const hasRunningPod = podStatuses.some((s: string) => FULL_RATE_STATUSES.includes(s));
-        if (!hasRunningPod && podStatuses.length > 0) {
+        const configured = pod.hourlyRateBasis === "per_instance";
+        const isStopped = !hasRunningPod && podStatuses.some(status => ["stopped", "paused", "reserved"].includes(status));
+        if (!hasRunningPod && podStatuses.length > 0 && !configured) {
           console.log(`[Sync] Skipping pod ${pod.subscriptionId}: no running pods (statuses: ${podStatuses.join(", ")}). Will be billed at stopped rate.`);
           // Still advance prepaidUntil so we don't re-check every cycle
           const currentPrepaidUntil = pod.prepaidUntil || now;
@@ -372,11 +379,27 @@ export async function POST(request: NextRequest) {
         }
 
         // Calculate GPU count from subscription (round up, minimum 1 — no fractional GPU billing)
-        const gpuCount = Math.max(1, Math.ceil(subscription.per_pod_info?.vgpu_count || 1));
+        const gpuCount = getPodGpuCount(pod, subscription.per_pod_info?.vgpu_count);
 
         // Calculate cost for 30 minutes
         const hoursToCharge = BILLING_INTERVAL_MINUTES / 60; // 0.5 hours
-        const amountCents = Math.round(hoursToCharge * pod.hourlyRateCents! * gpuCount);
+        const instanceHourlyRateCents = configured && isStopped
+          ? getPodStoppedHourlyRateCents(pod, gpuCount, stoppedInstanceRatePercent)
+          : getPodHourlyRateCents(pod, gpuCount);
+        if (instanceHourlyRateCents === null) {
+          podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, status: "error", error: "Missing valid captured instance pricing" });
+          continue;
+        }
+        const amountCents = Math.round(hoursToCharge * instanceHourlyRateCents);
+        if (amountCents === 0) {
+          const nextBillingAt = new Date((pod.prepaidUntil || now).getTime() + BILLING_INTERVAL_MINUTES * 60 * 1000);
+          await prisma.podMetadata.update({
+            where: { subscriptionId: pod.subscriptionId },
+            data: { prepaidUntil: nextBillingAt, prepaidAmountCents: 0 },
+          });
+          podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, status: "billed", amountCents: 0, nextBillingAt });
+          continue;
+        }
 
         // Generate unique charge ID to prevent duplicates
         const chargeId = `pod_${pod.subscriptionId}_${Math.floor(now.getTime() / 1000)}`;
@@ -404,7 +427,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create the charge
-        const chargeDescription = `GPU usage: ${gpuCount} GPU(s) x ${BILLING_INTERVAL_MINUTES} mins @ $${(pod.hourlyRateCents! / 100).toFixed(2)}/hr`;
+        const chargeDescription = `${isStopped ? "Reserved GPU" : "GPU usage"}: ${gpuCount} GPU(s) x ${BILLING_INTERVAL_MINUTES} mins @ $${(instanceHourlyRateCents / 100).toFixed(2)}/instance/hr`;
         await stripe.customers.createBalanceTransaction(pod.stripeCustomerId, {
           amount: amountCents,
           currency: "usd",
@@ -413,6 +436,8 @@ export async function POST(request: NextRequest) {
             subscription_id: pod.subscriptionId,
             gpu_count: gpuCount.toString(),
             hourly_rate_cents: pod.hourlyRateCents!.toString(),
+            hourly_rate_basis: pod.hourlyRateBasis || "per_gpu",
+            billing_type: isStopped ? "configured_stopped_reservation" : "gpu_usage",
             billing_minutes: BILLING_INTERVAL_MINUTES.toString(),
             pod_billing_id: chargeId,
           },
@@ -436,7 +461,7 @@ export async function POST(request: NextRequest) {
           data: {
             stripeCustomerId: pod.stripeCustomerId,
             teamId,
-            type: "gpu_usage",
+            type: isStopped ? "stopped_reservation" : "gpu_usage",
             amountCents,
             description: chargeDescription,
             subscriptionId: pod.subscriptionId,
@@ -455,7 +480,7 @@ export async function POST(request: NextRequest) {
         const nextBillingAt = new Date(currentPrepaidUntil.getTime() + BILLING_INTERVAL_MINUTES * 60 * 1000);
         await prisma.podMetadata.update({
           where: { subscriptionId: pod.subscriptionId },
-          data: { prepaidUntil: nextBillingAt },
+          data: { prepaidUntil: nextBillingAt, prepaidAmountCents: amountCents },
         });
 
         console.log(`[Sync] Billed pod ${pod.subscriptionId}: $${(amountCents / 100).toFixed(2)} for ${gpuCount} GPU(s). Was prepaid until ${currentPrepaidUntil.toISOString()}, now prepaid until ${nextBillingAt.toISOString()}`);
@@ -491,6 +516,62 @@ export async function POST(request: NextRequest) {
     });
     allActivePods.forEach(p => customersToProcess.add(p.stripeCustomerId));
 
+    // Persistent storage outlives PodMetadata and is chargeable on monthly accounts too.
+    // The cache is maintained from Stripe interactions and its existing full-sync cron.
+    const storageCandidates = await prisma.customerCache.findMany({
+      where: {
+        isDeleted: false,
+        OR: [{ teamId: { not: null } }, { metadataJson: { contains: "primary_stripe_customer_id" } }],
+      },
+      select: { id: true },
+    });
+    storageCandidates.forEach(customer => customersToProcess.add(customer.id));
+
+    const billingCustomers = new Map<string, Stripe.Customer>();
+    const storageAccounts = new Map<string, { customer: Stripe.Customer; teamIds: Set<string> }>();
+    for (const candidateId of customersToProcess) {
+      try {
+        let source = billingCustomers.get(candidateId);
+        if (!source) {
+          const retrieved = await stripe.customers.retrieve(candidateId);
+          if ("deleted" in retrieved && retrieved.deleted) continue;
+          source = retrieved as Stripe.Customer;
+          billingCustomers.set(candidateId, source);
+          cacheCustomer(source).catch(() => {});
+        }
+        // Monthly checkout aliases use the primary wallet, not a second storage meter.
+        const accountId = source.metadata?.primary_stripe_customer_id || source.id;
+        let customer = billingCustomers.get(accountId);
+        if (!customer) {
+          const retrieved = await stripe.customers.retrieve(accountId);
+          if ("deleted" in retrieved && retrieved.deleted) continue;
+          customer = retrieved as Stripe.Customer;
+          billingCustomers.set(accountId, customer);
+          cacheCustomer(customer).catch(() => {});
+        }
+        const account = storageAccounts.get(accountId) || { customer, teamIds: new Set<string>() };
+        if (source.metadata?.hostedai_team_id) account.teamIds.add(source.metadata.hostedai_team_id);
+        if (customer.metadata?.hostedai_team_id) account.teamIds.add(customer.metadata.hostedai_team_id);
+        if (account.teamIds.size > 0) storageAccounts.set(accountId, account);
+      } catch (error) {
+        console.error(`[Sync] Could not resolve storage account ${candidateId}:`, error);
+      }
+    }
+    // Match the existing primary-account preference: hourly team owner before
+    // an unlinked monthly alias. Each provider team can contribute storage only once.
+    const storageTeamOwners = new Map<string, string>();
+    for (const [accountId, account] of storageAccounts) {
+      for (const teamId of account.teamIds) {
+        const previousId = storageTeamOwners.get(teamId);
+        const previous = previousId ? storageAccounts.get(previousId) : undefined;
+        if (!previous || (account.customer.metadata?.billing_type === "hourly" && previous.customer.metadata?.billing_type !== "hourly")) {
+          storageTeamOwners.set(teamId, accountId);
+        }
+      }
+    }
+    customersToProcess.clear();
+    storageTeamOwners.forEach(accountId => customersToProcess.add(accountId));
+
     const storageResults: Array<{
       customerId: string;
       storageGb: number;
@@ -503,14 +584,12 @@ export async function POST(request: NextRequest) {
       stoppedCostCents: number;
     }> = [];
 
-    for (const customerId of customersToProcess) {
+    for (const [customerId, account] of storageAccounts) {
       try {
-        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
-        cacheCustomer(customer).catch(() => {});
-        if (customer.metadata?.billing_type !== "hourly") continue;
-
-        const teamId = customer.metadata?.hostedai_team_id;
-        if (!teamId) continue;
+        const { customer } = account;
+        const billingTeams = [...account.teamIds].filter(id => storageTeamOwners.get(id) === customerId);
+        if (billingTeams.length === 0) continue;
+        const teamId = billingTeams.find(id => id === customer.metadata?.hostedai_team_id) || billingTeams[0];
 
         // Check last storage sync time (storage is still on fixed 30-min intervals)
         const lastStorageSync = customer.metadata?.last_storage_sync_timestamp;
@@ -534,12 +613,11 @@ export async function POST(request: NextRequest) {
         // === Storage billing ===
         let totalStorageGb = 0;
         try {
-          const allVolumes = await getCachedVolumes(teamId);
-          const filteredVolumes = allVolumes.filter(vol => vol.team_id === teamId);
-          const volumeMap = new Map<number, typeof filteredVolumes[0]>();
-          for (const vol of filteredVolumes) {
-            if (!volumeMap.has(vol.id)) {
-              volumeMap.set(vol.id, vol);
+          const volumeMap = new Map<number, SharedVolume>();
+          for (const billingTeam of billingTeams) {
+            const volumes = await getCachedVolumes(billingTeam);
+            for (const volume of volumes) {
+              if (volume.team_id === billingTeam && !volumeMap.has(volume.id)) volumeMap.set(volume.id, volume);
             }
           }
           for (const vol of volumeMap.values()) {
@@ -597,7 +675,7 @@ export async function POST(request: NextRequest) {
               await prisma.walletTransaction.create({
                 data: {
                   stripeCustomerId: customerId,
-                  teamId,
+                  teamId: billingTeams.length === 1 ? teamId : null,
                   type: "storage",
                   amountCents: result.charge.cents,
                   description: result.charge.description,
@@ -613,29 +691,23 @@ export async function POST(request: NextRequest) {
         }
 
         // === Stopped instance billing ===
-        // Bill each stopped/paused/reserved pod at ITS OWN per-GPU rate × the
-        // configured stopped percentage — mirroring the running-charge path.
-        // (Previously this averaged hourlyRateCents across the whole fleet, so a
-        // single expensive or stale terminated pod overcharged cheap stopped
-        // ones — e.g. a stopped $100/hr GPU billed $751.90. See stopped-billing.ts.)
+        // Each allocation uses its own saved basis and stopped price, never a fleet average.
         let stoppedGpuCount = 0;
+        if (customer.metadata?.billing_type === "hourly") {
         try {
-          // Per-GPU rate lookup, keyed by every id shape a HAI sub takes in
-          // PodMetadata (bare id, "instance-<id>", and instanceId).
+          // Match every provider/local ID shape without discarding the captured rate basis.
           const podMetaRows = await prisma.podMetadata.findMany({
-            where: { stripeCustomerId: customerId, hourlyRateCents: { gt: 0 } },
-            select: { subscriptionId: true, instanceId: true, hourlyRateCents: true },
+            where: { stripeCustomerId: customerId, hourlyRateCents: { gt: 0 }, OR: [{ billingType: null }, { billingType: { not: "monthly" } }] },
+            select: { subscriptionId: true, instanceId: true, hourlyRateCents: true, hourlyRateBasis: true, rateSnapshot: true, launchConfiguration: true, billingType: true },
           });
-          const rateBySubId = new Map<string, number>();
+          const rateBySubId = new Map<string, typeof podMetaRows[number]>();
           for (const m of podMetaRows) {
-            const rate = m.hourlyRateCents || 0;
-            if (rate <= 0) continue;
             const bare = m.subscriptionId.startsWith("instance-")
               ? m.subscriptionId.slice("instance-".length)
               : m.subscriptionId;
-            rateBySubId.set(m.subscriptionId, rate);
-            rateBySubId.set(bare, rate);
-            if (m.instanceId) rateBySubId.set(String(m.instanceId), rate);
+            rateBySubId.set(m.subscriptionId, m);
+            rateBySubId.set(bare, m);
+            if (m.instanceId) rateBySubId.set(String(m.instanceId), m);
           }
 
           const allSubscriptions = await getCachedSubs(teamId);
@@ -651,8 +723,9 @@ export async function POST(request: NextRequest) {
             if (!sub.pods || sub.pods.length === 0) continue;
 
             const subId = String(sub.id);
-            const perGpuRateCents =
-              rateBySubId.get(subId) ?? rateBySubId.get(`instance-${subId}`) ?? 0;
+            const rate = rateBySubId.get(subId) ?? rateBySubId.get(`instance-${subId}`);
+            // Configured stopped coverage is prepaid once through STEP 1, never fleet-billed.
+            if (rate?.hourlyRateBasis === "per_instance") continue;
 
             for (const pod of sub.pods) {
               const podKey = pod.pod_name || `${sub.id}-${pod.pod_status}`;
@@ -663,12 +736,12 @@ export async function POST(request: NextRequest) {
               if (podStatus === "stopped" || podStatus === "paused" || podStatus === "reserved") {
                 // Surface revenue gaps: a stopped pod with no PodMetadata rate is
                 // not billed (computeStoppedCharge skips it) — log so it's visible.
-                if (perGpuRateCents <= 0) {
+                if (!rate || getPodHourlyRateCents(rate, 1) === null) {
                   console.warn(`[Sync] Stopped pod ${podKey} (sub ${subId}) has no rate in PodMetadata — not billed`);
                 }
                 stoppedPods.push({
+                  ...(rate || { hourlyRateCents: null }),
                   gpuCount: pod.gpu_count || sub.per_pod_info?.vgpu_count || 1,
-                  perGpuRateCents,
                 });
               }
             }
@@ -692,7 +765,7 @@ export async function POST(request: NextRequest) {
             if (wasStoppedBilledRecently(recentTxns.data, nowSec, 5 * 60)) {
               console.log(`[Sync] Skipping duplicate stopped-reservation charge for ${customerId} (already billed in last 5m)`);
             } else {
-              const stoppedDesc = `Reserved: ${stoppedGpuCount} GPU(s) stopped @ ${stoppedInstanceRatePercent}%`;
+              const stoppedDesc = `Reserved: ${stoppedGpuCount} GPU(s) stopped at saved reservation rates`;
               await stripe.customers.createBalanceTransaction(customerId, {
                 amount: stoppedCostCents,
                 currency: "usd",
@@ -721,6 +794,7 @@ export async function POST(request: NextRequest) {
           }
         } catch (stoppedErr) {
           console.error(`Error billing stopped instances for ${customerId}:`, stoppedErr);
+        }
         }
 
         // === Wallet refill check ===

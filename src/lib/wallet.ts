@@ -359,24 +359,43 @@ export async function checkAndRefillWallet(
 }
 
 /**
+ * Hide invoice balance neutralization from customer-visible wallet history and spend.
+ * Description matching preserves the exclusions for older transactions without metadata.
+ */
+export function isUserFacingWalletTransaction(
+  txn: Pick<Stripe.CustomerBalanceTransaction, "metadata" | "description">
+): boolean {
+  const metaType = txn.metadata?.type;
+  if (metaType === "invoice_balance_hold" || metaType === "invoice_balance_restore") return false;
+  const desc = (txn.description || "").toLowerCase();
+  return !desc.includes("temporary hold for invoice") && !desc.includes("restore after invoice");
+}
+
+/**
  * Get wallet transaction history.
  * @param maxItems - Max transactions to return. 0 = unlimited (auto-paginate all).
+ * @param createdSince - Inclusive lower bound, in Unix seconds. Stripe filters before pagination.
  */
 export async function getWalletTransactions(
   customerId: string,
-  maxItems: number = 0
+  maxItems: number = 0,
+  createdSince?: number
 ): Promise<Stripe.CustomerBalanceTransaction[]> {
   const stripe = await getStripe();
   const all: Stripe.CustomerBalanceTransaction[] = [];
+  const params: Stripe.CustomerListBalanceTransactionsParams = {
+    limit: maxItems > 0 ? maxItems : 100,
+    ...(createdSince === undefined ? {} : { created: { gte: createdSince } }),
+  };
 
   if (maxItems > 0) {
     // Fast path: single API call for limited results
-    const page = await stripe.customers.listBalanceTransactions(customerId, { limit: maxItems });
+    const page = await stripe.customers.listBalanceTransactions(customerId, params);
     return page.data;
   }
 
-  // Unlimited: auto-paginate all transactions
-  for await (const txn of stripe.customers.listBalanceTransactions(customerId, { limit: 100 })) {
+  // Auto-paginate the requested interval; without a bound this remains full history.
+  for await (const txn of stripe.customers.listBalanceTransactions(customerId, params)) {
     all.push(txn);
   }
 

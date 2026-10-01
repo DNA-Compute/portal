@@ -226,6 +226,7 @@ export async function getPoolSubscriptions(
     team?: { id: string; name: string };
     region?: { id: number; region_name: string; city?: string; country?: string };
     pod_info?: {
+      vgpu_count?: number;
       model?: string;
       vendor?: string;
       pool_id?: number;
@@ -250,7 +251,7 @@ export async function getPoolSubscriptions(
     // The raw status is preserved in pod_status for full-rate vs stopped-rate decisions.
     // Ref: Confluence HP/600178689 — Status for VM/Pod Instances
     const BILLABLE_STATUSES = [
-      "running", "active", "restarting", "stopping", "stopped",
+      "running", "active", "restarting", "stopping", "stopped", "paused", "reserved",
       "resizing", "succeeded",
     ];
     const mappedStatus = BILLABLE_STATUSES.includes(status) ? "subscribed" : status;
@@ -269,10 +270,10 @@ export async function getPoolSubscriptions(
       pods: [{
         pod_name: instance.pod_info?.provisioned_service_name || instance.name,
         pod_status: status,
-        gpu_count: 1,
+        gpu_count: instance.pod_info?.vgpu_count || 1,
       }],
       per_pod_info: {
-        vgpu_count: 1,
+        vgpu_count: instance.pod_info?.vgpu_count || 1,
       },
     };
   });
@@ -877,7 +878,7 @@ export async function selectOptimalPool(
 
     if (!gpuaasId) {
       const err = new Error("Requested GPU pool not found or has no GPU type configured.");
-      (err as any).status = 404;
+      (err as Error & { status: number }).status = 404;
       throw err;
     }
 
@@ -913,13 +914,13 @@ export async function selectOptimalPool(
         ? "All pools for this GPU type are in use by your account. Terminate an existing pod or wait for a terminating pod to finish."
         : "No pools available for this GPU type."
     );
-    (err as any).status = 409;
+    (err as Error & { status: number }).status = 409;
     throw err;
   }
 
   // 5. Check GPU slot availability across eligible pools (for capacity filtering)
   // Query each unique gpuaas_id in the eligible pools
-  let availabilityMap = new Map<string, number>();
+  const availabilityMap = new Map<string, number>();
   let availabilityCheckSucceeded = false;
 
   try {
@@ -1156,7 +1157,7 @@ export async function selectOptimalPool(
     const err = new Error(
       "No GPUs currently available. All eligible pools are at capacity. Please try again later."
     );
-    (err as any).status = 503;
+    (err as Error & { status: number }).status = 503;
     throw err;
   }
 

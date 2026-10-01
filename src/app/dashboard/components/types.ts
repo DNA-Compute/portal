@@ -98,19 +98,9 @@ export interface ActivityEvent {
 export interface BillingStats {
   totalCost: number;
   gpuHours: number;
-  storageCost?: number;
+  storageCost: number;
   storageHours?: number;
-  storageVolumes?: Array<{
-    name: string;
-    hours: number;
-    cost: number;
-  }>;
-  instances: Array<{
-    instance_id: string;
-    instance_name: string;
-    hours: number;
-    cost: number;
-  }>;
+  dailyCharges: Array<{ date: string; amountCents: number }>;
   periodStart: string | null;
   periodEnd: string | null;
 }
@@ -127,6 +117,22 @@ export interface Instance {
   ip_address?: string;
 }
 
+/** Saved API metadata: hourlyRate is expressed in its explicit stored basis. */
+export interface PodMetadata {
+  displayName: string | null;
+  notes: string | null;
+  hourlyRate?: number;
+  hourlyRateBasis?: string;
+  gpuCount?: number;
+  stoppedHourlyRate?: number;
+  stoppedRatePercent?: number;
+  startupScriptStatus?: string | null;
+  stripeSubscriptionId?: string;
+  billingType?: string;
+  deployStatus?: string | null;
+  deployStatusReason?: string | null;
+}
+
 export interface PoolSubscription {
   id: string;
   pool_id?: number;
@@ -137,8 +143,13 @@ export interface PoolSubscription {
     region_name?: string;
     city?: string;
   };
-  // Hourly rate in dollars (e.g., 0.66 for $0.66/hr) - from GpuProduct pricing
+  // Whole-instance hourly dollars, normalized once when merging API metadata.
   hourlyRate?: number;
+  hourlyRateBasis?: string;
+  gpuCount?: number;
+  stoppedHourlyRate?: number;
+  stoppedRatePercent?: number;
+  billingType?: string;
   storage_details?: {
     ephemeral_storage_gb?: number;
     persistent_storage_block_id?: string;
@@ -270,12 +281,6 @@ export interface LaunchOptions {
   walletBalanceCents?: number; // Wallet balance in cents for prepaid check
 }
 
-export interface ChartDataPoint {
-  date: string;
-  fullDate: string;
-  spend: number;
-  hours: number;
-}
 
 export interface ConnectionInfo {
   id: number;

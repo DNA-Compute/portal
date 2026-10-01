@@ -53,6 +53,7 @@ vi.mock("@/lib/metrics-collector", () => ({ installMetricsCollector: vi.fn() }))
 vi.mock("@/lib/startup-script-runner", () => ({ runStartupScript: vi.fn() }));
 vi.mock("@/lib/startup-scripts", () => ({ WORKSPACE_SETUP_SCRIPT: "" }));
 vi.mock("@/lib/auth/gate", () => ({ gatePermission: vi.fn() }));
+vi.mock("@/lib/instance-launch", () => ({ launchInstance: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     podMetadata: { findMany: mockFindManyPodMeta },

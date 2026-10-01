@@ -10,11 +10,11 @@ import {
   searchCatalog,
   getRtxOptimizedModels,
   HFCatalogItem,
-  HFItemType,
 } from "@/lib/huggingface-catalog";
-import { getPoolVRAM, getCompatibilityMessage } from "@/lib/gpu-specs";
+import { getCompatibilityMessage } from "@/lib/gpu-specs";
 import { getAllPools } from "@/lib/hostedai";
-import { getModelMemory, type HfMemResult } from "@/lib/hf-mem";
+import { getModelMemory } from "@/lib/hf-mem";
+import { getPublicLaunchModelSupport } from "@/lib/launch-model-runtime";
 
 // Cache for real memory data (in-memory, resets on server restart)
 const realMemoryCache = new Map<string, { vramGb: number; timestamp: number }>();
@@ -94,6 +94,7 @@ async function enrichWithRealMemory(
  * - search: Search catalog by query
  * - checkCompatibility: "true" to include GPU compatibility info
  * - onlyCompatible: "true" to filter out incompatible models
+ * - launch: "true" for model-only float16 runtime support (unsupported items are flagged)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -141,6 +142,33 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const checkCompatibility = searchParams.get("checkCompatibility") === "true";
     const onlyCompatible = searchParams.get("onlyCompatible") === "true";
+    const launch = searchParams.get("launch") === "true";
+
+    // Launch-facing responses never use quantized memory estimates from hf-mem.
+    // Keep the general browse/compatibility behavior below unchanged.
+    if (launch) {
+      const item = id ? getCatalogItem(id) : undefined;
+      if (id && (!item || item.type !== "model")) {
+        return NextResponse.json({ error: "Launch model not found" }, { status: 404 });
+      }
+      const catalogItems = item ? [item] : search ? searchCatalog(search)
+        : type === "all" ? getAllCatalogItems()
+        : type === "rtx" ? getRtxOptimizedModels()
+        : type === "model" || type === "docker" || type === "space" ? getCatalogByType(type)
+        : HF_CATALOG.popular;
+      const items = await Promise.all(catalogItems.filter(item => item.type === "model").map(async item => {
+        const support = await getPublicLaunchModelSupport(item.id);
+        const launchSupport = item.gated && support.status === "supported"
+          ? { ...support, status: "unverified" as const, message: "This gated model requires approved access. Runtime compatibility and resources will be checked with your token before launch." }
+          : support;
+        return {
+          ...item,
+          vramGb: support.float16VramGb ? Math.max(item.vramGb, support.float16VramGb) : 0,
+          launchSupport,
+        };
+      }));
+      return NextResponse.json(id ? { item: items[0] } : { type, items, total: items.length });
+    }
 
     // Get a specific item by ID
     if (id) {
@@ -268,7 +296,7 @@ async function addCompatibilityInfo(
 
     for (const pool of pools) {
       const poolName = pool.name || pool.id;
-      const { status, minGpusNeeded } = getCompatibilityMessage(
+      const { status } = getCompatibilityMessage(
         item.vramGb,
         poolName,
         8 // max GPUs

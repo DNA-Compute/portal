@@ -270,7 +270,7 @@ export async function POST(
       }
     }
 
-    let existingVolumeIds = sharedVolumes.map(v => Number(v.id)).filter(id => !isNaN(id));
+    const existingVolumeIds = sharedVolumes.map(v => Number(v.id)).filter(id => !isNaN(id));
     // User has storage if they have shared volumes OR persistent_storage_gb is set
     let hasStorage = sharedVolumes.length > 0 || persistentStorageGb > 0;
     let autoCreatedVolume = false;
@@ -283,6 +283,18 @@ export async function POST(
     // If saveData is true AND user doesn't already have storage, create new storage
     // If user already has storage, their data is already preserved - no need to resubscribe
     if (saveData && !hasStorage) {
+      // This legacy branch replaces CPU/root/GPU allocation while attaching storage.
+      // It cannot retain a configured instance's purchased quote.
+      const metadata = await prisma.podMetadata.findFirst({
+        where: { OR: [{ instanceId: subscriptionId }, { subscriptionId }, { subscriptionId: `instance-${subscriptionId}` }] },
+        select: { hourlyRateBasis: true, launchConfiguration: true, rateSnapshot: true },
+      });
+      if (metadata && (metadata.hourlyRateBasis === "per_instance" || metadata.launchConfiguration || metadata.rateSnapshot)) {
+        return NextResponse.json({
+          error: "This snapshot operation would replace the purchased allocation and requires a new configuration quote. Attach shared storage without resizing first.",
+          code: "REQUOTE_REQUIRED",
+        }, { status: 409 });
+      }
       // Check if user already has max storage volumes
       if (existingVolumeIds.length >= MAX_STORAGE_VOLUMES) {
         return NextResponse.json(

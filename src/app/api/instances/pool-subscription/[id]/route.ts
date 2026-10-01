@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { getStripe } from "@/lib/stripe";
 import { unsubscribeFromPool, getPoolSubscriptions, deleteInstance, getUnifiedInstanceDetail } from "@/lib/hostedai";
+import type { PoolSubscription } from "@/lib/hostedai";
 import { logGPUTerminated } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { sendGpuTerminatedEmail } from "@/lib/email";
@@ -9,6 +10,8 @@ import { generateCustomerToken } from "@/lib/customer-auth";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents } from "@/lib/pod-billing";
+import { getStoppedInstanceRatePercent } from "@/lib/pricing";
 
 // Check if the ID looks like an HAI 2.2 instance (i-{uuid}) vs numeric (legacy pool subscription)
 function isInstanceId(id: string): boolean {
@@ -220,21 +223,46 @@ export async function DELETE(
       });
 
       const displayName = podMetadata?.displayName || undefined;
+      const configured = Boolean(podMetadata && (podMetadata.hourlyRateBasis === "per_instance" || podMetadata.launchConfiguration || podMetadata.rateSnapshot));
+      if (configured && podMetadata?.billingType !== "monthly" && (!podMetadata?.prepaidUntil || getPodHourlyRateCents(podMetadata, 1) === null)) {
+        return NextResponse.json({ error: "Captured billing data must be repaired before termination.", code: "SETTLEMENT_REQUIRED" }, { status: 409 });
+      }
 
       // Billing reconciliation for hourly instances
-      if (podMetadata?.prepaidUntil && podMetadata?.hourlyRateCents) {
+      if (podMetadata?.prepaidUntil && podMetadata?.hourlyRateCents && podMetadata.billingType !== "monthly") {
         try {
           const now = new Date();
           const prepaidUntil = new Date(podMetadata.prepaidUntil);
-          const hourlyRateCents = podMetadata.hourlyRateCents;
+          let subscription: PoolSubscription | undefined;
+          // Refunds use the saved payment, and must not depend on provider availability.
+          if (now >= prepaidUntil || !configured) {
+            try {
+              const subscriptions = await getPoolSubscriptions(teamId);
+              subscription = subscriptions.find(sub => String(sub.id) === id);
+            } catch (error) {
+              if (configured && now >= prepaidUntil) throw error;
+              console.warn("[Billing] Provider status unavailable during prepaid refund:", error);
+            }
+          }
+          if (configured && now >= prepaidUntil && !subscription) throw new Error("Instance status unavailable for final settlement");
+          const gpuCount = getPodGpuCount(podMetadata, subscription?.per_pod_info?.vgpu_count);
+          const isStopped = subscription?.pods?.length && subscription.pods.every(pod =>
+            ["stopped", "paused", "reserved"].includes((pod.pod_status || "").toLowerCase()));
+          // Stop does not reprice an already-paid running interval. Only overdue
+          // usage uses the current reservation rate; unused credit returns what was paid.
+          const hourlyRateCents = now >= prepaidUntil && isStopped && podMetadata.hourlyRateBasis === "per_instance"
+            ? getPodStoppedHourlyRateCents(podMetadata, gpuCount, getStoppedInstanceRatePercent())
+            : getPodHourlyRateCents(podMetadata, gpuCount);
+          if (hourlyRateCents === null) throw new Error("Missing valid captured instance pricing");
           const billingIntervalMs = 30 * 60 * 1000;
 
           if (now < prepaidUntil) {
             const periodStartMs = prepaidUntil.getTime() - billingIntervalMs;
             const usedMs = now.getTime() - periodStartMs;
-            const unusedMs = Math.max(0, billingIntervalMs - usedMs);
-            const unusedHours = unusedMs / (1000 * 60 * 60);
-            const creditBackCents = Math.round(unusedHours * hourlyRateCents);
+            const unusedMs = Math.min(billingIntervalMs, Math.max(0, billingIntervalMs - usedMs));
+            const prepaidCents = podMetadata.prepaidAmountCents ?? hourlyRateCents * billingIntervalMs / 3_600_000;
+            if (!Number.isFinite(prepaidCents) || prepaidCents < 0) throw new Error("Invalid saved prepayment");
+            const creditBackCents = Math.round(prepaidCents * unusedMs / billingIntervalMs);
 
             if (creditBackCents > 0) {
               const unusedMins = Math.round(unusedMs / 60000);
@@ -265,6 +293,7 @@ export async function DELETE(
           }
         } catch (billingErr) {
           console.error("[Billing] Error during reconciliation:", billingErr);
+          if (configured) throw billingErr;
         }
       }
 
@@ -317,9 +346,16 @@ export async function DELETE(
     // Get subscription info for logging
     let poolName = "GPU Pool";
     let poolId: string | number = 0;
+    let subscriptionGpuCount = 1;
+    let subscriptionStopped = false;
+    let subscriptionKnown = false;
     try {
       const subs = await getPoolSubscriptions(teamId);
       const sub = subs.find(s => String(s.id) === String(subscriptionId));
+      subscriptionKnown = Boolean(sub);
+      subscriptionGpuCount = sub?.per_pod_info?.vgpu_count || 1;
+      subscriptionStopped = Boolean(sub?.pods?.length && sub.pods.every(pod =>
+        ["stopped", "paused", "reserved"].includes((pod.pod_status || "").toLowerCase())));
       if (sub?.pool_name) {
         poolName = sub.pool_name;
       }
@@ -346,15 +382,26 @@ export async function DELETE(
     // The billing cycle is 30 minutes. prepaidUntil marks the END of the current paid period.
     // If terminated before prepaidUntil: credit back unused portion of current period
     // If terminated after prepaidUntil: charge for unbilled time since prepaidUntil
+    let configuredSettlement = false;
     try {
       const podMetadata = await prisma.podMetadata.findUnique({
         where: { subscriptionId: String(subscriptionId) },
       });
+      configuredSettlement = Boolean(podMetadata && (podMetadata.hourlyRateBasis === "per_instance" || podMetadata.launchConfiguration || podMetadata.rateSnapshot));
+      if (configuredSettlement && podMetadata?.billingType !== "monthly" && (!podMetadata?.prepaidUntil || getPodHourlyRateCents(podMetadata, 1) === null)) {
+        return NextResponse.json({ error: "Captured billing data must be repaired before termination.", code: "SETTLEMENT_REQUIRED" }, { status: 409 });
+      }
 
-      if (podMetadata?.prepaidUntil && podMetadata?.hourlyRateCents) {
+      if (podMetadata?.prepaidUntil && podMetadata?.hourlyRateCents && podMetadata.billingType !== "monthly") {
         const now = new Date();
         const prepaidUntil = new Date(podMetadata.prepaidUntil);
-        const hourlyRateCents = podMetadata.hourlyRateCents;
+        if (configuredSettlement && now >= prepaidUntil && !subscriptionKnown) throw new Error("Instance status unavailable for final settlement");
+        subscriptionGpuCount = getPodGpuCount(podMetadata, subscriptionGpuCount);
+        // The prepaid interval was purchased at the running rate, even if now stopped.
+        const hourlyRateCents = now >= prepaidUntil && subscriptionStopped && podMetadata.hourlyRateBasis === "per_instance"
+          ? getPodStoppedHourlyRateCents(podMetadata, subscriptionGpuCount, getStoppedInstanceRatePercent())
+          : getPodHourlyRateCents(podMetadata, subscriptionGpuCount);
+        if (hourlyRateCents === null) throw new Error("Missing valid captured instance pricing");
         const billingIntervalMinutes = 30;
         const billingIntervalMs = billingIntervalMinutes * 60 * 1000;
 
@@ -363,13 +410,10 @@ export async function DELETE(
           // Calculate the START of the current billing period
           const periodStartMs = prepaidUntil.getTime() - billingIntervalMs;
           const usedMs = now.getTime() - periodStartMs;
-          const unusedMs = Math.max(0, billingIntervalMs - usedMs);
-
-          // Calculate credit based on hourly rate and unused time
-          const unusedHours = unusedMs / (1000 * 60 * 60);
-          // Get GPU count from hosted.ai subscription if available, default to 1
-          const gpuCount = 1; // Will be refined below if we can fetch subscription
-          const creditBackCents = Math.round(unusedHours * hourlyRateCents * gpuCount);
+          const unusedMs = Math.min(billingIntervalMs, Math.max(0, billingIntervalMs - usedMs));
+          const prepaidCents = podMetadata.prepaidAmountCents ?? hourlyRateCents * billingIntervalMs / 3_600_000;
+          if (!Number.isFinite(prepaidCents) || prepaidCents < 0) throw new Error("Invalid saved prepayment");
+          const creditBackCents = Math.round(prepaidCents * unusedMs / billingIntervalMs);
 
           if (creditBackCents > 0) {
             const unusedMins = Math.round(unusedMs / 60000);
@@ -393,8 +437,7 @@ export async function DELETE(
 
           // Only charge if more than 1 minute of unbilled time (avoid micro-charges)
           if (unbilledHours > (1 / 60)) {
-            const gpuCount = 1; // Default, could fetch from subscription if needed
-            const finalChargeCents = Math.round(unbilledHours * hourlyRateCents * gpuCount);
+            const finalChargeCents = Math.round(unbilledHours * hourlyRateCents);
 
             if (finalChargeCents > 0) {
               const unbilledMins = Math.round(unbilledHours * 60);
@@ -415,7 +458,7 @@ export async function DELETE(
       }
     } catch (billingError) {
       console.error("Error during billing reconciliation:", billingError);
-      // Continue with termination even if billing reconciliation fails
+      if (configuredSettlement) throw billingError;
     }
 
     // Always clean up PodMetadata on termination, regardless of billing state

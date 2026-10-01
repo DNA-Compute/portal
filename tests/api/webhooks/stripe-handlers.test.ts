@@ -67,7 +67,7 @@ const {
     changeTeamPackage: vi.fn(),
     syncTeamsToDefaultPolicy: vi.fn(),
     unsubscribeFromPool: vi.fn(),
-    ensureDefaultPolicies: vi.fn(),
+    getDefaultPolicies: vi.fn(),
     ensureRoles: vi.fn(),
   },
   lifecycleMock: {
@@ -178,7 +178,7 @@ beforeEach(() => {
   mockCreateInvoiceForPayment.mockResolvedValue(undefined);
   Object.values(lifecycleMock).forEach((fn) => fn.mockResolvedValue(undefined));
   Object.values(hostedaiMock).forEach((fn) => fn.mockResolvedValue(undefined));
-  hostedaiMock.ensureDefaultPolicies.mockResolvedValue({
+  hostedaiMock.getDefaultPolicies.mockResolvedValue({
     pricing: "pol-pricing",
     resource: "pol-resource",
     service: "pol-service",

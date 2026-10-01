@@ -16,6 +16,10 @@ export async function GET(request: NextRequest) {
     const search = request.nextUrl.searchParams.get("search") || "";
     const page = request.nextUrl.searchParams.get("page") || "0";
     const perPage = request.nextUrl.searchParams.get("per_page") || "20";
+    const offeringMode = request.nextUrl.searchParams.get("offering_mode");
+    if (offeringMode && offeringMode !== "fixed" && offeringMode !== "configurable") {
+      return NextResponse.json({ error: "Invalid offering mode" }, { status: 400 });
+    }
 
     // Build query for HAI service listing API
     const params = new URLSearchParams({
@@ -48,9 +52,16 @@ export async function GET(request: NextRequest) {
 
     // Normalize response -- HAI may return items array or flat array
     const items = data.items || (Array.isArray(data) ? data : []);
+    // Do not filter out unlocked services: configurable offerings resolve supported
+    // resources at launch. Product save enforces the mode-specific default policy.
+    const services = offeringMode
+      ? items.filter(s => s.is_enabled &&
+          (s.service_type === "pod_accelerator" ||
+            (offeringMode === "configurable" && s.service_type === "cpu_gpu_card")))
+      : items;
 
     return NextResponse.json({
-      services: items.map(s => ({
+      services: services.map(s => ({
         id: s.id,
         name: s.name,
         description: s.description,
@@ -61,7 +72,7 @@ export async function GET(request: NextRequest) {
         recipeExecTimingType: s.recipe_exec_timing_type,
         instancesCount: s.instances_count,
       })),
-      total: data.total || items.length,
+      total: offeringMode ? services.length : data.total || items.length,
     });
   } catch (error) {
     console.error("[Admin] Failed to fetch HAI services:", error);

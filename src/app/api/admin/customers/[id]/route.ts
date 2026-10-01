@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/admin";
 import { getStripe } from "@/lib/stripe";
-import { createOneTimeLogin, createTeam, suspendTeam, unsuspendTeam, terminateTeam, syncTeamsToDefaultPolicy, ensureDefaultPolicies, ensureRoles } from "@/lib/hostedai";
+import { createOneTimeLogin, createTeam, suspendTeam, unsuspendTeam, terminateTeam, syncTeamsToDefaultPolicy, getDefaultPolicies, ensureRoles } from "@/lib/hostedai";
 import { sendEmail } from "@/lib/email";
 import {
   emailLayout, emailButton, emailGreeting, emailText, emailMuted,
@@ -102,7 +102,7 @@ export async function POST(
             const safeName = customerName.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 30) || "user";
             const billingType = customer.metadata?.billing_type || "hourly";
             const [adminPolicies, adminRoles] = await Promise.all([
-              ensureDefaultPolicies(),
+              getDefaultPolicies(),
               ensureRoles(),
             ]);
             const team = await createTeam({

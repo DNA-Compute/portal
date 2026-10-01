@@ -25,7 +25,7 @@ const {
   mockTerminateTeam,
   mockSuspendTeam,
   mockEnsureRoles,
-  mockEnsureDefaultPolicies,
+  mockGetDefaultPolicies,
   mockCreateOneTimeLogin,
   mockCreateTeam,
   mockSyncTeamsToDefaultPolicy,
@@ -51,7 +51,7 @@ const {
   mockTerminateTeam: vi.fn(),
   mockSuspendTeam: vi.fn(),
   mockEnsureRoles: vi.fn(),
-  mockEnsureDefaultPolicies: vi.fn(),
+  mockGetDefaultPolicies: vi.fn(),
   mockCreateOneTimeLogin: vi.fn(),
   mockCreateTeam: vi.fn(),
   mockSyncTeamsToDefaultPolicy: vi.fn(),
@@ -80,7 +80,7 @@ vi.mock("@/lib/hostedai", () => ({
   unsuspendTeam: mockUnsuspendTeam,
   terminateTeam: mockTerminateTeam,
   syncTeamsToDefaultPolicy: mockSyncTeamsToDefaultPolicy,
-  ensureDefaultPolicies: mockEnsureDefaultPolicies,
+  getDefaultPolicies: mockGetDefaultPolicies,
   ensureRoles: mockEnsureRoles,
 }));
 vi.mock("@/lib/email", () => ({ sendEmail: mockSendEmail }));

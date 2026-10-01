@@ -144,6 +144,8 @@ export async function POST(
     let selectedImage: string | undefined;
     let selectedStorage: string | undefined;
     let selectedPoolId: number | undefined;
+    let rootfsEnabled = true;
+    let sharedStorageEnabled = true;
     let workspaceId: string | undefined;
 
     // Use snapshot's image if it's a valid UUID (custom image)
@@ -204,6 +206,8 @@ export async function POST(
       if (pools.length > 0) {
         const sorted = [...pools].sort((a, b) => (b.available_vgpus || 0) - (a.available_vgpus || 0));
         selectedPoolId = sorted[0].id;
+        rootfsEnabled = sorted[0].pool_source !== "marketplace" || sorted[0].rootfs_persistence_capable !== false;
+        sharedStorageEnabled = sorted[0].pool_source !== "marketplace" || sorted[0].shared_storage_capable !== false;
         console.log(`[Snapshot Restore] Selected pool: ${sorted[0].name} (id=${selectedPoolId}, available=${sorted[0].available_vgpus})`);
       }
     } catch (poolErr) {
@@ -256,6 +260,13 @@ export async function POST(
       }
     } else {
       console.log(`[Snapshot Restore] attachStorage is false - skipping storage attachment`);
+    }
+
+    if (sharedVolumeIds.length > 0 && !sharedStorageEnabled) {
+      return NextResponse.json(
+        { error: "The selected pool does not support shared storage. Restore without attaching storage or choose a compatible pool." },
+        { status: 409 }
+      );
     }
 
     console.log(`[Snapshot Restore] Final sharedVolumeIds to attach: ${JSON.stringify(sharedVolumeIds)}`);
@@ -331,6 +342,7 @@ export async function POST(
           ...(selectedPoolId ? { pool_id: selectedPoolId } : {}),
           vgpus: 1,
           shared_volumes: sharedVolumeIds.length > 0 ? sharedVolumeIds : [],
+          rootfs_enabled: rootfsEnabled,
         },
       });
     } catch (deployError) {

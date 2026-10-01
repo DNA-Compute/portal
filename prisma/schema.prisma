@@ -206,6 +206,9 @@ model PodMetadata {
   updatedAt            DateTime  @updatedAt @map("updated_at")
   deployTime           DateTime? @map("deploy_time")
   hourlyRateCents      Int?      @map("hourly_rate_cents")
+  hourlyRateBasis      String    @default("per_gpu") @map("hourly_rate_basis") @db.VarChar(16)
+  launchConfiguration Json?     @map("launch_configuration")
+  rateSnapshot        Json?     @map("rate_snapshot")
   poolId               String?   @map("pool_id")
   prepaidAmountCents   Int?      @map("prepaid_amount_cents")
   prepaidUntil         DateTime? @map("prepaid_until")
@@ -265,7 +268,7 @@ model HuggingFaceDeployment {
   openWebUI        Boolean  @default(false) @map("open_web_ui")
   netdataPort      Int?     @map("netdata_port")
   netdata          Boolean  @default(false)
-  hfToken          String?  @map("hf_token")
+  hfToken          String?  @map("hf_token") @db.Text
   errorMessage     String?  @map("error_message")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
@@ -918,6 +921,7 @@ model GpuProduct {
   billingType        String       @default("hourly") @map("billing_type") // "hourly" or "monthly"
   pricePerHourCents  Int          @map("price_per_hour_cents")
   pricePerMonthCents Int?         @map("price_per_month_cents")
+  configurationPricing Json?    @map("configuration_pricing")
   stripeProductId    String?      @map("stripe_product_id")
   stripePriceId      String?      @map("stripe_price_id")
   poolIds            String       @default("[]") @map("pool_ids") @db.Text

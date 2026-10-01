@@ -115,6 +115,7 @@ export async function GET(request: NextRequest) {
       name: p.name,
       description: p.description,
       pricePerHourCents: p.pricePerHourCents,
+      configurationPricing: p.configurationPricing,
       pricePerMonthCents: p.pricePerMonthCents,
       billingType: p.billingType,
       stripePriceId: p.stripePriceId,

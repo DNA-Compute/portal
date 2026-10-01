@@ -3,7 +3,7 @@ import { verifyCronAuth } from "@/lib/cron-auth";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { getUnifiedInstances } from "@/lib/hostedai";
-import { getExposedServices } from "@/lib/hostedai/services";
+import { getExposedServices, exposeService } from "@/lib/hostedai/services";
 import { sendHfDeploymentEmail } from "@/lib/email";
 import { generateCustomerToken } from "@/lib/customer-auth";
 import { logActivity } from "@/lib/activity";
@@ -14,6 +14,7 @@ import {
   ERROR_MESSAGES,
   STATUS_CHECK_SCRIPT,
 } from "@/lib/huggingface-status";
+import { startPendingHuggingFaceDeployment, redactHuggingFaceSecrets } from "@/lib/launch-software";
 
 // Deployments older than this are auto-failed
 const MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
             data: {
               status: "failed",
               errorMessage: ERROR_MESSAGES.DEPLOYMENT_TIMEOUT,
+              hfToken: null,
             },
           });
 
@@ -121,9 +123,15 @@ export async function POST(request: NextRequest) {
           results.push({ id: deployment.id, model: deployment.hfItemName, action: "skipped", error: "credentials not ready" });
           continue;
         }
+        if (deployment.status === "pending") {
+          await startPendingHuggingFaceDeployment(instanceId, creds);
+          results.push({ id: deployment.id, model: deployment.hfItemName, action: "installation_triggered" });
+          continue;
+        }
 
         // SSH in and check status
         const sshResult = await executeRemoteCommand(creds.host, creds.port, creds.username, creds.password, STATUS_CHECK_SCRIPT);
+        sshResult.output = redactHuggingFaceSecrets(sshResult.output);
 
         if (!sshResult.success) {
           results.push({ id: deployment.id, model: deployment.hfItemName, action: "skipped", error: "SSH failed" });
@@ -145,9 +153,8 @@ export async function POST(request: NextRequest) {
             const alreadyExposed = existingServices.some((s) => s.internal_port === 8000);
             if (!alreadyExposed) {
               // Use the legacy expose-service endpoint which still works for unified instances
-              const { exposeService } = await import("@/lib/hostedai/services");
               await exposeService({
-                pod_name: instance.name || instance.id,
+                pod_name: instance.id,
                 port: 8000,
                 service_name: "vllm",
                 protocol: "TCP",

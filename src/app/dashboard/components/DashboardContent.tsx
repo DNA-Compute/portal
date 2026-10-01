@@ -14,7 +14,6 @@ import TwoFactorVerify from "@/components/TwoFactorVerify";
 import TosConsentModal from "@/components/TosConsentModal";
 import { LogoutConfirmModal } from "@/components/logout-confirm-modal";
 import ReferralCard from "@/components/ReferralCard";
-import { formatSmartPrice } from "@/lib/format";
 import { ApiKeysSettings } from "@/components/ApiKeysSettings";
 import { GPUHardwareMetrics } from "@/components/GPUHardwareMetrics";
 import { AppsTab } from "./AppsTab";
@@ -22,6 +21,7 @@ import { StorageTab } from "./StorageTab";
 import { resolveLaunchDeeplink } from "./launch-deeplink";
 import { ImpersonationBanner } from "./ImpersonationBanner";
 import { isTabAllowed } from "./tab-access";
+import { WalletUsageStats } from "./WalletUsageStats";
 
 // Support tab — edition-gated: Pro uses Zammad ticketing, OSS uses contact form
 const SupportTab = hasPremiumFeature("support")
@@ -42,7 +42,7 @@ import {
   UsageChart,
   GPUUsageChart,
   NavItem,
-  LaunchGPUModal,
+  LaunchConfigurator,
   PoolSubscriptionCard,
   SnapshotCard,
   MetricsTab,
@@ -86,6 +86,7 @@ export function DashboardContent() {
     instancesLoading,
     activityEvents,
     billingStats,
+    billingStatsError,
     snapshots,
     provisioningGpu,
     greeting,
@@ -391,8 +392,13 @@ export function DashboardContent() {
 
     if (topupStatus === "success") {
       // Track wallet refill conversion
-      if (typeof (window as any).my_analytics !== "undefined") {
-        (window as any).my_analytics.goal("0xxmvyzdifvutbty");
+      const w = window as Window & {
+        my_analytics?: { goal: (id: string) => void };
+        grpQueue?: ArrayLike<unknown>[];
+        grp?: (...args: unknown[]) => void;
+      };
+      if (typeof w.my_analytics !== "undefined") {
+        w.my_analytics.goal("0xxmvyzdifvutbty");
       }
 
       // Growify v2 conversion — wallet top-up
@@ -402,9 +408,8 @@ export function DashboardContent() {
           const custEmail = data?.customer?.email;
           const custName = data?.customer?.name || "";
           const nameParts = custName.split(" ");
-          const w = window as any;
           w.grpQueue = w.grpQueue || [];
-          if (!w.grp) { w.grp = function() { w.grpQueue.push(arguments); }; }
+          if (!w.grp) { w.grp = (...args: unknown[]) => { w.grpQueue!.push(args); }; }
           w.grp('conversion', {
             userEmail: custEmail || '',
             userFirstName: nameParts[0] || '',
@@ -434,7 +439,7 @@ export function DashboardContent() {
 
       // Auto-reopen the launch modal with the product they were trying to launch
       if (launchProduct) {
-        setLaunchProductId(launchProduct);
+        if (launchProduct !== "resume") setLaunchProductId(launchProduct);
         setShowLaunchModal(true);
       }
 
@@ -445,6 +450,14 @@ export function DashboardContent() {
       url.searchParams.delete("bonus");
       url.searchParams.delete("launchProduct");
       window.history.replaceState({}, "", url.pathname + (url.search || ""));
+    }
+    if (topupStatus === "canceled" && launchProduct) {
+      if (launchProduct !== "resume") setLaunchProductId(launchProduct);
+      setShowLaunchModal(true);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("topup");
+      url.searchParams.delete("launchProduct");
+      window.history.replaceState({}, "", url.pathname + url.search);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -667,7 +680,7 @@ export function DashboardContent() {
   activeSubscriptions.forEach((sub) => {
     totalTflops += sub.metrics?.tflops_usage || 0;
     totalVramKb += sub.metrics?.vram_usage || 0;
-    totalHourlyRate += sub.hourlyRate || 0; // Use catalog-based hourly rate
+    totalHourlyRate += sub.hourlyRate || 0; // Saved whole-instance rate, normalized once by useDashboardData
   });
   const totalVramGb = totalVramKb / (1024 * 1024); // KB -> GB
   // Average hourly rate per subscription (for display purposes)
@@ -680,26 +693,6 @@ export function DashboardContent() {
   // payload is already redacted server-side; this also hides the empty widgets.
   const canViewBilling = !!data.can?.["billing.view"];
 
-  let spentFromTxns = 0;
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime() / 1000;
-  data.transactions.forEach((txn) => {
-    if (txn.created < startOfMonth) return;
-    if (txn.type !== "debit") return;
-    spentFromTxns += txn.amount / 100;
-  });
-
-  // GPU hours from spending (use average hourly rate from active subscriptions)
-  const gpuHoursFromTxns = avgHourlyRate > 0 ? spentFromTxns / avgHourlyRate : 0;
-
-  // Projected monthly spend (extrapolate from current spend)
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const dayOfMonth = now.getDate();
-  const projectedSpend = dayOfMonth > 0 ? (spentFromTxns / dayOfMonth) * daysInMonth : 0;
-
-  // Storage costs from billing stats
-  const storageCost = billingStats?.storageCost || 0;
-  const hasStorageCost = storageCost > 0;
 
   // Estimated runtime from balance (use total hourly rate from all active subscriptions)
   const balanceAmount = data.wallet?.balance ? data.wallet.balance / 100 : 0;
@@ -1078,32 +1071,8 @@ export function DashboardContent() {
                   </div>
                 </div>
 
-                {/* PA-271: Spent / GPU Hours / Projected are financial — billing.view only */}
-                {canViewBilling && (<>
-                <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
-                  <div className="text-xs text-[var(--muted)] mb-1">GPU Hours</div>
-                  <div className="text-3xl font-bold text-[var(--fg)]">{gpuHoursFromTxns.toFixed(2)}h</div>
-                  <div className="text-xs text-zinc-400">this month</div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
-                  <div className="text-xs text-[var(--muted)] mb-1">Spent</div>
-                  <div className="text-3xl font-bold text-[var(--fg)]">${spentFromTxns.toFixed(2)}</div>
-                  {hasStorageCost ? (
-                    <div className="text-xs text-zinc-400">
-                      ${(spentFromTxns - storageCost).toFixed(2)} GPU + {formatSmartPrice(storageCost)} storage
-                    </div>
-                  ) : (
-                    <div className="text-xs text-zinc-400">this month</div>
-                  )}
-                </div>
-
-                <div className="bg-white rounded-2xl p-5 border border-[var(--line)]">
-                  <div className="text-xs text-[var(--muted)] mb-1">Projected</div>
-                  <div className="text-3xl font-bold text-[var(--fg)]">~${projectedSpend.toFixed(0)}</div>
-                  <div className="text-xs text-zinc-400">this month</div>
-                </div>
-                </>)}
+                {/* PA-271: billing.view gates every financial summary. */}
+                {canViewBilling && <WalletUsageStats stats={billingStats} error={billingStatsError} />}
               </div>
 
               {/* Monthly Subscription Entitlements — billing-gated (PA-271) */}
@@ -1296,13 +1265,15 @@ export function DashboardContent() {
                     )}
                     {poolSubscriptions.map((subscription) => {
                       const meta = podMetadata[String(subscription.id)];
-                      // Detect monthly: check billingType in metadata, or match against Stripe subscriptions via poolIds
-                      const isMonthly = meta?.billingType === "monthly" || (data?.subscriptions || []).some(
-                        (sub) => sub.poolIds?.length && subscription.pool_id != null && sub.poolIds.map(String).includes(String(subscription.pool_id))
-                      );
+                      // Explicit saved billing wins; pool matching is only for historical rows.
+                      const isMonthly = meta?.billingType
+                        ? meta.billingType === "monthly"
+                        : (data?.subscriptions || []).some(
+                          (sub) => sub.poolIds?.length && subscription.pool_id != null && sub.poolIds.map(String).includes(String(subscription.pool_id))
+                        );
                       // Find the matching Stripe subscription for monthly price
                       const matchingSub = isMonthly ? (data?.subscriptions || []).find((sub) => {
-                        if (meta?.stripeSubscriptionId && meta.stripeSubscriptionId === sub.id) return true;
+                        if (meta?.stripeSubscriptionId) return meta.stripeSubscriptionId === sub.id;
                         if (sub.poolIds?.length && subscription.pool_id != null) {
                           return sub.poolIds.map(String).includes(String(subscription.pool_id));
                         }
@@ -1476,11 +1447,11 @@ export function DashboardContent() {
                 {data.can?.["billing.view"] && (
                   <div className="bg-white rounded-2xl border border-[var(--line)] p-5">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-[var(--fg)]">Billing</h3>
-                      <span className="text-xs text-zinc-400">Last 14 days</span>
+                      <h3 className="font-semibold text-[var(--fg)]">Wallet charges</h3>
+                      <span className="text-xs text-zinc-400">Last 14 days (UTC)</span>
                     </div>
                     <div className="h-44">
-                      <UsageChart transactions={data.transactions} />
+                      <UsageChart charges={billingStats?.dailyCharges ?? null} error={billingStatsError} />
                     </div>
                   </div>
                 )}
@@ -1531,7 +1502,8 @@ export function DashboardContent() {
 
           {activeTab === "billing" && canViewBilling && (
             <BillingTab
-              transactions={data.transactions}
+              billingStats={billingStats}
+              billingStatsError={billingStatsError}
               walletBalance={data.wallet?.balanceFormatted || "$0"}
               onTopUp={() => setShowTopupModal(true)}
               formatDateTime={formatDateTime}
@@ -1661,11 +1633,8 @@ export function DashboardContent() {
         </footer>
       </main>
 
-      {/* Launch GPU Modal */}
-      {/* key forces a clean remount when the pre-seeded product/subscription
-          changes, so the stepper re-initialises instead of keeping stale state
-          (the init effect only runs on isOpen/token changes). */}
-      <LaunchGPUModal
+      {/* A new preselection starts a fresh configuration session. */}
+      <LaunchConfigurator
         key={launchSubscription?.productId ?? launchProductId ?? launchCategorySlug ?? "browse"}
         isOpen={showLaunchModal}
         onClose={() => {
@@ -1675,7 +1644,6 @@ export function DashboardContent() {
           setLaunchSubscription(null);
         }}
         token={token!}
-        customerEmail={data?.customer?.email}
         onSuccess={(launchInfo) => {
           setProvisioningGpu(launchInfo);
           setLaunchProductId(undefined);
@@ -1691,9 +1659,6 @@ export function DashboardContent() {
           setErrorToast(message);
           setTimeout(() => setErrorToast(null), 8000);
         }}
-        gpuDashboardUrl={data?.gpuDashboardUrl}
-        onTopup={handleTopup}
-        topupLoading={topupLoading}
         initialProductId={launchProductId}
         initialCategorySlug={launchCategorySlug}
         lockedProductId={launchSubscription?.productId}

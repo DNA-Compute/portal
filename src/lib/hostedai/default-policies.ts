@@ -1,26 +1,9 @@
 /**
- * Dynamic default policies fetcher with fallback to hardcoded values
- *
- * Fetches default policy IDs from hosted.ai API /policy/defaults
- * and caches them in memory. Falls back to hardcoded values if API fails.
+ * Fetches general default policy IDs from Hosted.ai and caches verified sets.
+ * A failed refresh may retain a previously fetched set; cold failures reject.
  */
 
 import { hostedaiRequest } from "./client";
-
-// Hardcoded fallback values (from staging instance)
-export const FALLBACK_POLICIES = {
-  pricing: "582592e0-fb6b-4ca2-903f-dd1d88278c59", // Default Policy - Zero Cost
-  resource: "06cf8cc7-6b89-4302-8107-fb22c3f15e2e", // UK Resource Policy
-  service: "4dbfdae0-13b7-45f6-a9c9-a533a3a8ff87", // Default Service Policy
-  instanceType: "6374e27b-b7c5-4fae-9371-390f1175ca8f", // Default Instance Type Policy
-  image: "8c4fe149-7ea6-4507-bd6b-3d6a12465152", // Default Image Policy
-};
-
-interface PolicyDefault {
-  type: string;
-  id: string;
-  name: string;
-}
 
 interface DefaultPolicies {
   pricing: string;
@@ -30,196 +13,97 @@ interface DefaultPolicies {
   image: string;
 }
 
-// In-memory cache
 let cachedPolicies: DefaultPolicies | null = null;
-let lastFetchTime: number = 0;
-let isFetching = false;
+let lastFetchTime = 0;
+let inFlight: Promise<DefaultPolicies> | null = null;
 
 // Cache duration: 24 hours (policies rarely change)
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
+const policyTypes: Record<string, keyof DefaultPolicies> = {
+  pricing: "pricing",
+  resource: "resource",
+  service: "service",
+  "instance-type": "instanceType",
+  image: "image",
+};
+const requiredKeys: (keyof DefaultPolicies)[] = ["pricing", "resource", "service", "instanceType", "image"];
 
-/**
- * Maps API policy type to our internal key names
- */
 function mapPolicyType(type: string): keyof DefaultPolicies | null {
-  const typeMap: Record<string, keyof DefaultPolicies> = {
-    "pricing": "pricing",
-    "resource": "resource",
-    "service": "service",
-    "instance-type": "instanceType",
-    "image": "image",
-  };
-  return typeMap[type] || null;
+  return Object.prototype.hasOwnProperty.call(policyTypes, type) ? policyTypes[type] : null;
 }
 
-/**
- * Fetches default policies from hosted.ai API
- * Returns null if fetch fails
- */
-async function fetchDefaultPoliciesFromAPI(): Promise<DefaultPolicies | null> {
-  try {
-    console.log("[DefaultPolicies] Fetching from hosted.ai API...");
-
-    // Scope to the `general` nature. The ariel HAI release split policies into
-    // general/baremetal natures, so the unscoped /policy/defaults now returns
-    // TWO defaults per type (general + baremetal). This parser maps purely by
-    // `type` ("last wins"), which would silently resolve a mix of general and
-    // baremetal IDs depending on response order — and a baremetal policy ID
-    // sent into a team's general policy set is rejected by ariel
-    // (400 "invalid policy id general resource policy"), which surfaced as a
-    // 500 on signup/checkout/webhook team creation (PA-279). The `?nature=general`
-    // filter returns only the five general-nature defaults. Titan (pre-ariel)
-    // returns one default per type and ignores the unknown query param.
-    const response = await hostedaiRequest<PolicyDefault[]>(
-      "GET",
-      "/policy/defaults?nature=general"
-    );
-
-    if (!response || !Array.isArray(response)) {
-      console.error("[DefaultPolicies] Invalid response format:", response);
-      return null;
-    }
-
-    // Transform array response to our object format
-    const policies: Partial<DefaultPolicies> = {};
-
-    for (const policy of response) {
-      const key = mapPolicyType(policy.type);
-      if (key) {
-        policies[key] = policy.id;
-        console.log(`[DefaultPolicies] Mapped ${policy.type} -> ${key}: ${policy.id} (${policy.name})`);
-      }
-    }
-
-    // Validate we got all required policies
-    const requiredKeys: (keyof DefaultPolicies)[] = ["pricing", "resource", "service", "instanceType", "image"];
-    const missingKeys = requiredKeys.filter(key => !policies[key]);
-
-    if (missingKeys.length > 0) {
-      console.error(`[DefaultPolicies] Missing required policies: ${missingKeys.join(", ")}`);
-      return null;
-    }
-
-    console.log("[DefaultPolicies] ✅ Successfully fetched all default policies");
-    return policies as DefaultPolicies;
-
-  } catch (error) {
-    console.error("[DefaultPolicies] Failed to fetch from API:", error);
-    return null;
+async function fetchDefaultPoliciesFromAPI(): Promise<DefaultPolicies> {
+  // Ariel has general and baremetal defaults per type. Keep the general scope
+  // so a baremetal ID can never overwrite the policy used for customer teams.
+  // Titan (pre-ariel) ignores the query parameter and returns one per type.
+  const response = await hostedaiRequest<unknown>("GET", "/policy/defaults?nature=general");
+  if (!Array.isArray(response)) {
+    throw new Error("Hosted.ai returned an invalid default policies response");
   }
+
+  const policies: Partial<DefaultPolicies> = {};
+  for (const policy of response) {
+    if (!policy || typeof policy !== "object" || typeof policy.type !== "string") {
+      throw new Error("Hosted.ai returned an invalid default policy entry");
+    }
+    const key = mapPolicyType(policy.type);
+    if (!key) continue;
+    if (typeof policy.id !== "string" || policy.id.trim().length === 0) {
+      throw new Error(`Hosted.ai returned an invalid default policy ID for ${policy.type}`);
+    }
+    policies[key] = policy.id;
+  }
+
+  const missingKeys = requiredKeys.filter((key) => !policies[key]);
+  if (missingKeys.length > 0) {
+    throw new Error(`Hosted.ai is missing required default policies: ${missingKeys.join(", ")}`);
+  }
+  return policies as DefaultPolicies;
 }
 
 /**
- * Gets default policies with smart caching and fallback
- *
- * - Returns cached value if fresh (< 24h old)
- * - Fetches from API if cache is stale or empty
- * - Falls back to hardcoded values if API fails
- * - Thread-safe: prevents multiple concurrent fetches
+ * Returns fresh cached defaults or awaits a shared lookup. Only a previously
+ * verified set can be returned if refreshing fails; cold lookups reject.
  */
 export async function getDefaultPolicies(): Promise<DefaultPolicies> {
-  const now = Date.now();
-
-  // Return cached value if fresh
-  if (cachedPolicies && (now - lastFetchTime < CACHE_DURATION_MS)) {
-    console.log("[DefaultPolicies] Using cached values");
+  if (cachedPolicies && Date.now() - lastFetchTime < CACHE_DURATION_MS) {
     return cachedPolicies;
   }
+  if (inFlight) return inFlight;
 
-  // If already fetching, wait a bit and return cached (or fallback)
-  if (isFetching) {
-    console.log("[DefaultPolicies] Fetch already in progress, using cached or fallback");
-    return cachedPolicies || FALLBACK_POLICIES;
-  }
-
-  // Fetch from API
-  isFetching = true;
-  try {
-    const fetchedPolicies = await fetchDefaultPoliciesFromAPI();
-
-    if (fetchedPolicies) {
-      // Success: cache and return
-      cachedPolicies = fetchedPolicies;
-      lastFetchTime = now;
-      console.log("[DefaultPolicies] ✅ Updated cache with fresh policies");
-      return fetchedPolicies;
-    } else {
-      // API failed: use cached or fallback
-      if (cachedPolicies) {
-        console.log("[DefaultPolicies] ⚠️ API fetch failed, using stale cache");
-        return cachedPolicies;
-      } else {
-        console.log("[DefaultPolicies] ⚠️ API fetch failed, using hardcoded fallback");
-        return FALLBACK_POLICIES;
+  const previousPolicies = cachedPolicies;
+  const lookup = fetchDefaultPoliciesFromAPI()
+    .then((policies) => {
+      // Clearing the cache transfers ownership to the next lookup. Existing
+      // callers can still finish, but their result must not repopulate it.
+      if (inFlight === lookup) {
+        cachedPolicies = policies;
+        lastFetchTime = Date.now();
       }
-    }
-  } finally {
-    isFetching = false;
-  }
+      return policies;
+    })
+    .catch((error: unknown) => {
+      if (previousPolicies) {
+        console.error("[DefaultPolicies] Refresh failed, retaining verified policies:", error);
+        return previousPolicies;
+      }
+      throw error;
+    })
+    .finally(() => {
+      if (inFlight === lookup) inFlight = null;
+    });
+  inFlight = lookup;
+  return lookup;
 }
 
-/**
- * Synchronous getter that returns cached policies or fallback immediately
- * Use this when you need policies synchronously (e.g., in webhook handlers)
- *
- * Note: This will trigger a background fetch if cache is stale
- */
-export function getDefaultPoliciesSync(): DefaultPolicies {
-  // Trigger background refresh if cache is stale (fire-and-forget)
-  const now = Date.now();
-  if (!cachedPolicies || (now - lastFetchTime >= CACHE_DURATION_MS)) {
-    if (!isFetching) {
-      getDefaultPolicies().catch(err => {
-        console.error("[DefaultPolicies] Background fetch failed:", err);
-      });
-    }
-  }
-
-  // Return cached or fallback immediately
-  return cachedPolicies || FALLBACK_POLICIES;
-}
-
-/**
- * Clears the cache and forces a fresh fetch on next call
- * Useful for testing or manual refresh
- */
+/** Invalidates cached defaults and ownership of any outstanding lookup. */
 export function clearDefaultPoliciesCache(): void {
   cachedPolicies = null;
   lastFetchTime = 0;
-  console.log("[DefaultPolicies] Cache cleared");
+  inFlight = null;
 }
 
-/**
- * Pre-warms the cache by fetching policies
- * Call this during application startup
- */
+/** Pre-warms the cache; initialization fails if no verified defaults exist. */
 export async function initializeDefaultPolicies(): Promise<void> {
-  console.log("[DefaultPolicies] Initializing...");
   await getDefaultPolicies();
-  console.log("[DefaultPolicies] Initialization complete");
 }
-
-/**
- * Ensures policies are fetched from the API (not just fallback).
- *
- * Unlike the sync Proxy (`DEFAULT_POLICIES`), this awaits the API call
- * when the cache is empty. Use this in critical paths like team creation
- * where stale fallback UUIDs could cause failures.
- */
-export async function ensureDefaultPolicies(): Promise<DefaultPolicies> {
-  // Fast path: cache is warm
-  if (cachedPolicies && (Date.now() - lastFetchTime < CACHE_DURATION_MS)) {
-    return cachedPolicies;
-  }
-  // Slow path: fetch from API (returns fallback only if API is truly down)
-  return getDefaultPolicies();
-}
-
-// Backward compatibility: export as DEFAULT_POLICIES for existing code
-// This uses the sync getter which will return cached or fallback immediately
-export const DEFAULT_POLICIES = new Proxy({} as DefaultPolicies, {
-  get(_target, prop: string) {
-    const policies = getDefaultPoliciesSync();
-    return policies[prop as keyof DefaultPolicies];
-  }
-});

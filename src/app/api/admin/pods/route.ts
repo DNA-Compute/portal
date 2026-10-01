@@ -12,6 +12,7 @@ import { getConnectionInfo, getAllUnifiedInstances } from "@/lib/hostedai";
 import type { UnifiedInstance } from "@/lib/hostedai";
 import { getStripeTeamMap } from "@/lib/admin-cache";
 import { prisma } from "@/lib/prisma";
+import { getPodGpuCount, getPodHourlyRateCents } from "@/lib/pod-billing";
 
 export interface AdminPod {
   subscriptionId: string;
@@ -188,66 +189,16 @@ async function fetchPodsData(): Promise<{ pods: AdminPod[]; summary: Record<stri
     }
   }
 
-  // Build GpuProduct price map by poolId and pool name — authoritative billing source.
-  // Unified instances don't have numeric poolId, so we also match by pool_name.
-  const poolPriceMap = new Map<number, { hourlyRateCents: number; monthlyRateCents: number | null; billingType: string }>();
-  const poolNamePriceMap = new Map<string, { hourlyRateCents: number; monthlyRateCents: number | null; billingType: string }>();
+  // A pool/name cannot identify a purchased configuration. Hourly prices come
+  // only from the saved allocation; monthly display uses its exact product.
+  const monthlyPrices = new Map<string, number | null>();
   try {
-    const gpuProducts = await prisma.gpuProduct.findMany({
-      where: { active: true },
-      select: { name: true, poolIds: true, pricePerHourCents: true, pricePerMonthCents: true, billingType: true },
+    const products = await prisma.gpuProduct.findMany({
+      select: { id: true, pricePerMonthCents: true },
     });
-
-    for (const product of gpuProducts) {
-      const pricing = {
-        hourlyRateCents: product.pricePerHourCents,
-        monthlyRateCents: product.pricePerMonthCents,
-        billingType: product.billingType,
-      };
-      // Index by pool name (lowercase for matching)
-      const nameKey = product.name.toLowerCase();
-      const existingByName = poolNamePriceMap.get(nameKey);
-      if (!existingByName || (product.billingType === "hourly" && existingByName.billingType !== "hourly")) {
-        poolNamePriceMap.set(nameKey, pricing);
-      }
-      try {
-        const ids = JSON.parse(product.poolIds) as number[];
-        for (const id of ids) {
-          const existing = poolPriceMap.get(id);
-          if (!existing || (product.billingType === "hourly" && existing.billingType !== "hourly")) {
-            poolPriceMap.set(id, pricing);
-          }
-        }
-      } catch { /* skip invalid JSON */ }
-    }
+    for (const product of products) monthlyPrices.set(product.id, product.pricePerMonthCents);
   } catch (priceError) {
-    console.warn("[Admin Pods] Could not build pool price map:", priceError);
-  }
-
-  // Apply GpuProduct pricing to pods — try poolId first, fall back to pool name match
-  for (const pod of allPods) {
-    let pricing = pod.poolId ? poolPriceMap.get(pod.poolId) : undefined;
-    if (!pricing && pod.poolName) {
-      // Try matching pool name to product name (case-insensitive, partial match)
-      const poolNameLower = pod.poolName.toLowerCase();
-      pricing = poolNamePriceMap.get(poolNameLower);
-      if (!pricing) {
-        // Try partial match — product name contained in pool name or vice versa
-        for (const [name, p] of poolNamePriceMap) {
-          if (poolNameLower.includes(name) || name.includes(poolNameLower)) {
-            pricing = p;
-            break;
-          }
-        }
-      }
-    }
-    if (pricing) {
-      pod.billing = {
-        hourlyRateCents: pricing.hourlyRateCents || null,
-        monthlyRateCents: pricing.monthlyRateCents || null,
-        billingType: pricing.billingType,
-      };
-    }
+    console.warn("[Admin Pods] Could not load monthly prices:", priceError);
   }
 
   // Enrich with PodMetadata from our database (for display names, notes, deploy times)
@@ -259,6 +210,12 @@ async function fetchPodsData(): Promise<{ pods: AdminPod[]; summary: Record<stri
         notes: true,
         createdAt: true,
         hourlyRateCents: true,
+        hourlyRateBasis: true,
+        rateSnapshot: true,
+        launchConfiguration: true,
+        billingType: true,
+        productId: true,
+        instanceId: true,
         prepaidUntil: true,
         stripeCustomerId: true,
         poolId: true,
@@ -266,34 +223,30 @@ async function fetchPodsData(): Promise<{ pods: AdminPod[]; summary: Record<stri
     });
 
     // Build lookup maps
-    const metaBySubId = new Map(allMeta.map((m) => [m.subscriptionId, m]));
-    // Also by poolId + stripeCustomerId for matching cache pods
-    const metaByPoolCustomer = new Map<string, typeof allMeta[0]>();
-    for (const m of allMeta) {
-      if (m.poolId && m.stripeCustomerId) {
-        metaByPoolCustomer.set(`${m.poolId}-${m.stripeCustomerId}`, m);
+    const metaBySubId = new Map<string, typeof allMeta[number]>();
+    for (const meta of allMeta) {
+      metaBySubId.set(meta.subscriptionId, meta);
+      if (meta.instanceId) metaBySubId.set(meta.instanceId, meta);
+      if (meta.subscriptionId.startsWith("instance-")) {
+        metaBySubId.set(meta.subscriptionId.slice("instance-".length), meta);
       }
     }
 
     for (const pod of allPods) {
-      // Try matching by subscriptionId first
-      let meta = metaBySubId.get(pod.subscriptionId);
-
-      // If no match, try by poolId + stripeCustomerId
-      if (!meta && pod.owner?.customerId) {
-        meta = metaByPoolCustomer.get(`${pod.poolId}-${pod.owner.customerId}`);
-      }
+      const meta = metaBySubId.get(pod.subscriptionId);
 
       if (meta) {
+        pod.vgpuCount = getPodGpuCount(meta, pod.vgpuCount);
         pod.metadata = {
           displayName: meta.displayName || undefined,
           deployTime: meta.createdAt?.toISOString(),
           notes: meta.notes || undefined,
         };
-        // Merge PodMetadata billing fields into existing billing (don't overwrite GpuProduct rates)
+        // Never replace a purchased rate with today's catalog price or a neighbor's rate.
         pod.billing = {
-          ...pod.billing,
-          hourlyRateCents: pod.billing?.hourlyRateCents ?? meta.hourlyRateCents,
+          hourlyRateCents: getPodHourlyRateCents(meta, pod.vgpuCount),
+          monthlyRateCents: meta.billingType === "monthly" && meta.productId ? monthlyPrices.get(meta.productId) ?? null : null,
+          billingType: meta.billingType || undefined,
           prepaidUntil: meta.prepaidUntil?.toISOString(),
           stripeCustomerId: meta.stripeCustomerId || undefined,
         };

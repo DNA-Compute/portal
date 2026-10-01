@@ -12,7 +12,7 @@ import {
   createTeam,
   createOneTimeLogin,
   syncTeamsToDefaultPolicy,
-  ensureDefaultPolicies,
+  getDefaultPolicies,
   ensureRoles,
 } from "@/lib/hostedai";
 import { logAccountCreated, logApiKeyCreated } from "@/lib/activity";
@@ -276,10 +276,9 @@ export async function POST(request: NextRequest) {
 
     let team: { id: string; name: string };
     try {
-      // Await policies and roles from the API (not sync fallback) so team
-      // creation never uses stale staging UUIDs on cold start.
+      // Resolve verified policy IDs before creating the team.
       const [policies, roles] = await Promise.all([
-        ensureDefaultPolicies(),
+        getDefaultPolicies(),
         ensureRoles(),
       ]);
 

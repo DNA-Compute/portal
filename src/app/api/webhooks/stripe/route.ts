@@ -8,7 +8,7 @@ import {
   changeTeamPackage,
   syncTeamsToDefaultPolicy,
   unsubscribeFromPool,
-  ensureDefaultPolicies,
+  getDefaultPolicies,
   ensureRoles,
 } from "@/lib/hostedai";
 import { sendWelcomeEmail } from "@/lib/email";
@@ -406,7 +406,7 @@ async function handleCheckoutCompleted(
   const originalDepositCents = parseInt(session.metadata?.original_deposit_cents || "0", 10);
 
   // Use original deposit if available (includes voucher), otherwise use amount paid
-  let depositAmount = originalDepositCents > 0 ? originalDepositCents : (amountPaid || 10000);
+  const depositAmount = originalDepositCents > 0 ? originalDepositCents : (amountPaid || 10000);
 
   console.log(`Payment breakdown: paid=$${amountPaid / 100}, voucher=$${voucherCreditCents / 100}, total credit=$${depositAmount / 100}`);
 
@@ -426,7 +426,6 @@ async function handleCheckoutCompleted(
   }
 
   console.log(`✅ Product: ${productName} (${billingType})`);
-  console.log(`Policy IDs: Using ensureDefaultPolicies()`);
 
   // Get customer name from Stripe checkout session (billing details)
   // Fall back to email prefix if name not provided
@@ -704,10 +703,9 @@ async function handleCheckoutCompleted(
   console.log("=== CREATING HOSTED.AI TEAM ===");
   let team: { id: string; name: string };
 
-  // Await policies and roles from the API (not sync fallback) so team
-  // creation never uses stale staging UUIDs on cold start.
+  // Resolve verified policy IDs before creating the team.
   const [whPolicies, whRoles] = await Promise.all([
-    ensureDefaultPolicies(),
+    getDefaultPolicies(),
     ensureRoles(),
   ]);
 
@@ -1120,7 +1118,7 @@ async function handleSubscriptionUpdated(
 
   try {
     // Update hosted.ai team policies (all products use same policies)
-    const subPolicies = await ensureDefaultPolicies();
+    const subPolicies = await getDefaultPolicies();
     await changeTeamPackage(teamId, {
       pricing_policy_id: subPolicies.pricing,
       resource_policy_id: subPolicies.resource,

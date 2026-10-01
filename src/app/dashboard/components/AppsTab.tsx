@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LaunchGPUModal } from "./LaunchGPUModal";
+import { LaunchConfigurator } from "./LaunchConfigurator";
 
 interface App {
   slug: string;
@@ -29,15 +29,6 @@ interface App {
   billingType?: string | null;
 }
 
-interface AvailableProduct {
-  id: string;
-  name: string;
-  pricePerHourCents: number;
-  vramGb: number | null;
-  cudaCores: number | null;
-  available: boolean;
-  regions: Array<{ id: number; region_name: string }>;
-}
 
 interface InstalledApp {
   id: string;
@@ -77,13 +68,6 @@ export function AppsTab({ token, subscriptions, onRefresh }: AppsTabProps) {
   const [selectedSubscription, setSelectedSubscription] = useState<string>("all");
   // Deploy modal state
   const [deployApp, setDeployApp] = useState<App | null>(null);
-  const [availableProducts, setAvailableProducts] = useState<AvailableProduct[]>([]);
-  const [walletBalanceCents, setWalletBalanceCents] = useState<number>(0);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
-  const [deploying, setDeploying] = useState(false);
-  const [deployError, setDeployError] = useState<string | null>(null);
 
   // Filter active subscriptions with running pods
   const activeSubscriptions = subscriptions.filter(
@@ -166,95 +150,14 @@ export function AppsTab({ token, subscriptions, onRefresh }: AppsTabProps) {
     }
   };
 
-  const openDeployModal = async (app: App) => {
+  const openDeployModal = (app: App) => {
     setDeployApp(app);
-    setSelectedProductId(null);
-    setSelectedRegionId(null);
-    setDeployError(null);
-    setDeploying(false);
-    setAvailableProducts([]);
-    setLoadingProducts(true);
-
-    try {
-      const res = await fetch("/api/apps/deploy-options", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const products: AvailableProduct[] = data.products || [];
-        setAvailableProducts(products);
-        setWalletBalanceCents(data.walletBalanceCents || 0);
-        // Auto-select first available product
-        const firstAvailable = products.find(p => p.available);
-        if (firstAvailable) {
-          setSelectedProductId(firstAvailable.id);
-          if (firstAvailable.regions.length > 0) {
-            setSelectedRegionId(firstAvailable.regions[0].id);
-          }
-        }
-      } else {
-        setDeployError("Failed to load GPU options");
-      }
-    } catch {
-      setDeployError("Failed to load GPU options");
-    } finally {
-      setLoadingProducts(false);
-    }
   };
 
   const closeDeployModal = () => {
     setDeployApp(null);
-    setDeployError(null);
   };
 
-  // When product selection changes, auto-select first region
-  const selectProduct = (productId: string) => {
-    setSelectedProductId(productId);
-    const product = availableProducts.find(p => p.id === productId);
-    if (product && product.regions.length > 0) {
-      setSelectedRegionId(product.regions[0].id);
-    } else {
-      setSelectedRegionId(null);
-    }
-  };
-
-  const handleDeploy = async () => {
-    if (!deployApp || !selectedProductId) return;
-    setDeploying(true);
-    setDeployError(null);
-
-    try {
-      const response = await fetch("/api/apps/deploy", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appId: deployApp.id,
-          product_id: selectedProductId,
-          region_id: selectedRegionId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.needsFunding) {
-          throw new Error(`Insufficient balance. Need $${(data.requiredCents / 100).toFixed(2)}, have $${(data.availableCents / 100).toFixed(2)}. Please fund your wallet.`);
-        }
-        throw new Error(data.error || "Failed to deploy app");
-      }
-
-      // Success — close modal and refresh to see the new pod
-      closeDeployModal();
-      onRefresh();
-    } catch (err) {
-      setDeployError(err instanceof Error ? err.message : "Failed to deploy app");
-    } finally {
-      setDeploying(false);
-    }
-  };
 
   const handleInstall = async (subscriptionId: string, appSlug: string) => {
     setInstalling({ subscriptionId, appSlug });
@@ -609,39 +512,21 @@ export function AppsTab({ token, subscriptions, onRefresh }: AppsTabProps) {
         </div>
       )}
 
-      {/* Deploy Modal — Shared LaunchGPUModal with app deploy context */}
-      <LaunchGPUModal
+      {/* Launch with the selected managed recipe and full resource configuration. */}
+      <LaunchConfigurator
         isOpen={!!deployApp}
         onClose={closeDeployModal}
         token={token}
+        initialProductId={deployApp?.productId || undefined}
         onSuccess={() => {
           closeDeployModal();
           onRefresh();
         }}
-        onError={(msg) => setDeployError(msg)}
         deployContext={deployApp ? {
           type: "app",
           title: `Deploy ${deployApp.name}`,
           subtitle: deployApp.description,
           modelId: deployApp.id,
-          onDeploy: async (params) => {
-            const res = await fetch("/api/apps/deploy", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                appId: deployApp.id,
-                product_id: params.product_id,
-                region_id: params.region_id,
-              }),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-              throw new Error(data.error || "Failed to deploy app");
-            }
-          },
         } : undefined}
       />
     </div>

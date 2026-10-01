@@ -15,7 +15,7 @@ export interface DashboardActionsCallbacks {
   downloadActivityCSV: () => void;
   downloadTransactionsCSV: () => void;
   formatDateTime: (timestamp: number) => string;
-  handleTopup: (amount: number, voucherCode?: string, launchProductId?: string) => Promise<void>;
+  handleTopup: (amount: number, voucherCode?: string) => Promise<void>;
 }
 
 interface UseDashboardActionsProps {
@@ -189,8 +189,7 @@ export function useDashboardActions({
 
   // Handle wallet top-up
   // When called from TopupModal: handleTopup(amount, voucherCode)
-  // When called from LaunchGPUModal: handleTopup(amount, undefined, launchProductId)
-  const handleTopup = useCallback(async (amount: number, voucherCode?: string, launchProductId?: string) => {
+  const handleTopup = useCallback(async (amount: number, voucherCode?: string) => {
     if (!token || topupLoading) return;
 
     setTopupLoading(true);
@@ -201,7 +200,7 @@ export function useDashboardActions({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ amount, voucherCode, launchProductId }),
+        body: JSON.stringify({ amount, voucherCode }),
       });
       const result = await res.json();
       if (result.url) {

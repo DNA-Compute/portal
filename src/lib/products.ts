@@ -13,10 +13,10 @@ export interface ProductPricing {
 }
 
 /**
- * Get product pricing by pool ID
- * Searches all GpuProducts to find one that includes the given pool_id in its poolIds array
+ * Resolve unambiguous legacy hourly pricing. Configurable products require their
+ * captured quote, and monthly products must never become hourly backfills.
  */
-export async function getProductByPoolId(poolId: string | number): Promise<ProductPricing | null> {
+export async function getProductByPoolId(poolId: string | number, productId?: string | null): Promise<ProductPricing | null> {
   try {
     const numericPoolId = typeof poolId === "string" ? parseInt(poolId, 10) : poolId;
 
@@ -25,19 +25,13 @@ export async function getProductByPoolId(poolId: string | number): Promise<Produ
       where: { active: true },
     });
 
-    // Find product that contains this pool_id in its poolIds array
+    const matches: typeof products = [];
     for (const product of products) {
       try {
         // poolIds is stored as JSON string like "[12,13,14,15]"
         const poolIds: number[] = product.poolIds ? JSON.parse(product.poolIds) : [];
         if (poolIds.includes(numericPoolId)) {
-          return {
-            id: product.id,
-            name: product.name,
-            hourly_rate_cents: product.pricePerHourCents,
-            poolIds,
-            serviceId: product.serviceId,
-          };
+          matches.push(product);
         }
       } catch {
         // Skip malformed poolIds
@@ -45,7 +39,18 @@ export async function getProductByPoolId(poolId: string | number): Promise<Produ
       }
     }
 
-    return null;
+    // A pool alone cannot identify which allocation (and therefore price) was purchased.
+    const candidates = productId ? matches.filter(product => product.id === productId) : matches;
+    if (candidates.length !== 1) return null;
+    const product = candidates[0];
+    if (product.configurationPricing || product.billingType === "monthly") return null;
+    return {
+      id: product.id,
+      name: product.name,
+      hourly_rate_cents: product.pricePerHourCents,
+      poolIds: JSON.parse(product.poolIds || "[]"),
+      serviceId: product.serviceId,
+    };
   } catch (error) {
     console.error("[Products] Failed to get product by pool ID:", error);
     return null;

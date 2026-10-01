@@ -14,9 +14,10 @@ import { getVramBadge, getCompatibilityBadge } from "./helpers";
 interface ItemCardProps {
   item: CatalogItem | SearchResult;
   onDeploy: (item: CatalogItem | SearchResult) => void;
+  onInstallExisting: (item: CatalogItem | SearchResult) => void;
 }
 
-export function ItemCard({ item, onDeploy }: ItemCardProps) {
+export function ItemCard({ item, onDeploy, onInstallExisting }: ItemCardProps) {
   const isGated = "gated" in item && item.gated;
   const vramGb =
     "vramGb" in item
@@ -101,7 +102,14 @@ export function ItemCard({ item, onDeploy }: ItemCardProps) {
         onClick={() => onDeploy(item)}
         className="w-full py-2 px-4 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors text-sm font-medium"
       >
-        Deploy to GPU
+        Launch new GPU
+      </button>
+      <button
+        type="button"
+        onClick={() => onInstallExisting(item)}
+        className="mt-2 w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+      >
+        Install on existing GPU
       </button>
     </div>
   );

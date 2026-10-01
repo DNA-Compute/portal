@@ -72,6 +72,8 @@ export async function GET(
           prepaidUntil: metadata.prepaidUntil?.toISOString(),
           prepaidAmountCents: metadata.prepaidAmountCents,
           hourlyRateCents: metadata.hourlyRateCents,
+          hourlyRateBasis: metadata.hourlyRateBasis,
+          rateSnapshot: metadata.rateSnapshot,
           poolId: metadata.poolId,
           productId: metadata.productId,
         },

@@ -24,7 +24,7 @@ export { NavItem } from "./NavItem";
 // Re-export modal components
 export { TerminalModal } from "./TerminalModal";
 export { RunScriptModal } from "./RunScriptModal";
-export { LaunchGPUModal } from "./LaunchGPUModal";
+export { LaunchConfigurator } from "./LaunchConfigurator";
 
 // Re-export card components
 export { PoolSubscriptionCard, type PoolSubscriptionCardProps } from "./PoolSubscriptionCard";
@@ -34,7 +34,7 @@ export { SnapshotCard } from "./SnapshotCard";
 export { MetricsTab } from "./MetricsTab";
 export { BillingTab } from "./BillingTab";
 // OSS stub — original: export { BareMetalTab } from "./BareMetalTab";
-export const BareMetalTab = (_props?: any) => null;
+export const BareMetalTab = (_props?: unknown) => null;
 
 // Re-export main dashboard content
 export { DashboardContent } from "./DashboardContent";

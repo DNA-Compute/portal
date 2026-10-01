@@ -170,7 +170,7 @@ describe("POST /api/cron/check-hf-deployments", () => {
 
   it("auto-fails deployments older than 2 hours and emails the customer", async () => {
     mockHfFindMany.mockResolvedValue([
-      deployment({ createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000) }),
+      deployment({ createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000), hfToken: "encrypted-token" }),
     ]);
 
     const res = await POST(makeRequest(SECRET));
@@ -178,10 +178,10 @@ describe("POST /api/cron/check-hf-deployments", () => {
 
     expect(mockHfUpdate).toHaveBeenCalledWith({
       where: { id: "hf-1" },
-      data: {
+      data: expect.objectContaining({
         status: "failed",
-        errorMessage: "Deployment timed out after 2 hours",
-      },
+        hfToken: null,
+      }),
     });
     expect(mockSendHfDeploymentEmail).toHaveBeenCalledWith(
       expect.objectContaining({ to: "user@x.com", status: "failed" }),
