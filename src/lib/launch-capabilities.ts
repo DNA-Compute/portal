@@ -305,11 +305,20 @@ async function discover(
     .filter(available).map(row => block(row, gpuScale(rootDetails))), "root storage blocks"), capabilities.locks.rootStorage, capabilities.defaults.rootStorageBlockId);
   if (!capabilities.defaults.rootStorageBlockId && capabilities.rootStorageBlocks.length === 1) capabilities.defaults.rootStorageBlockId = capabilities.rootStorageBlocks[0].id;
   if (auth.can("storage.manage") && serviceType === "pod_accelerator" && capabilities.pools.find(pool => pool.id === query.pool_id)?.sharedStorageEnabled) {
-    const [blocks, owned, compatible] = await Promise.all([
-      provider("shared storage", () => getSharedStorageBlocks(regionId, teamId)),
-      provider("owned shared volumes", () => getSharedVolumes(teamId)),
-      provider("attachable shared volumes", () => getLaunchServiceResources("shared-volumes", query)),
-    ]);
+    let lookups: [unknown, unknown, unknown];
+    try {
+      lookups = await Promise.all([
+        provider("shared storage", () => getSharedStorageBlocks(regionId, teamId)),
+        provider("owned shared volumes", () => getSharedVolumes(teamId)),
+        provider("attachable shared volumes", () => getLaunchServiceResources("shared-volumes", query)),
+      ]);
+    } catch (error) {
+      // Shared storage is optional: a region without a storage node must not block a GPU launch.
+      if (!(error instanceof LaunchCapabilityError) || error.code !== "PROVIDER_UNAVAILABLE") throw error;
+      capabilities.sharedStorageUnavailable = true;
+      return capabilities;
+    }
+    const [blocks, owned, compatible] = lookups;
     capabilities.sharedStorageBlocks = unique(rows(blocks, "shared storage").filter(available).map(row => block(row)), "shared storage blocks");
     const compatibleIds = new Set(rows(compatible, "compatible shared volumes").map(row => integer(row.id, "volume identifier")));
     capabilities.volumes = unique(rows(owned, "owned shared volumes").filter(row =>

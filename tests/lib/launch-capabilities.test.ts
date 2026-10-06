@@ -187,6 +187,17 @@ describe("launch capabilities trust boundary", () => {
     }
   });
 
+  it("still offers a launch without shared storage when the provider cannot report it", async () => {
+    mocks.blocks.mockRejectedValue(new Error("Failed to get storage node availability"));
+    const capabilities = await getLaunchCapabilities(auth(), "offering", 2, 7);
+    expect(capabilities.sharedStorageUnavailable).toBe(true);
+    expect(capabilities.rootStorageBlocks.map(block => block.id)).toEqual(["root"]);
+    expect(capabilities.sharedStorageBlocks).toEqual([]);
+    expect(capabilities.volumes).toEqual([]);
+    await expect(resolveLaunchConfiguration(auth(), configuration)).resolves.toMatchObject({ sharedStorage: null });
+    await expect(resolveLaunchConfiguration(auth(), { ...configuration, storage: { mode: "existing", volumeId: 50 } })).rejects.toMatchObject({ code: "RESOURCE_UNAVAILABLE" });
+  });
+
   it("normalizes ram_mb and cpu_cores profiles with provider GPU scaling", async () => {
     const originalResources = mocks.resources.getMockImplementation()!;
     mocks.resources.mockImplementation(async (kind: string, ...args: unknown[]) => kind === "instance-types"

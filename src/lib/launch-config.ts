@@ -66,6 +66,8 @@ export interface LaunchCapabilities {
   rootStorageBlocks: LaunchStorageBlock[];
   sharedStorageBlocks: LaunchStorageBlock[];
   volumes: LaunchVolume[];
+  /** The provider could not report shared storage, so none is offered for this launch. */
+  sharedStorageUnavailable?: boolean;
   pools: LaunchPool[];
   gpuModels: LaunchGpuModel[];
   maxGpuCount: number;
