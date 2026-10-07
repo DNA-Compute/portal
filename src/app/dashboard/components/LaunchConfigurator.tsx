@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { launchConfigurationSchema, type ConfigurationPricing, type LaunchCapabilities, type LaunchConfiguration, type LaunchQuote } from "@/lib/launch-config";
 import { LaunchSoftwarePicker, type SoftwareSelectionMetadata } from "./LaunchSoftwarePicker";
+import { ChoiceCard, Select, ui } from "./launch-ui";
 
 interface LaunchProduct {
   id: string; name: string; gpuFamily: string | null; billingType: string;
@@ -41,9 +42,14 @@ interface Draft {
 }
 const DRAFT_KEY = "dna.launch-configuration.v1";
 const steps = ["GPU & region", "Resources", "Software", "Access", "Review"];
+const stepIntros = [
+  "Pick the GPU you want and where it runs.",
+  "Size the machine around your GPU. Every option listed is supported for this selection.",
+  "",
+  "Name this GPU and choose which SSH keys can reach it.",
+  "Check the itemised price before you launch.",
+];
 const emptyConfiguration: LaunchConfiguration = { productId: "", regionId: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "", gpuCount: 0, storage: { mode: "none" }, software: { kind: "none" } };
-const field = "mt-1 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm text-zinc-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-zinc-100 disabled:text-zinc-600";
-const button = "rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium hover:border-teal-500 disabled:cursor-not-allowed disabled:opacity-50";
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 6 });
 const money = (cents: number) => usd.format(cents / 100);
 const shareNames: Record<number, string> = { 100: "Whole GPU", 75: "Three quarters of a GPU", 50: "Half a GPU", 25: "Quarter of a GPU" };
@@ -307,137 +313,210 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
     finally { setLaunching(false); }
   }
 
-  if (accepted) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 p-5">
-    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="launch-title" className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 text-zinc-900 shadow-2xl">
-      <h2 ref={title} id="launch-title" tabIndex={-1} className="text-xl font-semibold">GPU launch accepted</h2>
-      <p>Your GPU launch was accepted, but setup needs attention. Do not launch another GPU to retry this operation.</p>
-      <p role="alert" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{accepted.warning}</p>
-      <p className="text-sm text-zinc-600">{accepted.configurationSaved ? "The instance and its accepted billing configuration have been saved. Check its details for status." : "Support must reconcile this instance and its payment before it can be managed safely."}</p>
-      <button type="button" className={`${button} bg-teal-700 text-white`} onClick={() => closeRef.current()}>View my GPU</button>
+
+  const pool = capabilities?.pools.find(item => item.id === configuration.poolId);
+  const noCapacity = !!capabilities && (capabilities.serviceType === "pod_accelerator" ? !capabilities.pools.length : !capabilities.gpuModels.length);
+  const rootDisk = capabilities?.rootStorageBlocks.find(item => item.id === configuration.rootStorageBlockId);
+  const continueDisabled = !options || capabilityLoading || !capabilities || launching || funding || (step === 0 ? !configuration.productId || !configuration.regionId : step === 1 ? !resourcesValid : step === 2 ? !softwareValid || !quote || quoteLoading : !name.trim());
+  const setGpuCount = (count: number) => { if (capabilities && Number.isInteger(count) && count >= 1 && count <= capabilities.maxGpuCount) update({ gpuCount: count, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" }); };
+
+  if (accepted) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(5,12,11,0.75)] p-5 backdrop-blur-sm">
+    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="launch-title" className="w-full max-w-lg space-y-4 border border-[var(--line)] bg-[var(--ink-soft)] p-6 text-[var(--fg)]">
+      <p className="label-mono text-[var(--warn)]">Needs attention</p>
+      <h2 ref={title} id="launch-title" tabIndex={-1} className="text-xl font-semibold outline-none">GPU launch accepted</h2>
+      <p className="text-sm text-[var(--fg-soft)]">Your GPU launch was accepted, but setup needs attention. Do not launch another GPU to retry this operation.</p>
+      <p role="alert" className={ui.notice.warn}>{accepted.warning}</p>
+      <p className="text-sm text-[var(--fg-muted)]">{accepted.configurationSaved ? "The instance and its accepted billing configuration have been saved. Check its details for status." : "Support must reconcile this instance and its payment before it can be managed safely."}</p>
+      <button type="button" className={ui.primary} onClick={() => closeRef.current()}>View my GPU</button>
     </div>
   </div>;
 
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 p-0 backdrop-blur-sm sm:p-5">
-    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="launch-title" className="flex max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-white text-zinc-900 shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl">
-      <header className="flex items-start justify-between border-b border-zinc-200 px-5 py-4 sm:px-7">
-        <div><p className="text-xs font-semibold uppercase tracking-widest text-teal-700">GPU workspace</p><h2 ref={title} tabIndex={-1} id="launch-title" className="mt-1 text-xl font-semibold outline-none">{deployContext?.title || "Launch GPU"}</h2><p className="mt-1 text-sm text-zinc-500">Configure only what you need. Review the full price before launch.</p></div>
-        <button type="button" aria-label="Close GPU configurator" className={button} onClick={onClose} disabled={launching || funding}>Close</button>
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(5,12,11,0.75)] p-0 backdrop-blur-sm sm:p-5">
+    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="launch-title" className="flex max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden border border-[var(--line)] bg-[var(--ink-soft)] text-[var(--fg)] sm:max-h-[92dvh]">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--line)] px-5 pb-5 pt-6 sm:px-8">
+        <div className="min-w-0">
+          <p className="label-mono text-[var(--acid)]">GPU workspace</p>
+          <h2 ref={title} tabIndex={-1} id="launch-title" className="mt-2 text-2xl font-semibold outline-none">{deployContext?.title || "Launch GPU"}</h2>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">Configure only what you need. Review the full price before launch.</p>
+        </div>
+        <button type="button" aria-label="Close GPU configurator" className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center text-[var(--fg-muted)] transition-colors hover:bg-[var(--ink-raise)] hover:text-[var(--fg)] disabled:opacity-40" onClick={onClose} disabled={launching || funding}>
+          <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4"><path d="M3.5 3.5l9 9m0-9l-9 9" stroke="currentColor" strokeWidth="1.6" /></svg>
+        </button>
       </header>
-      <nav aria-label="Launch steps" className="flex shrink-0 gap-1 overflow-x-auto border-b border-zinc-200 px-4 py-3 sm:px-7">{steps.map((label, index) => <button key={label} type="button" aria-current={step === index ? "step" : undefined} disabled={index > step || launching || funding} onClick={() => go(index)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium disabled:cursor-not-allowed ${step === index ? "bg-teal-700 text-white" : "text-zinc-500 hover:bg-zinc-100"}`}>{index + 1}. {label}</button>)}</nav>
+      <nav aria-label="Launch steps" className="shrink-0 overflow-x-auto border-b border-[var(--line)] px-5 sm:px-8">
+        <ol className="flex min-w-max items-center gap-3 py-4">{steps.map((label, index) => {
+          const done = index < step; const current = index === step;
+          return <li key={label} className="flex items-center gap-3">
+            {index > 0 && <span aria-hidden className={`h-px w-6 sm:w-10 ${done || current ? "bg-[var(--acid)]" : "bg-[var(--line)]"}`} />}
+            <button type="button" aria-current={current ? "step" : undefined} disabled={index > step || launching || funding} onClick={() => go(index)} className={`flex items-center gap-2.5 text-sm transition-colors disabled:cursor-not-allowed ${current ? "font-semibold text-[var(--fg)]" : done ? "text-[var(--fg-soft)] hover:text-[var(--fg)]" : "text-[var(--fg-faint)]"}`}>
+              <span className={`flex h-6 w-6 items-center justify-center font-mono text-xs font-bold ${current ? "bg-[var(--acid)] text-[var(--ink)]" : done ? "border border-[var(--acid)] text-[var(--acid)]" : "border border-[var(--line-strong)]"}`}>
+                {done ? <svg aria-hidden viewBox="0 0 12 12" className="h-3 w-3"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg> : index + 1}
+              </span>
+              {label}
+            </button>
+          </li>;
+        })}</ol>
+      </nav>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <section aria-label={steps[step]} className="min-w-0 space-y-5">
-            {restored && <div className="rounded-xl bg-teal-50 p-3 text-sm text-teal-900">Your saved configuration has been restored and is being revalidated. Re-enter any Hugging Face token or custom script; secrets are not saved.</div>}
-            {bootstrapError ? <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{bootstrapError}<button type="button" className="ml-2 underline" onClick={() => setReload(value => value + 1)}>Retry</button></div> : !options ? <p role="status">Loading GPU offerings…</p> : <fieldset disabled={launching || funding} className="min-w-0 space-y-5">
+        <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section aria-label={steps[step]} className="min-w-0 space-y-6">
+            {restored && <div className={ui.notice.info}>Your saved configuration has been restored and is being revalidated. Re-enter any Hugging Face token or custom script; secrets are not saved.</div>}
+            {bootstrapError ? <div role="alert" className={ui.notice.danger}>{bootstrapError} <button type="button" className="ml-1 font-medium underline" onClick={() => setReload(value => value + 1)}>Retry</button></div> : !options ? <p role="status" className="text-sm text-[var(--fg-muted)]">Loading GPU offerings…</p> : <fieldset disabled={launching || funding} className="min-w-0 space-y-6">
               <legend className="sr-only">{steps[step]}</legend>
-              <h3 className="text-lg font-semibold">{steps[step]}</h3>
+              <div>
+                <h3 className="text-xl font-semibold">{steps[step]}</h3>
+                {stepIntros[step] && <p className="mt-1 text-sm text-[var(--fg-muted)]">{stepIntros[step]}</p>}
+              </div>
               {step === 0 && <>
-                {entitlement.productId && <p className="rounded-xl bg-teal-50 p-3 text-sm text-teal-900">Monthly entitlement: your paid GPU and included allocation are locked. Persistent storage is separately charged.</p>}
-                <label className="block text-sm font-medium">GPU offering
-                  <select className={field} value={configuration.productId} disabled={!!entitlement.productId} onChange={event => update({ ...emptyConfiguration, productId: event.target.value, poolId: undefined, gpuModelId: undefined, software: configuration.software })}>
-                    <option value="">Select a GPU</option>{groups.map(group => <optgroup key={group} label={group}>{products.filter(item => (item.gpuFamily || item.name) === group).map(item => <option value={item.id} key={item.id}>{item.name}{item.billingType === "monthly" ? " · Monthly included" : item.configurationPricing ? " · Resource rates available" : " · Default bundle pricing"}{item.vramGb != null ? ` · ${item.vramGb} GB VRAM` : ""}</option>)}</optgroup>)}
-                  </select>
-                </label>
-                {!products.length && <p className="text-sm text-zinc-600">No entitled GPU offerings are available for this account.</p>}
-                {product && <p className="text-sm text-zinc-500">{product.billingType === "monthly" ? "Your subscription covers its included allocation." : product.configurationPricing ? "Choose supported CPU/RAM and storage. Your selections determine the allocation and its resource charges." : "Choose supported CPU/RAM and storage. Only the original default bundle has a price; custom allocations need resource rates configured before launch."}</p>}
-                <label className="block text-sm font-medium">Region
-                  <select className={field} value={configuration.regionId || ""} disabled={!regionOptions.length || capabilityLoading} onChange={event => update({ regionId: Number(event.target.value), gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "", poolId: undefined, gpuModelId: undefined, storage: { mode: "none" } })}>
-                    <option value="">Select a region</option>{regionOptions.map(item => <option key={item.id} value={item.id}>{item.name}{item.country ? ` · ${item.country}` : ""}</option>)}
-                  </select>
-                </label>
-              </>}
-              {step === 1 && capabilities && <>
-                {capabilities.serviceType === "pod_accelerator" ? <label className="block text-sm font-medium">GPU pool
-                  <select className={field} value={configuration.poolId || ""} disabled={capabilities.locks.pool} onChange={event => update({ poolId: Number(event.target.value), gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.pools.map(pool => <option key={pool.id} value={pool.id}>{pool.name}{pool.vramGb != null ? ` · ${pool.vramGb} GB VRAM` : ""}</option>)}</select>
-                </label> : <label className="block text-sm font-medium">GPU model
-                  <select className={field} value={configuration.gpuModelId || ""} disabled={capabilities.locks.pool} onChange={event => update({ gpuModelId: event.target.value, gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.gpuModels.map(model => <option key={model.id} value={model.id}>{model.name}{model.vramGb != null ? ` · ${model.vramGb} GB VRAM` : ""}</option>)}</select>
-                </label>}
-                {gpuShares.some(share => share.percent < 100) && <fieldset>
-                  <legend className="text-sm font-medium">GPU share</legend>
-                  <div role="radiogroup" aria-label="GPU share" className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {gpuShares.map(share => {
-                      const chosen = share.percent === sharePercent;
-                      const soldOut = !share.maxGpuCount;
-                      const gpuCents = product?.pricePerHourCents == null ? null : Math.round(product.pricePerHourCents * share.percent / 100);
-                      return <button key={share.percent} type="button" role="radio" aria-checked={chosen} disabled={soldOut}
-                        onClick={() => update({ gpuSharePercent: share.percent, gpuCount: 1, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}
-                        className={`flex flex-col gap-2 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600/40 disabled:cursor-not-allowed disabled:opacity-50 ${chosen ? "border-teal-600 bg-teal-50 ring-1 ring-teal-600" : "border-zinc-200 bg-white hover:border-teal-500"}`}>
-                        <span className="flex items-baseline justify-between gap-2">
-                          <span className="text-lg font-semibold tabular-nums text-zinc-900">{share.percent}%</span>
-                          {chosen && <span aria-hidden className="text-xs font-medium text-teal-700">Selected</span>}
+                {entitlement.productId && <p className={ui.notice.info}>Monthly entitlement: your paid GPU and included allocation are locked. Persistent storage is separately charged.</p>}
+                <fieldset className="space-y-4">
+                  <legend className={ui.label}>GPU offering</legend>
+                  {!products.length && <p className="text-sm text-[var(--fg-muted)]">No entitled GPU offerings are available for this account.</p>}
+                  {groups.map(group => <div key={group} className="space-y-2">
+                    {groups.length > 1 && <p className="text-xs font-semibold text-[var(--fg-soft)]">{group}</p>}
+                    <div className="grid gap-3 sm:grid-cols-2">{products.filter(item => (item.gpuFamily || item.name) === group).map(item => {
+                      const fractional = item.configurationPricing?.fractionalGpu === true && item.billingType !== "monthly";
+                      return <ChoiceCard key={item.id} name="launch-product" checked={configuration.productId === item.id} disabled={!!entitlement.productId && item.id !== entitlement.productId}
+                        onChange={() => update({ ...emptyConfiguration, productId: item.id, poolId: undefined, gpuModelId: undefined, software: configuration.software })}>
+                        <span className="pr-6 text-base font-semibold">{item.name}</span>
+                        <span className="text-xs text-[var(--fg-muted)]">{[item.vramGb != null ? `${item.vramGb} GB VRAM` : null, item.billingType === "monthly" ? "Monthly included" : item.configurationPricing ? "Pay per resource" : "Fixed bundle"].filter(Boolean).join(" · ")}</span>
+                        <span className="mt-3 flex items-end justify-between gap-3">
+                          <span className="tabular-nums">{item.billingType !== "monthly" && item.pricePerHourCents != null ? <><span className="text-lg font-semibold">{money(item.pricePerHourCents)}</span><span className="text-xs text-[var(--fg-muted)]"> / GPU-hour</span></> : <span className="text-xs text-[var(--fg-muted)]">Priced on review</span>}</span>
+                          {fractional && <span className="label-mono border border-[var(--acid)] px-1.5 py-0.5 text-[10px] text-[var(--acid)]">Fractional</span>}
                         </span>
-                        <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200"><span className={`block h-full rounded-full ${chosen ? "bg-teal-600" : "bg-zinc-400"}`} style={{ width: `${share.percent}%` }} /></span>
-                        <span className="text-xs text-zinc-600">{shareNames[share.percent] ?? "Guaranteed share"}</span>
-                        <span className="text-xs font-medium tabular-nums text-zinc-900">{soldOut ? "Sold out" : gpuCents == null ? "\u00a0" : `GPU ${money(gpuCents)}/hr`}</span>
-                      </button>;
-                    })}
-                  </div>
-                  <p className="mt-2 text-xs text-zinc-500">A share guarantees that fraction of one GPU&apos;s compute time, billed at the same fraction of the GPU rate. CPU, RAM and disk are priced separately.</p>
-                </fieldset>}
-                {sharePercent === 100 && <label className="block text-sm font-medium">Whole GPUs
-                  <input className={field} type="number" min={1} max={capabilities.maxGpuCount} step={1} value={configuration.gpuCount} disabled={capabilities.locks.gpuCount} onChange={event => { const count = Number(event.target.value); if (Number.isInteger(count) && count >= 1 && count <= capabilities.maxGpuCount) update({ gpuCount: count, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" }); }} />
-                  <span className="mt-1 block text-xs font-normal text-zinc-500">Up to {capabilities.maxGpuCount} whole GPU{capabilities.maxGpuCount === 1 ? "" : "s"} for this selection.</span>
-                </label>}
-                <label className="block text-sm font-medium">CPU & RAM profile {capabilities.locks.profile && (product?.billingType === "monthly" ? "· monthly included" : "· provider locked")}
-                  <select className={field} value={configuration.instanceTypeId} disabled={capabilities.locks.profile} onChange={event => update({ instanceTypeId: event.target.value, rootStorageBlockId: "" })}>{capabilities.profiles.map(item => <option key={item.id} value={item.id}>{item.cpuCores} CPU cores · {item.ramGb} GB RAM · {item.name}</option>)}</select>
-                </label>
-                <label className="block text-sm font-medium">System image
-                  <select className={field} value={configuration.imageHash} disabled={capabilities.locks.image} onChange={event => update({ imageHash: event.target.value, instanceTypeId: "", rootStorageBlockId: "" })}>{capabilities.images.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
-                </label>
-                <label className="block text-sm font-medium">Root disk {capabilities.locks.rootStorage && (product?.billingType === "monthly" ? "· monthly included" : "· provider locked")}
-                  <select className={field} value={configuration.rootStorageBlockId} disabled={capabilities.locks.rootStorage} onChange={event => update({ rootStorageBlockId: event.target.value })}>{capabilities.rootStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</select>
-                </label>
-                {capabilities.pools.find(pool => pool.id === configuration.poolId)?.rootfsEnabled === false && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">This pool does not support root-filesystem persistence. Do not rely on root-disk files surviving restarts.</p>}
-                <label className="block text-sm font-medium">Persistent shared storage
-                  <select className={field} value={configuration.storage.mode} onChange={event => update({ storage: event.target.value === "new" ? { mode: "new", blockId: capabilities.sharedStorageBlocks[0]?.id || "" } : event.target.value === "existing" ? { mode: "existing", volumeId: capabilities.volumes[0]?.id || 0 } : { mode: "none" } })}>
-                    <option value="none">No persistent storage</option><option value="new" disabled={!capabilities.sharedStorageBlocks.length}>Create a new volume</option><option value="existing" disabled={!capabilities.volumes.length}>Attach an existing volume</option>
-                  </select>
-                </label>
-                {capabilities.sharedStorageUnavailable && <p className="text-xs text-zinc-500">Persistent shared storage is not available in this region right now. You can still launch without it.</p>}
-                {configuration.storage.mode === "new" && <label className="block text-sm font-medium">New volume size<select className={field} value={configuration.storage.blockId} onChange={event => update({ storage: { mode: "new", blockId: event.target.value } })}>{capabilities.sharedStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</select></label>}
-                {configuration.storage.mode === "existing" && <label className="block text-sm font-medium">Existing volume<select className={field} value={configuration.storage.volumeId} onChange={event => update({ storage: { mode: "existing", volumeId: Number(event.target.value) } })}>{capabilities.volumes.filter(volume => volume.regionId === configuration.regionId).map(item => <option key={item.id} value={item.id}>{item.name} · {item.sizeGb} GB</option>)}</select></label>}
-                <p className="text-xs text-zinc-500">Root storage belongs to this instance. Shared storage is billed separately and continues to incur charges while the volume exists, including when the GPU is stopped or deleted. Attaching an existing volume does not charge for a second copy.</p>
+                      </ChoiceCard>;
+                    })}</div>
+                  </div>)}
+                  {product && <p className="text-xs leading-relaxed text-[var(--fg-muted)]">{product.billingType === "monthly" ? "Your subscription covers its included allocation." : product.configurationPricing ? `The GPU rate is shown above. CPU, RAM and disk are added at their own rates${product.configurationPricing.fractionalGpu ? ", and you can rent part of a GPU on the next step" : ""}.` : "Only the original default bundle has a price; custom allocations need resource rates configured before launch."}</p>}
+                </fieldset>
+                <fieldset className="space-y-3">
+                  <legend className={ui.label}>Region</legend>
+                  {regionOptions.length ? <div className="grid gap-3 sm:grid-cols-3">{regionOptions.map(item => <ChoiceCard key={item.id} name="launch-region" checked={configuration.regionId === item.id}
+                    onChange={() => update({ regionId: item.id, gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "", poolId: undefined, gpuModelId: undefined, storage: { mode: "none" } })}>
+                    <span className="pr-6 text-sm font-semibold">{item.name}</span>
+                    {item.country && <span className="text-xs text-[var(--fg-muted)]">{item.country}</span>}
+                  </ChoiceCard>)}</div> : <p className="text-sm text-[var(--fg-muted)]">{configuration.productId ? "Checking where this GPU is available…" : "Choose a GPU to see its regions."}</p>}
+                </fieldset>
               </>}
+              {step === 1 && capabilities && (noCapacity ? <div className="border border-dashed border-[var(--line-strong)] p-6">
+                <p className="font-semibold">No {product?.name || "GPUs"} available in {region?.name || "this region"} right now</p>
+                <p className="mt-1 text-sm text-[var(--fg-muted)]">Every GPU of this kind is in use or not offered here. Go back to pick another GPU or region, or try again shortly.</p>
+                <div className="mt-4 flex flex-wrap gap-3"><button type="button" className={ui.secondary} onClick={() => go(0)}>Change GPU or region</button><button type="button" className={ui.secondary} onClick={() => setCapabilityRevision(value => value + 1)}>Check again</button></div>
+              </div> : <>
+                <div className="space-y-5 border border-[var(--line)] bg-[var(--ink)] p-5">
+                  {capabilities.serviceType === "pod_accelerator" ? capabilities.pools.length > 1 && !capabilities.locks.pool ? <label className={ui.label}>GPU pool
+                    <Select value={configuration.poolId || ""} onChange={event => update({ poolId: Number(event.target.value), gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.pools.map(item => <option key={item.id} value={item.id}>{item.name}{item.vramGb != null ? ` · ${item.vramGb} GB VRAM` : ""}</option>)}</Select>
+                  </label> : <div><p className={ui.label}>GPU pool</p><p className="mt-2 text-sm font-medium">{pool?.name || "Provider default"}{pool?.vramGb != null ? <span className="text-[var(--fg-muted)]"> · {pool.vramGb} GB VRAM</span> : null}</p></div>
+                    : <label className={ui.label}>GPU model
+                      <Select value={configuration.gpuModelId || ""} disabled={capabilities.locks.pool} onChange={event => update({ gpuModelId: event.target.value, gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.gpuModels.map(model => <option key={model.id} value={model.id}>{model.name}{model.vramGb != null ? ` · ${model.vramGb} GB VRAM` : ""}</option>)}</Select>
+                    </label>}
+                  {gpuShares.some(share => share.percent < 100) && <fieldset>
+                    <legend className={ui.label}>GPU share</legend>
+                    <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {gpuShares.map(share => {
+                        const chosen = share.percent === sharePercent;
+                        const soldOut = !share.maxGpuCount;
+                        const gpuCents = product?.pricePerHourCents == null ? null : Math.round(product.pricePerHourCents * share.percent / 100);
+                        return <ChoiceCard key={share.percent} name="launch-gpu-share" checked={chosen} disabled={soldOut} className="gap-2 p-3"
+                          onChange={() => update({ gpuSharePercent: share.percent, gpuCount: 1, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}>
+                          <span className="font-mono text-xl font-bold tabular-nums">{share.percent}%</span>
+                          <span aria-hidden className="h-1 w-full bg-[var(--line)]"><span className={`block h-full ${chosen ? "bg-[var(--acid)]" : "bg-[var(--fg-faint)]"}`} style={{ width: `${share.percent}%` }} /></span>
+                          <span className="text-xs text-[var(--fg-soft)]">{shareNames[share.percent] ?? "Guaranteed share"}</span>
+                          <span className="text-xs font-medium tabular-nums">{soldOut ? "Sold out" : gpuCents == null ? " " : `${money(gpuCents)} / hr`}</span>
+                        </ChoiceCard>;
+                      })}
+                    </div>
+                    <p className={ui.hint}>A share guarantees that fraction of one GPU&apos;s compute time, billed at the same fraction of the GPU rate.</p>
+                  </fieldset>}
+                  {sharePercent === 100 && <div>
+                    <label htmlFor="launch-gpu-count" className={ui.label}>Whole GPUs</label>
+                    <div className="mt-2 flex w-fit items-stretch border border-[var(--line)] bg-[var(--ink-sink)]">
+                      <button type="button" aria-label="One fewer GPU" className="w-10 text-lg text-[var(--fg-soft)] hover:bg-[var(--ink-raise)] disabled:opacity-30" disabled={capabilities.locks.gpuCount || configuration.gpuCount <= 1} onClick={() => setGpuCount(configuration.gpuCount - 1)}>−</button>
+                      <input id="launch-gpu-count" className="w-16 border-x border-[var(--line)] bg-transparent py-2 text-center font-mono text-sm tabular-nums text-[var(--fg)] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" type="number" min={1} max={capabilities.maxGpuCount} step={1} value={configuration.gpuCount} disabled={capabilities.locks.gpuCount} onChange={event => setGpuCount(Number(event.target.value))} />
+                      <button type="button" aria-label="One more GPU" className="w-10 text-lg text-[var(--fg-soft)] hover:bg-[var(--ink-raise)] disabled:opacity-30" disabled={capabilities.locks.gpuCount || configuration.gpuCount >= capabilities.maxGpuCount} onClick={() => setGpuCount(configuration.gpuCount + 1)}>+</button>
+                    </div>
+                    <span className={ui.hint}>{capabilities.locks.gpuCount ? "Fixed by your plan." : `Up to ${capabilities.maxGpuCount} whole GPU${capabilities.maxGpuCount === 1 ? "" : "s"} for this selection.`}</span>
+                  </div>}
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className={`${ui.label} sm:col-span-2`}>CPU & RAM profile {capabilities.locks.profile && <span className="text-[var(--fg-faint)]">{product?.billingType === "monthly" ? "· monthly included" : "· provider locked"}</span>}
+                    <Select value={configuration.instanceTypeId} disabled={capabilities.locks.profile} onChange={event => update({ instanceTypeId: event.target.value, rootStorageBlockId: "" })}>{capabilities.profiles.map(item => <option key={item.id} value={item.id}>{item.cpuCores} CPU cores · {item.ramGb} GB RAM · {item.name}</option>)}</Select>
+                  </label>
+                  <label className={ui.label}>System image {capabilities.locks.image && <span className="text-[var(--fg-faint)]">· provider locked</span>}
+                    <Select value={configuration.imageHash} disabled={capabilities.locks.image} onChange={event => update({ imageHash: event.target.value, instanceTypeId: "", rootStorageBlockId: "" })}>{capabilities.images.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</Select>
+                  </label>
+                  <label className={ui.label}>Root disk {capabilities.locks.rootStorage && <span className="text-[var(--fg-faint)]">{product?.billingType === "monthly" ? "· monthly included" : "· provider locked"}</span>}
+                    <Select value={configuration.rootStorageBlockId} disabled={capabilities.locks.rootStorage} onChange={event => update({ rootStorageBlockId: event.target.value })}>{capabilities.rootStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</Select>
+                  </label>
+                </div>
+                {pool?.rootfsEnabled === false && <p className={ui.notice.warn}>This pool does not keep root-disk files across restarts. Put anything you need to keep on persistent storage.</p>}
+                <fieldset className="space-y-3">
+                  <legend className={ui.label}>Persistent storage</legend>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <ChoiceCard name="launch-storage" checked={storage.mode === "none"} onChange={() => update({ storage: { mode: "none" } })}><span className="pr-6 text-sm font-semibold">None</span><span className="text-xs text-[var(--fg-muted)]">Root disk only</span></ChoiceCard>
+                    <ChoiceCard name="launch-storage" checked={storage.mode === "new"} disabled={!capabilities.sharedStorageBlocks.length} onChange={() => update({ storage: { mode: "new", blockId: capabilities.sharedStorageBlocks[0]?.id || "" } })}><span className="pr-6 text-sm font-semibold">New volume</span><span className="text-xs text-[var(--fg-muted)]">Survives stop and delete</span></ChoiceCard>
+                    <ChoiceCard name="launch-storage" checked={storage.mode === "existing"} disabled={!capabilities.volumes.length} onChange={() => update({ storage: { mode: "existing", volumeId: capabilities.volumes[0]?.id || 0 } })}><span className="pr-6 text-sm font-semibold">Existing volume</span><span className="text-xs text-[var(--fg-muted)]">{capabilities.volumes.length ? `${capabilities.volumes.length} available` : "None yet"}</span></ChoiceCard>
+                  </div>
+                  {capabilities.sharedStorageUnavailable && <p className="text-xs text-[var(--fg-muted)]">Persistent storage is not available in this region right now. You can still launch without it.</p>}
+                  {storage.mode === "new" && <label className={ui.label}>Volume size<Select value={storage.blockId} onChange={event => update({ storage: { mode: "new", blockId: event.target.value } })}>{capabilities.sharedStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</Select></label>}
+                  {storage.mode === "existing" && <label className={ui.label}>Volume<Select value={storage.volumeId} onChange={event => update({ storage: { mode: "existing", volumeId: Number(event.target.value) } })}>{capabilities.volumes.filter(volume => volume.regionId === configuration.regionId).map(item => <option key={item.id} value={item.id}>{item.name} · {item.sizeGb} GB</option>)}</Select></label>}
+                  <p className="text-xs leading-relaxed text-[var(--fg-muted)]">Persistent volumes are billed separately for as long as they exist, including while the GPU is stopped or after it is deleted. Attaching an existing volume does not charge for a second copy.</p>
+                </fieldset>
+              </>)}
               {step === 2 && <LaunchSoftwarePicker token={token} value={configuration.software} onChange={software => update({ software })} selected={metadata} onSelect={setMetadata} />}
               {step === 3 && <>
-                <label className="block text-sm font-medium">Instance name<input className={field} required maxLength={128} value={name} onChange={event => setName(event.target.value)} autoComplete="off" placeholder="training-workspace" /></label>
-                <fieldset className="space-y-3"><legend className="mb-2 text-sm font-medium">SSH keys (optional)</legend>{options.sshKeys.length ? options.sshKeys.map(key => <label key={key.id} className="flex items-start gap-3 rounded-xl border border-zinc-200 p-3 text-sm"><input className="mt-1" type="checkbox" checked={sshKeyIds.includes(key.id)} onChange={event => setSshKeyIds(current => event.target.checked ? [...current, key.id] : current.filter(id => id !== key.id))} /><span>{key.name}<span className="block break-all text-xs text-zinc-500">{key.fingerprint}</span></span></label>) : <p className="text-sm text-zinc-500">No SSH keys saved. Add a key in Dashboard settings before launch if you need SSH access.</p>}</fieldset>
+                <label className={ui.label}>Instance name<input className={ui.field} required maxLength={128} value={name} onChange={event => setName(event.target.value)} autoComplete="off" placeholder="training-workspace" /></label>
+                <fieldset className="space-y-3"><legend className={ui.label}>SSH keys <span className="text-[var(--fg-faint)]">· optional</span></legend>{options.sshKeys.length ? <div className="grid gap-3 sm:grid-cols-2">{options.sshKeys.map(key => <ChoiceCard key={key.id} type="checkbox" name="launch-ssh-keys" checked={sshKeyIds.includes(key.id)} onChange={checked => setSshKeyIds(current => checked ? [...current, key.id] : current.filter(id => id !== key.id))}><span className="pr-6 text-sm font-semibold">{key.name}</span><span className="break-all font-mono text-[11px] text-[var(--fg-muted)]">{key.fingerprint}</span></ChoiceCard>)}</div> : <p className="text-sm text-[var(--fg-muted)]">No SSH keys saved. Add a key in Dashboard settings before launch if you need SSH access.</p>}</fieldset>
               </>}
               {step === 4 && <>
-                <div className="rounded-xl border border-zinc-200 p-4 text-sm"><p className="font-semibold">{name || "Name required"}</p><p className="mt-1 text-zinc-600">{product?.name} · {region?.name} · {sharePercent < 100 ? `${sharePercent}% GPU share` : `${configuration.gpuCount} GPU${configuration.gpuCount === 1 ? "" : "s"}`}</p><p className="mt-1 text-zinc-600">{configuration.software.kind === "huggingface" ? configuration.software.hfItemId : configuration.software.kind === "recipe" ? `Managed recipe: ${metadata?.id === configuration.software.appId ? metadata.name : configuration.software.appId}` : configuration.software.kind === "startup" ? "Startup script" : "No additional software"} · {sshKeyIds.length} SSH key{sshKeyIds.length === 1 ? "" : "s"}</p></div>
-                {quote && <><div className="overflow-hidden rounded-xl border border-zinc-200"><table className="w-full text-left text-sm"><caption className="sr-only">Itemized hourly quote</caption><thead className="bg-zinc-50 text-xs text-zinc-500"><tr><th className="px-3 py-3">Resource</th><th className="px-3 py-3 text-right">Hourly price</th></tr></thead><tbody>{quote.rate.lines.map(line => <tr key={line.key} className="border-t border-zinc-100"><td className="px-3 py-3">{line.label}<span className="block text-xs text-zinc-500">{line.quantity} {line.unit}{line.separatelyMetered ? " · separately metered" : ""}</span></td><td className="px-3 py-3 text-right tabular-nums">{money(line.hourlyCents)}</td></tr>)}</tbody><tfoot className="border-t border-zinc-200 font-semibold"><tr><td className="px-3 py-3">Total ongoing hourly cost</td><td className="px-3 py-3 text-right">{money(quote.rate.totalHourlyCents)}</td></tr></tfoot></table></div>
-                  <div className="space-y-2 text-sm text-zinc-600"><p>Due at launch: <strong>{money(quote.rate.prepayCents)}</strong>. Minimum billing period: {quote.rate.minimumBillingMinutes} minutes.</p><p>Stopped instance: {money(quote.rate.stoppedInstanceHourlyCents)}/hour. Shared storage: {money(quote.rate.sharedStorageHourlyCents)}/hour, separately metered while the volume exists.</p>{product?.billingType === "monthly" && <p>GPU and included resources are paid by your monthly subscription; shared storage is not included.</p>}</div>
-                  {quote.warnings.map(warning => <p key={warning} className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{warning}</p>)}
-                  <label className="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm"><input type="checkbox" className="mt-0.5" checked={reviewedFingerprint === quote.fingerprint} onChange={event => setReviewedFingerprint(event.target.checked ? quote.fingerprint : "")} /><span>I have reviewed this configuration, {money(quote.rate.totalHourlyCents)}/hour total and {money(quote.rate.prepayCents)} due at launch. If the quote changes, I will review it again.</span></label>
+                <div className="border border-[var(--line)] bg-[var(--ink)] p-5">
+                  <p className="text-lg font-semibold">{name || "Name required"}</p>
+                  <p className="mt-1 text-sm text-[var(--fg-soft)]">{product?.name} · {region?.name} · {sharePercent < 100 ? `${sharePercent}% GPU share` : `${configuration.gpuCount} GPU${configuration.gpuCount === 1 ? "" : "s"}`}</p>
+                  <p className="mt-1 text-sm text-[var(--fg-muted)]">{configuration.software.kind === "huggingface" ? configuration.software.hfItemId : configuration.software.kind === "recipe" ? `Managed recipe: ${metadata?.id === configuration.software.appId ? metadata.name : configuration.software.appId}` : configuration.software.kind === "startup" ? "Startup script" : "No additional software"} · {sshKeyIds.length} SSH key{sshKeyIds.length === 1 ? "" : "s"}</p>
+                </div>
+                {quote && <>
+                  <div className="overflow-x-auto border border-[var(--line)]"><table className="w-full text-left text-sm"><caption className="sr-only">Itemized hourly quote</caption>
+                    <thead className="bg-[var(--ink-sink)]"><tr><th className="label-mono px-4 py-3">Resource</th><th className="label-mono px-4 py-3 text-right">Per hour</th></tr></thead>
+                    <tbody>{quote.rate.lines.map(line => <tr key={line.key} className="border-t border-[var(--line)]"><td className="px-4 py-3">{line.label}<span className="block text-xs text-[var(--fg-muted)]">{line.quantity} {line.unit}{line.separatelyMetered ? " · separately metered" : ""}</span></td><td className="px-4 py-3 text-right font-mono tabular-nums">{money(line.hourlyCents)}</td></tr>)}</tbody>
+                    <tfoot className="border-t border-[var(--line-strong)] bg-[var(--ink-sink)] font-semibold"><tr><td className="px-4 py-3">Total ongoing hourly cost</td><td className="px-4 py-3 text-right font-mono tabular-nums text-[var(--acid)]">{money(quote.rate.totalHourlyCents)}</td></tr></tfoot>
+                  </table></div>
+                  <div className="space-y-2 text-sm text-[var(--fg-muted)]"><p>Due at launch: <strong className="text-[var(--fg)]">{money(quote.rate.prepayCents)}</strong>. Minimum billing period: {quote.rate.minimumBillingMinutes} minutes.</p><p>Stopped instance: {money(quote.rate.stoppedInstanceHourlyCents)}/hour. Persistent storage: {money(quote.rate.sharedStorageHourlyCents)}/hour, separately metered while the volume exists.</p>{product?.billingType === "monthly" && <p>GPU and included resources are paid by your monthly subscription; persistent storage is not included.</p>}</div>
+                  {quote.warnings.map(warning => <p key={warning} className={ui.notice.warn}>{warning}</p>)}
+                  <ChoiceCard type="checkbox" name="launch-reviewed" checked={reviewedFingerprint === quote.fingerprint} onChange={checked => setReviewedFingerprint(checked ? quote.fingerprint : "")}><span className="pr-6 text-sm">I have reviewed this configuration, {money(quote.rate.totalHourlyCents)}/hour total and {money(quote.rate.prepayCents)} due at launch. If the quote changes, I will review it again.</span></ChoiceCard>
                 </>}
               </>}
             </fieldset>}
-            {capabilityLoading && <p role="status" className="text-sm text-zinc-500">Checking supported regions and resources…</p>}
-            {capabilityError && <div role="alert" className="space-y-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"><p>{capabilityError}</p><button type="button" className="mr-3 underline" onClick={() => setCapabilityRevision(value => value + 1)}>Retry capabilities</button><button type="button" className="underline" onClick={() => update({ gpuCount: 0, gpuSharePercent: undefined, poolId: undefined, gpuModelId: undefined, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}>Reload provider defaults</button></div>}
-            {quoteError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{quoteError}<p className="mt-1">Change the resources or software, or <button type="button" className="underline" onClick={() => setQuoteRevision(value => value + 1)}>retry quote</button>.</p></div>}
-            {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-            {(insufficientFunds || bootstrapError.toLowerCase().includes("no team")) && <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><h4 className="font-medium">Add funds to continue</h4><p className="text-sm text-zinc-600">Your non-secret configuration is saved for your return from checkout. {options && `Wallet: ${money(options.walletBalanceCents)}.`}</p><div className="flex flex-wrap gap-2">{amounts.map(amount => <button key={amount.value} type="button" disabled={funding || launching} className={button} onClick={() => void topUp(amount.value)}>{funding ? "Opening checkout…" : `Add ${amount.label}`}</button>)}</div>{!amounts.length && <p className="text-sm">Top-up options are unavailable. Try again or use Dashboard billing.</p>}</div>}
+            {capabilityLoading && <p role="status" className="flex items-center gap-2 text-sm text-[var(--fg-muted)]"><span aria-hidden className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--line-strong)] border-t-[var(--acid)] motion-reduce:animate-none" />Checking supported regions and resources…</p>}
+            {capabilityError && <div role="alert" className={`${ui.notice.danger} space-y-2`}><p>{capabilityError}</p><p className="flex flex-wrap gap-4"><button type="button" className="font-medium underline" onClick={() => setCapabilityRevision(value => value + 1)}>Retry capabilities</button><button type="button" className="font-medium underline" onClick={() => update({ gpuCount: 0, gpuSharePercent: undefined, poolId: undefined, gpuModelId: undefined, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}>Reload provider defaults</button></p></div>}
+            {quoteError && <div role="alert" className={ui.notice.danger}>{quoteError}<p className="mt-1">Change the resources or software, or <button type="button" className="font-medium underline" onClick={() => setQuoteRevision(value => value + 1)}>retry quote</button>.</p></div>}
+            {error && <p role="alert" className={ui.notice.danger}>{error}</p>}
+            {(insufficientFunds || bootstrapError.toLowerCase().includes("no team")) && <div className={`${ui.notice.warn} space-y-3`}><h4 className="font-semibold">Add funds to continue</h4><p className="text-[var(--fg-soft)]">Your non-secret configuration is saved for your return from checkout. {options && `Wallet: ${money(options.walletBalanceCents)}.`}</p><div className="flex flex-wrap gap-2">{amounts.map(amount => <button key={amount.value} type="button" disabled={funding || launching} className={ui.secondary} onClick={() => void topUp(amount.value)}>{funding ? "Opening checkout…" : `Add ${amount.label}`}</button>)}</div>{!amounts.length && <p className="text-[var(--fg-soft)]">Top-up options are unavailable. Try again or use Dashboard billing.</p>}</div>}
           </section>
-          <aside aria-label="Live configuration summary" className="h-fit rounded-2xl border border-zinc-200 bg-zinc-50 p-5 lg:sticky lg:top-0">
-            <h3 className="font-semibold">Your configuration</h3>
-            <dl className="mt-4 space-y-3 text-sm">
-              <div><dt className="text-zinc-500">GPU</dt><dd className="font-medium">{product?.name || "Choose a GPU"}{product && gpuSummary}</dd></div>
-              <div><dt className="text-zinc-500">Region</dt><dd>{region?.name || "Checking availability"}</dd></div>
-              <div><dt className="text-zinc-500">CPU / RAM</dt><dd>{profile ? `${profile.cpuCores} cores / ${profile.ramGb} GB` : "Choose supported resources"}</dd></div>
-              <div><dt className="text-zinc-500">Root disk</dt><dd>{capabilities?.rootStorageBlocks.find(item => item.id === configuration.rootStorageBlockId)?.sizeGb ?? "—"} GB</dd></div>
-              <div><dt className="text-zinc-500">Shared storage</dt><dd>{storage.mode === "none" ? "None" : storage.mode === "new" ? `${capabilities?.sharedStorageBlocks.find(item => item.id === storage.blockId)?.sizeGb ?? "—"} GB · new volume` : `${capabilities?.volumes.find(item => item.id === storage.volumeId)?.sizeGb ?? "—"} GB · existing volume`}</dd></div>
+          <aside aria-label="Live configuration summary" className="h-fit border border-[var(--line)] bg-[var(--ink)] lg:sticky lg:top-0">
+            <h3 className="label-mono border-b border-[var(--line)] px-5 py-4">Your configuration</h3>
+            <dl className="space-y-4 px-5 py-5 text-sm">
+              <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">GPU</dt><dd className="mt-1 font-semibold">{product?.name || "Choose a GPU"}{product && configuration.gpuCount > 0 && <span className="font-normal text-[var(--fg-soft)]">{gpuSummary}</span>}</dd></div>
+              <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">Region</dt><dd className="mt-1">{region?.name || <span className="text-[var(--fg-muted)]">Not chosen yet</span>}</dd></div>
+              <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">CPU / RAM</dt><dd className="mt-1">{profile ? `${profile.cpuCores} cores / ${profile.ramGb} GB` : <span className="text-[var(--fg-muted)]">Not chosen yet</span>}</dd></div>
+              <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">Root disk</dt><dd className="mt-1">{rootDisk ? `${rootDisk.sizeGb} GB` : <span className="text-[var(--fg-muted)]">Not chosen yet</span>}</dd></div>
+              <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">Persistent storage</dt><dd className="mt-1">{storage.mode === "none" ? "None" : storage.mode === "new" ? `${capabilities?.sharedStorageBlocks.find(item => item.id === storage.blockId)?.sizeGb ?? "-"} GB · new volume` : `${capabilities?.volumes.find(item => item.id === storage.volumeId)?.sizeGb ?? "-"} GB · existing volume`}</dd></div>
             </dl>
-            <div className="mt-5 border-t border-zinc-200 pt-4" aria-live="polite">
-              {quoteLoading ? <p className="text-sm text-zinc-500">Updating quote…</p> : quote ? <>
-                <p className="text-2xl font-semibold tracking-tight">{money(quote.rate.totalHourlyCents)}<span className="text-sm font-normal text-zinc-500"> / hour</span></p>
-                <p className="mt-1 text-xs text-zinc-500">Instance {money(quote.rate.instanceHourlyCents)} + shared storage {money(quote.rate.sharedStorageHourlyCents)}</p>
-                <p className="mt-2 text-sm">{money(quote.rate.prepayCents)} due at launch</p>
-              </> : <p className="text-sm text-zinc-500">Complete valid resource and software selections for a live quote. No estimated or fallback prices.</p>}
+            <div className="border-t border-[var(--line)] px-5 py-5" aria-live="polite">
+              {quoteLoading ? <p className="text-sm text-[var(--fg-muted)]">Updating quote…</p> : quote ? <>
+                <p className="font-mono text-3xl font-bold tracking-tight tabular-nums">{money(quote.rate.totalHourlyCents)}<span className="font-sans text-sm font-normal text-[var(--fg-muted)]"> / hour</span></p>
+                <p className="mt-2 text-xs text-[var(--fg-muted)]">Instance {money(quote.rate.instanceHourlyCents)} + storage {money(quote.rate.sharedStorageHourlyCents)}</p>
+                <p className="mt-3 text-sm"><span className="text-[var(--fg-muted)]">Due at launch</span> <strong className="font-mono">{money(quote.rate.prepayCents)}</strong></p>
+              </> : <p className="text-sm leading-relaxed text-[var(--fg-muted)]">Your live price appears here once the resources are chosen. No estimates or fallback prices.</p>}
             </div>
           </aside>
         </div>
       </div>
-      <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 bg-white px-5 py-4 sm:px-7"><button type="button" className={button} disabled={launching || funding} onClick={() => step ? go(step - 1) : onClose()}>{step ? "Back" : "Cancel"}</button><span className="hidden text-xs text-zinc-500 sm:block">Step {step + 1} of {steps.length}</span>{step < 4 ? <button type="button" className={`${button} border-teal-700 bg-teal-700 text-white hover:bg-teal-800`} disabled={!options || capabilityLoading || !capabilities || launching || funding || (step === 0 ? !configuration.productId || !configuration.regionId : step === 1 ? !resourcesValid : step === 2 ? !softwareValid || !quote || quoteLoading : !name.trim())} onClick={() => go(step + 1)}>Continue</button> : <button type="button" className={`${button} border-teal-700 bg-teal-700 text-white hover:bg-teal-800`} disabled={!launchReady} onClick={() => void launch()}>{launching ? "Submitting launch…" : "Launch GPU"}</button>}</footer>
+      <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--ink)] px-5 py-4 sm:px-8">
+        <button type="button" className={ui.secondary} disabled={launching || funding} onClick={() => step ? go(step - 1) : onClose()}>{step ? "Back" : "Cancel"}</button>
+        <span className="label-mono hidden text-[var(--fg-faint)] sm:block">Step {step + 1} of {steps.length}</span>
+        {step < 4 ? <button type="button" className={ui.primary} disabled={continueDisabled} onClick={() => go(step + 1)}>Continue</button>
+          : <button type="button" className={ui.primary} disabled={!launchReady} onClick={() => void launch()}>{launching ? "Submitting launch…" : "Launch GPU"}</button>}
+      </footer>
     </div>
   </div>;
 }

@@ -46,13 +46,12 @@ describe("GPU configuration availability", () => {
       render(<LaunchConfigurator isOpen token="local-session" onClose={vi.fn()} onSuccess={vi.fn()} />);
     });
     expect(emptyRegionRequests).toBeLessThanOrEqual(2);
-    const region = screen.getByRole("combobox", { name: "Region" });
-    expect(region).toHaveValue("1");
+    expect(screen.getByRole("radio", { name: "Unavailable" })).toBeChecked();
+    const region = screen.getByRole("radio", { name: "Available" });
     expect(region).toBeEnabled();
 
-    await act(async () => { fireEvent.change(region, { target: { value: "2" } }); });
-    expect(region).toHaveValue("2");
-    expect(region).toBeEnabled();
+    await act(async () => { fireEvent.click(region); });
+    expect(region).toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("spinbutton", { name: /Whole GPUs/ })).toHaveValue(1);
     expect(screen.getByRole("combobox", { name: /CPU & RAM profile/ })).toHaveValue("cpu");

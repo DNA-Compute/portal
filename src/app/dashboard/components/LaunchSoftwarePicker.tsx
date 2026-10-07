@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { LaunchSoftware } from "@/lib/launch-config";
 import { STARTUP_SCRIPT_PRESETS } from "@/lib/startup-scripts";
 import type { LaunchModelSupport } from "@/lib/launch-model-runtime";
+import { ChoiceCard, Select, ui } from "./launch-ui";
 
 export interface SoftwareSelectionMetadata {
   id: string;
@@ -15,7 +16,12 @@ export interface SoftwareSelectionMetadata {
   launchSupport?: LaunchModelSupport;
 }
 interface Recipe { id: string; name: string; description: string; canDeploy?: boolean; deployable?: boolean }
-const field = "mt-1 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm text-zinc-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20";
+const kinds = [
+  { kind: "none", name: "Clean image", detail: "Just the system image" },
+  { kind: "huggingface", name: "Hugging Face model", detail: "Served with vLLM" },
+  { kind: "recipe", name: "Managed app", detail: "One-click recipes" },
+  { kind: "startup", name: "Startup script", detail: "Runs after boot" },
+] as const;
 
 export function LaunchSoftwarePicker({ token, value, onChange, selected, onSelect }: {
   token: string;
@@ -57,64 +63,62 @@ export function LaunchSoftwarePicker({ token, value, onChange, selected, onSelec
   }, [token, value.kind, query, retry]);
 
   return <div className="space-y-5">
-    <p className="text-sm text-zinc-600">Start with a clean image or add software. Compatibility is checked against your exact GPU and resources before launch.</p>
-    <label className="block text-sm font-medium">Software
-      <select className={field} value={value.kind} onChange={event => {
-        const kind = event.target.value;
-        if (kind === "huggingface") onChange({ kind, hfItemId: "", openWebUI: false, netdata: false });
-        else if (kind === "recipe") onChange({ kind, appId: "" });
-        else if (kind === "startup") onChange({ kind });
+    <p className="text-sm text-[var(--fg-muted)]">Start with a clean image or add software. Compatibility is checked against your exact GPU and resources before launch.</p>
+    <fieldset>
+      <legend className={ui.label}>Software</legend>
+      <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">{kinds.map(item => <ChoiceCard key={item.kind} name="launch-software" checked={value.kind === item.kind} onChange={() => {
+        if (item.kind === "huggingface") onChange({ kind: item.kind, hfItemId: "", openWebUI: false, netdata: false });
+        else if (item.kind === "recipe") onChange({ kind: item.kind, appId: "" });
+        else if (item.kind === "startup") onChange({ kind: item.kind });
         else onChange({ kind: "none" });
-      }}>
-        <option value="none">No additional software</option><option value="huggingface">Hugging Face model</option><option value="recipe">Managed app recipe</option><option value="startup">Startup script</option>
-      </select>
-    </label>
+      }}><span className="pr-6 text-sm font-semibold">{item.name}</span><span className="text-xs text-[var(--fg-muted)]">{item.detail}</span></ChoiceCard>)}</div>
+    </fieldset>
     {value.kind === "huggingface" && <>
-      <label className="block text-sm font-medium">Search Hugging Face models
-        <input className={field} value={query} onChange={event => setQuery(event.target.value)} placeholder="Search model name or organization" type="search" />
+      <label className={ui.label}>Search Hugging Face models
+        <input className={ui.field} value={query} onChange={event => setQuery(event.target.value)} placeholder="Search model name or organization" type="search" />
       </label>
-      <p className="text-xs text-zinc-600">Model launch uses float16 vLLM. Unsupported featured models cannot be selected. Unverified models, including search results and gated models, require a compatibility check before launch.</p>
-      {value.hfItemId && <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm"><strong>{selected?.id === value.hfItemId ? selected.name : value.hfItemId}</strong><p className="break-all text-xs text-zinc-600">{value.hfItemId}</p>{selected?.id === value.hfItemId && selected.description && <p className="mt-1 text-zinc-600">{selected.description}</p>}</div>}
-      {!loading && !error && items.length === 0 && <p className="text-sm text-zinc-600">No models found. Try another search.</p>}
+      <p className="text-xs text-[var(--fg-muted)]">Model launch uses float16 vLLM. Unsupported featured models cannot be selected. Unverified models, including search results and gated models, require a compatibility check before launch.</p>
+      {value.hfItemId && <div className="border border-[var(--acid)] bg-[rgba(200,255,61,0.06)] p-3 text-sm"><strong>{selected?.id === value.hfItemId ? selected.name : value.hfItemId}</strong><p className="break-all text-xs text-[var(--fg-muted)]">{value.hfItemId}</p>{selected?.id === value.hfItemId && selected.description && <p className="mt-1 text-[var(--fg-muted)]">{selected.description}</p>}</div>}
+      {!loading && !error && items.length === 0 && <p className="text-sm text-[var(--fg-muted)]">No models found. Try another search.</p>}
       <div className="max-h-56 space-y-2 overflow-y-auto" aria-label="Model results">
-        {!loading && items.map(item => <button type="button" key={item.id} disabled={item.launchSupport?.status === "unsupported"} aria-pressed={value.hfItemId === item.id} className={`w-full rounded-xl border p-3 text-left text-sm disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-500 ${value.hfItemId === item.id ? "border-teal-600 bg-teal-50" : "border-zinc-200 enabled:hover:border-teal-500"}`} onClick={() => { onSelect(item); onChange({ kind: "huggingface", hfItemId: item.id, openWebUI: value.openWebUI, netdata: value.netdata }); }}>
-          <span className="block font-medium">{item.name || item.id}</span><span className="block break-all text-xs text-zinc-500">{item.id}</span>
-          {item.launchSupport?.status === "supported" && item.vramGb != null && item.vramGb > 0 && <span className="block text-xs text-zinc-600">Estimated float16 VRAM: {item.vramGb} GB</span>}
-          <span className={`block text-xs ${item.launchSupport?.status === "unsupported" ? "text-red-700" : "text-zinc-600"}`}>{item.launchSupport?.message || "Runtime compatibility unverified. Model access and float16 resource requirements will be checked before launch."}</span>
+        {!loading && items.map(item => <button type="button" key={item.id} disabled={item.launchSupport?.status === "unsupported"} aria-pressed={value.hfItemId === item.id} className={`w-full border p-3 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${value.hfItemId === item.id ? "border-[var(--acid)] bg-[rgba(200,255,61,0.06)]" : "border-[var(--line)] bg-[var(--ink-sink)] enabled:hover:border-[var(--line-strong)]"}`} onClick={() => { onSelect(item); onChange({ kind: "huggingface", hfItemId: item.id, openWebUI: value.openWebUI, netdata: value.netdata }); }}>
+          <span className="block font-medium">{item.name || item.id}</span><span className="block break-all text-xs text-[var(--fg-muted)]">{item.id}</span>
+          {item.launchSupport?.status === "supported" && item.vramGb != null && item.vramGb > 0 && <span className="block text-xs text-[var(--fg-muted)]">Estimated float16 VRAM: {item.vramGb} GB</span>}
+          <span className={`block text-xs ${item.launchSupport?.status === "unsupported" ? "text-[var(--danger)]" : "text-[var(--fg-muted)]"}`}>{item.launchSupport?.message || "Runtime compatibility unverified. Model access and float16 resource requirements will be checked before launch."}</span>
         </button>)}
       </div>
-      <label className="block text-sm font-medium">Hugging Face access token {selected?.id === value.hfItemId && selected.gated ? "(required for gated model)" : "(optional for public models)"}
-        <input className={field} type="password" autoComplete="off" value={value.hfToken || ""} onChange={event => onChange({ ...value, hfToken: event.target.value })} placeholder="hf_…" />
-        <span className="mt-1 block text-xs font-normal text-zinc-500">Required for gated/private models. Accept the model license first. Tokens are never saved in the launch draft.</span>
+      <label className={ui.label}>Hugging Face access token {selected?.id === value.hfItemId && selected.gated ? "(required for gated model)" : "(optional for public models)"}
+        <input className={ui.field} type="password" autoComplete="off" value={value.hfToken || ""} onChange={event => onChange({ ...value, hfToken: event.target.value })} placeholder="hf_…" />
+        <span className={ui.hint}>Required for gated/private models. Accept the model license first. Tokens are never saved in the launch draft.</span>
       </label>
-      <label className="flex gap-2 text-sm"><input type="checkbox" checked={value.openWebUI || false} onChange={event => onChange({ ...value, openWebUI: event.target.checked })} /> Add Open WebUI</label>
-      <label className="flex gap-2 text-sm"><input type="checkbox" checked={value.netdata || false} onChange={event => onChange({ ...value, netdata: event.target.checked })} /> Add Netdata monitoring</label>
+      <label className="flex items-center gap-2 text-sm accent-[var(--acid)]"><input type="checkbox" checked={value.openWebUI || false} onChange={event => onChange({ ...value, openWebUI: event.target.checked })} /> Add Open WebUI</label>
+      <label className="flex items-center gap-2 text-sm accent-[var(--acid)]"><input type="checkbox" checked={value.netdata || false} onChange={event => onChange({ ...value, netdata: event.target.checked })} /> Add Netdata monitoring</label>
     </>}
     {value.kind === "recipe" && <>
-      <label className="block text-sm font-medium">Deployable managed recipe
-        <select className={field} value={value.appId} onChange={event => {
+      <label className={ui.label}>Deployable managed recipe
+        <Select value={value.appId} onChange={event => {
           const recipe = recipes.find(item => item.id === event.target.value);
           onChange({ kind: "recipe", appId: event.target.value });
           if (recipe) onSelect({ id: recipe.id, name: recipe.name, description: recipe.description });
         }} disabled={loading}>
           <option value="">Select an app recipe</option>{recipes.map(recipe => <option key={recipe.id} value={recipe.id}>{recipe.name}</option>)}
-        </select>
+        </Select>
       </label>
-      {!loading && !error && !recipes.length && <p className="text-sm text-zinc-600">No active deployable recipes are available for this account.</p>}
-      <p className="text-sm text-zinc-600">{recipes.find(recipe => recipe.id === value.appId)?.description}</p>
+      {!loading && !error && !recipes.length && <p className="text-sm text-[var(--fg-muted)]">No active deployable recipes are available for this account.</p>}
+      <p className="text-sm text-[var(--fg-muted)]">{recipes.find(recipe => recipe.id === value.appId)?.description}</p>
     </>}
     {value.kind === "startup" && <>
-      <label className="block text-sm font-medium">Startup script
-        <select className={field} value={value.presetId || "custom"} onChange={event => onChange(event.target.value === "custom" ? { kind: "startup", script: "" } : { kind: "startup", presetId: event.target.value })}>
+      <label className={ui.label}>Startup script
+        <Select value={value.presetId || "custom"} onChange={event => onChange(event.target.value === "custom" ? { kind: "startup", script: "" } : { kind: "startup", presetId: event.target.value })}>
           <option value="custom">Custom script</option>{STARTUP_SCRIPT_PRESETS.map(preset => <option value={preset.id} key={preset.id}>{preset.name}</option>)}
-        </select>
+        </Select>
       </label>
-      {value.presetId ? <p className="text-sm text-zinc-600">{STARTUP_SCRIPT_PRESETS.find(preset => preset.id === value.presetId)?.description}</p> : <label className="block text-sm font-medium">Custom startup script
-        <textarea className={`${field} min-h-48 font-mono`} maxLength={65536} value={value.script || ""} onChange={event => onChange({ kind: "startup", script: event.target.value })} spellCheck={false} placeholder="#!/bin/bash" />
-        <span className="mt-1 block text-xs font-normal text-zinc-500">Runs after provisioning. Custom scripts are never saved; re-enter after checkout or reopening this wizard.</span>
+      {value.presetId ? <p className="text-sm text-[var(--fg-muted)]">{STARTUP_SCRIPT_PRESETS.find(preset => preset.id === value.presetId)?.description}</p> : <label className={ui.label}>Custom startup script
+        <textarea className={`${ui.field} min-h-48 font-mono`} maxLength={65536} value={value.script || ""} onChange={event => onChange({ kind: "startup", script: event.target.value })} spellCheck={false} placeholder="#!/bin/bash" />
+        <span className={ui.hint}>Runs after provisioning. Custom scripts are never saved; re-enter after checkout or reopening this wizard.</span>
       </label>}
     </>}
-    {loading && <p role="status" className="text-sm text-zinc-500">Loading software catalog…</p>}
-    {error && <div role="alert" className="text-sm text-red-700">{error} <button type="button" className="underline" onClick={() => setRetry(value => value + 1)}>Try again</button></div>}
+    {loading && <p role="status" className="text-sm text-[var(--fg-muted)]">Loading software catalog…</p>}
+    {error && <div role="alert" className={ui.notice.danger}>{error} <button type="button" className="underline" onClick={() => setRetry(value => value + 1)}>Try again</button></div>}
   </div>;
 }
