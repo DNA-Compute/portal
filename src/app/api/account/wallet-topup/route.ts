@@ -4,14 +4,8 @@ import { getStripe } from "@/lib/stripe";
 import { validateVoucher } from "@/lib/voucher";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { CUSTOM_TOP_UP, TOP_UP_AMOUNTS, isValidTopUpAmount } from "@/lib/wallet-topup";
 
-const TOP_UP_AMOUNTS = [
-  { value: 2500, label: "$25" },
-  { value: 5000, label: "$50" },
-  { value: 10000, label: "$100" },
-  { value: 25000, label: "$250" },
-  { value: 50000, label: "$500" },
-];
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -29,9 +23,11 @@ export async function POST(request: NextRequest) {
     const { amount, voucherCode, launchProductId } = await request.json();
 
     // Validate amount
-    const amountCents = parseInt(amount);
-    if (!TOP_UP_AMOUNTS.some((a) => a.value === amountCents)) {
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    const amountCents = Number(amount);
+    if (!isValidTopUpAmount(amountCents)) {
+      return NextResponse.json({
+        error: `Enter a whole-dollar amount between $${CUSTOM_TOP_UP.minCents / 100} and $${(CUSTOM_TOP_UP.maxCents / 100).toLocaleString("en-US")}`,
+      }, { status: 400 });
     }
 
     const stripe = await getStripe();
@@ -155,5 +151,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  return NextResponse.json({ amounts: TOP_UP_AMOUNTS });
+  return NextResponse.json({ amounts: TOP_UP_AMOUNTS, custom: CUSTOM_TOP_UP });
 }

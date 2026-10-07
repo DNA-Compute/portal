@@ -10,6 +10,11 @@
 "use client";
 
 import React from "react";
+import { CUSTOM_TOP_UP, isValidTopUpAmount } from "@/lib/wallet-topup";
+
+/** Rough GPU time a top-up buys, at the ~$2/hour the tiles have always quoted. */
+const gpuHours = (cents: number) => Math.floor(cents / 200);
+const presets = [2500, 5000, 10000];
 
 interface ValidatedVoucher {
   code: string;
@@ -41,6 +46,7 @@ export function TopupModal({
   const [voucherError, setVoucherError] = React.useState<string | null>(null);
   const [redeeming, setRedeeming] = React.useState(false);
   const [redeemSuccess, setRedeemSuccess] = React.useState<number | null>(null); // credited cents
+  const [customDollars, setCustomDollars] = React.useState("");
 
   // Reset state when modal closes
   React.useEffect(() => {
@@ -50,6 +56,7 @@ export function TopupModal({
       setVoucherError(null);
       setRedeeming(false);
       setRedeemSuccess(null);
+      setCustomDollars("");
     }
   }, [isOpen]);
 
@@ -123,6 +130,10 @@ export function TopupModal({
     onTopup(amount, validatedVoucher?.code);
   }, [onTopup, validatedVoucher]);
 
+  const customCents = Math.round(Number(customDollars) * 100);
+  const customMinCents = Math.max(CUSTOM_TOP_UP.minCents, validatedVoucher?.minTopupCents ?? 0);
+  const customValid = customDollars.trim() !== "" && isValidTopUpAmount(customCents) && customCents >= customMinCents;
+
   // Whether this voucher can be redeemed without a payment
   const isFreeVoucher = validatedVoucher && !validatedVoucher.minTopupCents;
 
@@ -157,7 +168,7 @@ export function TopupModal({
             <p className="text-sm text-zinc-500 mb-6">Your voucher has been redeemed successfully.</p>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-violet-600 text-white text-sm rounded-lg hover:bg-violet-700 transition-colors"
+              className="px-6 py-2 bg-[var(--acid)] text-[var(--ink)] font-semibold text-sm rounded-lg hover:bg-[var(--acid-deep)] transition-colors"
             >
               Done
             </button>
@@ -180,12 +191,12 @@ export function TopupModal({
                   value={voucherCode}
                   onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                   placeholder="Enter voucher code"
-                  className="flex-1 px-2 py-1.5 border border-[var(--line)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-violet-500 uppercase"
+                  className="flex-1 px-2 py-1.5 border border-[var(--line)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-[var(--acid)] uppercase"
                 />
                 <button
                   onClick={() => validateVoucherCode(voucherCode)}
                   disabled={!voucherCode.trim() || voucherValidating}
-                  className="px-3 py-1.5 bg-violet-600 text-white text-xs rounded hover:bg-violet-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+                  className="px-3 py-1.5 bg-[var(--acid)] text-[var(--ink)] font-semibold text-xs rounded hover:bg-[var(--acid-deep)] disabled:opacity-50 transition-colors whitespace-nowrap"
                 >
                   {voucherValidating ? "..." : "Apply"}
                 </button>
@@ -229,35 +240,55 @@ export function TopupModal({
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  {[
-                    { value: 2500, label: "$25", hours: "~12h" },
-                    { value: 5000, label: "$50", hours: "~25h" },
-                    { value: 10000, label: "$100", hours: "~50h" },
-                    { value: 25000, label: "$250", hours: "~125h" },
-                  ].map((option) => {
-                    const bonusHours = validatedVoucher
-                      ? Math.round((validatedVoucher.creditCents / 100) / 2)
-                      : 0;
-                    const totalHours = parseInt(option.hours.replace("~", "").replace("h", "")) + bonusHours;
-                    const belowMinimum = validatedVoucher?.minTopupCents && option.value < validatedVoucher.minTopupCents;
+                  {presets.map((value) => {
+                    const belowMinimum = !!validatedVoucher?.minTopupCents && value < validatedVoucher.minTopupCents;
                     return (
                       <button
-                        key={option.value}
-                        onClick={() => handleTopupWithVoucher(option.value)}
-                        disabled={topupLoading || !!belowMinimum}
-                        className="flex flex-col items-center p-4 border border-[var(--line)] rounded-xl hover:border-violet-500 hover:bg-violet-50 transition-colors disabled:opacity-50"
+                        key={value}
+                        onClick={() => handleTopupWithVoucher(value)}
+                        disabled={topupLoading || belowMinimum}
+                        className="flex flex-col items-center justify-center gap-1 p-4 border border-[var(--line)] bg-[var(--ink-sink)] hover:border-[var(--acid)] hover:bg-[var(--ink-raise)] transition-colors disabled:opacity-50"
                       >
-                        <span className="text-xl font-bold text-zinc-900">{option.label}</span>
-                        {validatedVoucher ? (
-                          <span className="text-xs text-green-600 font-medium">
-                            ~{totalHours}h GPU time (+{bonusHours}h bonus)
-                          </span>
-                        ) : (
-                          <span className="text-xs text-[var(--muted)]">{option.hours} GPU time</span>
-                        )}
+                        <span className="text-xl font-bold text-zinc-900">${value / 100}</span>
+                        <GpuTime cents={value} bonusCents={validatedVoucher?.creditCents} />
                       </button>
                     );
                   })}
+                  <form
+                    onSubmit={(event) => { event.preventDefault(); if (customValid) handleTopupWithVoucher(customCents); }}
+                    className="flex flex-col justify-center gap-2 p-3 border border-[var(--line)] bg-[var(--ink-sink)] focus-within:border-[var(--acid)] transition-colors"
+                  >
+                    <label htmlFor="custom-topup" className="text-xs font-medium text-center text-[var(--fg-muted)]">Custom amount</label>
+                    <div className="flex items-stretch border border-[var(--line)] bg-[var(--ink)]">
+                      <span aria-hidden className="flex items-center pl-2.5 text-sm text-[var(--fg-muted)]">$</span>
+                      <input
+                        id="custom-topup"
+                        type="number"
+                        inputMode="numeric"
+                        min={customMinCents / 100}
+                        max={CUSTOM_TOP_UP.maxCents / 100}
+                        step={1}
+                        value={customDollars}
+                        onChange={(event) => setCustomDollars(event.target.value)}
+                        placeholder={`${customMinCents / 100}+`}
+                        className="w-full min-w-0 bg-transparent px-1.5 py-1.5 text-sm font-semibold text-zinc-900 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={topupLoading || !customValid}
+                        className="px-3 text-xs font-semibold bg-[var(--acid)] text-[var(--ink)] hover:bg-[var(--acid-deep)] disabled:opacity-40 transition-colors"
+                      >
+                        Pay
+                      </button>
+                    </div>
+                    {customDollars && !customValid ? (
+                      <span className="text-xs text-center text-[var(--danger)]">
+                        Whole dollars, ${customMinCents / 100} to ${(CUSTOM_TOP_UP.maxCents / 100).toLocaleString("en-US")}
+                      </span>
+                    ) : (
+                      <GpuTime cents={customValid ? customCents : 0} bonusCents={validatedVoucher?.creditCents} />
+                    )}
+                  </form>
                 </div>
 
                 <p className="text-xs text-zinc-400 text-center">
@@ -270,4 +301,12 @@ export function TopupModal({
       </div>
     </div>
   );
+}
+
+function GpuTime({ cents, bonusCents }: { cents: number; bonusCents?: number }) {
+  if (!cents) return <span className="text-xs text-center text-[var(--muted)]">Any amount you choose</span>;
+  const bonusHours = bonusCents ? gpuHours(bonusCents) : 0;
+  return bonusHours
+    ? <span className="text-xs text-center text-green-600 font-medium">~{gpuHours(cents) + bonusHours}h GPU time (+{bonusHours}h bonus)</span>
+    : <span className="text-xs text-center text-[var(--muted)]">~{gpuHours(cents)}h GPU time</span>;
 }
