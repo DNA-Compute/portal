@@ -6,7 +6,7 @@ import { LaunchSoftwarePicker, type SoftwareSelectionMetadata } from "./LaunchSo
 
 interface LaunchProduct {
   id: string; name: string; gpuFamily: string | null; billingType: string;
-  configurationPricing?: ConfigurationPricing | null; vramGb: number | null;
+  configurationPricing?: ConfigurationPricing | null; vramGb: number | null; pricePerHourCents?: number;
 }
 interface LaunchOptions {
   products: LaunchProduct[];
@@ -46,6 +46,7 @@ const field = "mt-1 w-full rounded-xl border border-[var(--line)] bg-white px-3 
 const button = "rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium hover:border-teal-500 disabled:cursor-not-allowed disabled:opacity-50";
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 6 });
 const money = (cents: number) => usd.format(cents / 100);
+const shareNames: Record<number, string> = { 100: "Whole GPU", 75: "Three quarters of a GPU", 50: "Half a GPU", 25: "Quarter of a GPU" };
 function draftConfiguration(configuration: LaunchConfiguration): LaunchConfiguration {
   const software = configuration.software;
   if (software.kind === "huggingface") return { ...configuration, software: { kind: software.kind, hfItemId: software.hfItemId, openWebUI: software.openWebUI, netdata: software.netdata } };
@@ -351,10 +352,28 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                 </label> : <label className="block text-sm font-medium">GPU model
                   <select className={field} value={configuration.gpuModelId || ""} disabled={capabilities.locks.pool} onChange={event => update({ gpuModelId: event.target.value, gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.gpuModels.map(model => <option key={model.id} value={model.id}>{model.name}{model.vramGb != null ? ` · ${model.vramGb} GB VRAM` : ""}</option>)}</select>
                 </label>}
-                {gpuShares.some(share => share.percent < 100) && <label className="block text-sm font-medium">GPU share
-                  <select className={field} value={sharePercent} onChange={event => { const percent = Number(event.target.value); update({ gpuSharePercent: percent, gpuCount: 1, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" }); }}>{gpuShares.map(share => <option key={share.percent} value={share.percent} disabled={!share.maxGpuCount}>{share.percent === 100 ? "Whole GPU" : `${share.percent}% guaranteed share`}{share.maxGpuCount ? "" : " · sold out"}</option>)}</select>
-                  <span className="mt-1 block text-xs font-normal text-zinc-500">A share guarantees that fraction of one GPU&apos;s compute time and is billed at that fraction of the GPU rate.</span>
-                </label>}
+                {gpuShares.some(share => share.percent < 100) && <fieldset>
+                  <legend className="text-sm font-medium">GPU share</legend>
+                  <div role="radiogroup" aria-label="GPU share" className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {gpuShares.map(share => {
+                      const chosen = share.percent === sharePercent;
+                      const soldOut = !share.maxGpuCount;
+                      const gpuCents = product?.pricePerHourCents == null ? null : Math.round(product.pricePerHourCents * share.percent / 100);
+                      return <button key={share.percent} type="button" role="radio" aria-checked={chosen} disabled={soldOut}
+                        onClick={() => update({ gpuSharePercent: share.percent, gpuCount: 1, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}
+                        className={`flex flex-col gap-2 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600/40 disabled:cursor-not-allowed disabled:opacity-50 ${chosen ? "border-teal-600 bg-teal-50 ring-1 ring-teal-600" : "border-zinc-200 bg-white hover:border-teal-500"}`}>
+                        <span className="flex items-baseline justify-between gap-2">
+                          <span className="text-lg font-semibold tabular-nums text-zinc-900">{share.percent}%</span>
+                          {chosen && <span aria-hidden className="text-xs font-medium text-teal-700">Selected</span>}
+                        </span>
+                        <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200"><span className={`block h-full rounded-full ${chosen ? "bg-teal-600" : "bg-zinc-400"}`} style={{ width: `${share.percent}%` }} /></span>
+                        <span className="text-xs text-zinc-600">{shareNames[share.percent] ?? "Guaranteed share"}</span>
+                        <span className="text-xs font-medium tabular-nums text-zinc-900">{soldOut ? "Sold out" : gpuCents == null ? "\u00a0" : `GPU ${money(gpuCents)}/hr`}</span>
+                      </button>;
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">A share guarantees that fraction of one GPU&apos;s compute time, billed at the same fraction of the GPU rate. CPU, RAM and disk are priced separately.</p>
+                </fieldset>}
                 {sharePercent === 100 && <label className="block text-sm font-medium">Whole GPUs
                   <input className={field} type="number" min={1} max={capabilities.maxGpuCount} step={1} value={configuration.gpuCount} disabled={capabilities.locks.gpuCount} onChange={event => { const count = Number(event.target.value); if (Number.isInteger(count) && count >= 1 && count <= capabilities.maxGpuCount) update({ gpuCount: count, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" }); }} />
                   <span className="mt-1 block text-xs font-normal text-zinc-500">Up to {capabilities.maxGpuCount} whole GPU{capabilities.maxGpuCount === 1 ? "" : "s"} for this selection.</span>
