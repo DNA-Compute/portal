@@ -210,7 +210,7 @@ export interface CreateInstanceParams {
   workspace_id?: string;
   network_assignment?: string;
   public_keys?: string[];
-  pod_opts?: { pool_id?: number; vgpus?: number; shared_volumes?: number[]; rootfs_enabled?: boolean; guaranteed_gpu_share_percent?: 100 };
+  pod_opts?: { pool_id?: number; vgpus?: number; shared_volumes?: number[]; rootfs_enabled?: boolean; guaranteed_gpu_share_percent?: number };
   vm_opts?: { gpu_card_count: number; passthrough_accelerators: string; networks: never[] };
 }
 

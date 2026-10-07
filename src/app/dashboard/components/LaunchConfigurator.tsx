@@ -177,7 +177,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
     fetch("/api/account/wallet-topup", { signal: controller.signal }).then(response => response.ok ? response.json() : Promise.reject()).then(data => { if (!controller.signal.aborted) setAmounts(data.amounts || []); }).catch(() => {});
     return () => controller.abort();
   }, []);
-  const capKey = [configuration.productId, configuration.regionId, configuration.poolId || "", configuration.gpuModelId || "", configuration.gpuCount, configuration.imageHash, configuration.instanceTypeId].join(":");
+  const capKey = [configuration.productId, configuration.regionId, configuration.poolId || "", configuration.gpuModelId || "", configuration.gpuCount, configuration.gpuSharePercent || "", configuration.imageHash, configuration.instanceTypeId].join(":");
   const capabilities = capabilityResult?.key === capKey ? capabilityResult.value : null;
   useEffect(() => {
     if (!configuration.productId || !options) return;
@@ -190,6 +190,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
         if (configuration.poolId) params.set("pool_id", String(configuration.poolId));
         if (configuration.gpuModelId) params.set("gpu_model_id", configuration.gpuModelId);
         if (configuration.gpuCount) params.set("gpu_count", String(configuration.gpuCount));
+        if (configuration.gpuSharePercent) params.set("gpu_share_percent", String(configuration.gpuSharePercent));
         if (configuration.imageHash) params.set("image_hash", configuration.imageHash);
         if (configuration.instanceTypeId) params.set("instance_type_id", configuration.instanceTypeId);
         const response = await fetch(`/api/instances/configuration?${params}`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
@@ -210,6 +211,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
             gpuModelId: caps.serviceType === "cpu_gpu_card" ? (caps.gpuModels.some(model => model.id === current.gpuModelId) ? current.gpuModelId : caps.defaults.gpuModelId || caps.gpuModels[0]?.id) : undefined,
             // Clamp defaults too, so an empty region cannot oscillate between zero and its default count.
             gpuCount: Math.min(caps.locks.gpuCount || !current.gpuCount ? caps.defaults.gpuCount || 0 : current.gpuCount, caps.maxGpuCount), storage,
+            gpuSharePercent: caps.defaults.gpuSharePercent,
           };
         });
         setCapabilityResult({ key: capKey, value: caps });
@@ -257,6 +259,9 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
   const groups = [...new Set(products.map(product => product.gpuFamily || product.name))];
   const product = options?.products.find(item => item.id === configuration.productId);
   const profile = capabilities?.profiles.find(item => item.id === configuration.instanceTypeId);
+  const gpuShares = capabilities?.pools.find(pool => pool.id === configuration.poolId)?.gpuShares ?? [];
+  const sharePercent = configuration.gpuSharePercent ?? 100;
+  const gpuSummary = sharePercent < 100 ? ` · ${sharePercent}% share` : ` × ${configuration.gpuCount}`;
   const region = capabilities?.regions.find(item => item.id === configuration.regionId);
   const regionOptions = capabilityResult?.value.productId === configuration.productId ? capabilityResult.value.regions : [];
   const storage = configuration.storage;
@@ -335,21 +340,25 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                 {!products.length && <p className="text-sm text-zinc-600">No entitled GPU offerings are available for this account.</p>}
                 {product && <p className="text-sm text-zinc-500">{product.billingType === "monthly" ? "Your subscription covers its included allocation." : product.configurationPricing ? "Choose supported CPU/RAM and storage. Your selections determine the allocation and its resource charges." : "Choose supported CPU/RAM and storage. Only the original default bundle has a price; custom allocations need resource rates configured before launch."}</p>}
                 <label className="block text-sm font-medium">Region
-                  <select className={field} value={configuration.regionId || ""} disabled={!regionOptions.length || capabilityLoading} onChange={event => update({ regionId: Number(event.target.value), gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "", poolId: undefined, gpuModelId: undefined, storage: { mode: "none" } })}>
+                  <select className={field} value={configuration.regionId || ""} disabled={!regionOptions.length || capabilityLoading} onChange={event => update({ regionId: Number(event.target.value), gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "", poolId: undefined, gpuModelId: undefined, storage: { mode: "none" } })}>
                     <option value="">Select a region</option>{regionOptions.map(item => <option key={item.id} value={item.id}>{item.name}{item.country ? ` · ${item.country}` : ""}</option>)}
                   </select>
                 </label>
               </>}
               {step === 1 && capabilities && <>
                 {capabilities.serviceType === "pod_accelerator" ? <label className="block text-sm font-medium">GPU pool
-                  <select className={field} value={configuration.poolId || ""} disabled={capabilities.locks.pool} onChange={event => update({ poolId: Number(event.target.value), gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.pools.map(pool => <option key={pool.id} value={pool.id}>{pool.name}{pool.vramGb != null ? ` · ${pool.vramGb} GB VRAM` : ""}</option>)}</select>
+                  <select className={field} value={configuration.poolId || ""} disabled={capabilities.locks.pool} onChange={event => update({ poolId: Number(event.target.value), gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.pools.map(pool => <option key={pool.id} value={pool.id}>{pool.name}{pool.vramGb != null ? ` · ${pool.vramGb} GB VRAM` : ""}</option>)}</select>
                 </label> : <label className="block text-sm font-medium">GPU model
                   <select className={field} value={configuration.gpuModelId || ""} disabled={capabilities.locks.pool} onChange={event => update({ gpuModelId: event.target.value, gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.gpuModels.map(model => <option key={model.id} value={model.id}>{model.name}{model.vramGb != null ? ` · ${model.vramGb} GB VRAM` : ""}</option>)}</select>
                 </label>}
-                <label className="block text-sm font-medium">Whole GPUs
+                {gpuShares.some(share => share.percent < 100) && <label className="block text-sm font-medium">GPU share
+                  <select className={field} value={sharePercent} onChange={event => { const percent = Number(event.target.value); update({ gpuSharePercent: percent, gpuCount: 1, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" }); }}>{gpuShares.map(share => <option key={share.percent} value={share.percent} disabled={!share.maxGpuCount}>{share.percent === 100 ? "Whole GPU" : `${share.percent}% guaranteed share`}{share.maxGpuCount ? "" : " · sold out"}</option>)}</select>
+                  <span className="mt-1 block text-xs font-normal text-zinc-500">A share guarantees that fraction of one GPU&apos;s compute time and is billed at that fraction of the GPU rate.</span>
+                </label>}
+                {sharePercent === 100 && <label className="block text-sm font-medium">Whole GPUs
                   <input className={field} type="number" min={1} max={capabilities.maxGpuCount} step={1} value={configuration.gpuCount} disabled={capabilities.locks.gpuCount} onChange={event => { const count = Number(event.target.value); if (Number.isInteger(count) && count >= 1 && count <= capabilities.maxGpuCount) update({ gpuCount: count, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" }); }} />
-                  <span className="mt-1 block text-xs font-normal text-zinc-500">Up to {capabilities.maxGpuCount} whole GPUs for this selection. Fractional shares are not offered.</span>
-                </label>
+                  <span className="mt-1 block text-xs font-normal text-zinc-500">Up to {capabilities.maxGpuCount} whole GPU{capabilities.maxGpuCount === 1 ? "" : "s"} for this selection.</span>
+                </label>}
                 <label className="block text-sm font-medium">CPU & RAM profile {capabilities.locks.profile && (product?.billingType === "monthly" ? "· monthly included" : "· provider locked")}
                   <select className={field} value={configuration.instanceTypeId} disabled={capabilities.locks.profile} onChange={event => update({ instanceTypeId: event.target.value, rootStorageBlockId: "" })}>{capabilities.profiles.map(item => <option key={item.id} value={item.id}>{item.cpuCores} CPU cores · {item.ramGb} GB RAM · {item.name}</option>)}</select>
                 </label>
@@ -376,7 +385,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                 <fieldset className="space-y-3"><legend className="mb-2 text-sm font-medium">SSH keys (optional)</legend>{options.sshKeys.length ? options.sshKeys.map(key => <label key={key.id} className="flex items-start gap-3 rounded-xl border border-zinc-200 p-3 text-sm"><input className="mt-1" type="checkbox" checked={sshKeyIds.includes(key.id)} onChange={event => setSshKeyIds(current => event.target.checked ? [...current, key.id] : current.filter(id => id !== key.id))} /><span>{key.name}<span className="block break-all text-xs text-zinc-500">{key.fingerprint}</span></span></label>) : <p className="text-sm text-zinc-500">No SSH keys saved. Add a key in Dashboard settings before launch if you need SSH access.</p>}</fieldset>
               </>}
               {step === 4 && <>
-                <div className="rounded-xl border border-zinc-200 p-4 text-sm"><p className="font-semibold">{name || "Name required"}</p><p className="mt-1 text-zinc-600">{product?.name} · {region?.name} · {configuration.gpuCount} GPU{configuration.gpuCount === 1 ? "" : "s"}</p><p className="mt-1 text-zinc-600">{configuration.software.kind === "huggingface" ? configuration.software.hfItemId : configuration.software.kind === "recipe" ? `Managed recipe: ${metadata?.id === configuration.software.appId ? metadata.name : configuration.software.appId}` : configuration.software.kind === "startup" ? "Startup script" : "No additional software"} · {sshKeyIds.length} SSH key{sshKeyIds.length === 1 ? "" : "s"}</p></div>
+                <div className="rounded-xl border border-zinc-200 p-4 text-sm"><p className="font-semibold">{name || "Name required"}</p><p className="mt-1 text-zinc-600">{product?.name} · {region?.name} · {sharePercent < 100 ? `${sharePercent}% GPU share` : `${configuration.gpuCount} GPU${configuration.gpuCount === 1 ? "" : "s"}`}</p><p className="mt-1 text-zinc-600">{configuration.software.kind === "huggingface" ? configuration.software.hfItemId : configuration.software.kind === "recipe" ? `Managed recipe: ${metadata?.id === configuration.software.appId ? metadata.name : configuration.software.appId}` : configuration.software.kind === "startup" ? "Startup script" : "No additional software"} · {sshKeyIds.length} SSH key{sshKeyIds.length === 1 ? "" : "s"}</p></div>
                 {quote && <><div className="overflow-hidden rounded-xl border border-zinc-200"><table className="w-full text-left text-sm"><caption className="sr-only">Itemized hourly quote</caption><thead className="bg-zinc-50 text-xs text-zinc-500"><tr><th className="px-3 py-3">Resource</th><th className="px-3 py-3 text-right">Hourly price</th></tr></thead><tbody>{quote.rate.lines.map(line => <tr key={line.key} className="border-t border-zinc-100"><td className="px-3 py-3">{line.label}<span className="block text-xs text-zinc-500">{line.quantity} {line.unit}{line.separatelyMetered ? " · separately metered" : ""}</span></td><td className="px-3 py-3 text-right tabular-nums">{money(line.hourlyCents)}</td></tr>)}</tbody><tfoot className="border-t border-zinc-200 font-semibold"><tr><td className="px-3 py-3">Total ongoing hourly cost</td><td className="px-3 py-3 text-right">{money(quote.rate.totalHourlyCents)}</td></tr></tfoot></table></div>
                   <div className="space-y-2 text-sm text-zinc-600"><p>Due at launch: <strong>{money(quote.rate.prepayCents)}</strong>. Minimum billing period: {quote.rate.minimumBillingMinutes} minutes.</p><p>Stopped instance: {money(quote.rate.stoppedInstanceHourlyCents)}/hour. Shared storage: {money(quote.rate.sharedStorageHourlyCents)}/hour, separately metered while the volume exists.</p>{product?.billingType === "monthly" && <p>GPU and included resources are paid by your monthly subscription; shared storage is not included.</p>}</div>
                   {quote.warnings.map(warning => <p key={warning} className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{warning}</p>)}
@@ -385,7 +394,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
               </>}
             </fieldset>}
             {capabilityLoading && <p role="status" className="text-sm text-zinc-500">Checking supported regions and resources…</p>}
-            {capabilityError && <div role="alert" className="space-y-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"><p>{capabilityError}</p><button type="button" className="mr-3 underline" onClick={() => setCapabilityRevision(value => value + 1)}>Retry capabilities</button><button type="button" className="underline" onClick={() => update({ gpuCount: 0, poolId: undefined, gpuModelId: undefined, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}>Reload provider defaults</button></div>}
+            {capabilityError && <div role="alert" className="space-y-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"><p>{capabilityError}</p><button type="button" className="mr-3 underline" onClick={() => setCapabilityRevision(value => value + 1)}>Retry capabilities</button><button type="button" className="underline" onClick={() => update({ gpuCount: 0, gpuSharePercent: undefined, poolId: undefined, gpuModelId: undefined, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}>Reload provider defaults</button></div>}
             {quoteError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{quoteError}<p className="mt-1">Change the resources or software, or <button type="button" className="underline" onClick={() => setQuoteRevision(value => value + 1)}>retry quote</button>.</p></div>}
             {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
             {(insufficientFunds || bootstrapError.toLowerCase().includes("no team")) && <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4"><h4 className="font-medium">Add funds to continue</h4><p className="text-sm text-zinc-600">Your non-secret configuration is saved for your return from checkout. {options && `Wallet: ${money(options.walletBalanceCents)}.`}</p><div className="flex flex-wrap gap-2">{amounts.map(amount => <button key={amount.value} type="button" disabled={funding || launching} className={button} onClick={() => void topUp(amount.value)}>{funding ? "Opening checkout…" : `Add ${amount.label}`}</button>)}</div>{!amounts.length && <p className="text-sm">Top-up options are unavailable. Try again or use Dashboard billing.</p>}</div>}
@@ -393,7 +402,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
           <aside aria-label="Live configuration summary" className="h-fit rounded-2xl border border-zinc-200 bg-zinc-50 p-5 lg:sticky lg:top-0">
             <h3 className="font-semibold">Your configuration</h3>
             <dl className="mt-4 space-y-3 text-sm">
-              <div><dt className="text-zinc-500">GPU</dt><dd className="font-medium">{product?.name || "Choose a GPU"}{product && ` × ${configuration.gpuCount}`}</dd></div>
+              <div><dt className="text-zinc-500">GPU</dt><dd className="font-medium">{product?.name || "Choose a GPU"}{product && gpuSummary}</dd></div>
               <div><dt className="text-zinc-500">Region</dt><dd>{region?.name || "Checking availability"}</dd></div>
               <div><dt className="text-zinc-500">CPU / RAM</dt><dd>{profile ? `${profile.cpuCores} cores / ${profile.ramGb} GB` : "Choose supported resources"}</dd></div>
               <div><dt className="text-zinc-500">Root disk</dt><dd>{capabilities?.rootStorageBlocks.find(item => item.id === configuration.rootStorageBlockId)?.sizeGb ?? "—"} GB</dd></div>

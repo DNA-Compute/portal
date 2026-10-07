@@ -50,6 +50,17 @@ describe("Configured launch pricing", () => {
     expect(quoteResolvedConfiguration(resolved, "account", "team", 0.003, 25).fingerprint).toBe(quote.fingerprint);
   });
 
+  it("bills a guaranteed GPU share as that fraction of the GPU rate, and only from a rate card", () => {
+    const resolved = allocation();
+    resolved.configuration = { ...resolved.configuration, gpuCount: 1, gpuSharePercent: 25 };
+    resolved.podOptions = { rootfsEnabled: true, guaranteedGpuSharePercent: 25 };
+    const rate = calculateLaunchRate(resolved, 0.003, 25);
+    expect(rate.lines[0]).toMatchObject({ label: "GPU (25% guaranteed share)", quantity: 0.25, hourlyCents: 50 });
+    expect(rate.instanceHourlyCents).toBe(92); // 0.25×200 + 8×3 + 32×0.5 + 200×0.01
+    expect(() => calculateLaunchRate({ ...resolved, configurationPricing: null }, 0.003, 25)).toThrow(LaunchPricingError);
+    expect(() => calculateLaunchRate({ ...resolved, configuration: { ...resolved.configuration, gpuCount: 2 } }, 0.003, 25)).toThrow(LaunchPricingError);
+  });
+
   it("quotes the rounded hourly components that the instance meter will actually charge", () => {
     const resolved = allocation();
     resolved.configurationPricing = { cpuCoreHourCents: 0.2, ramGbHourCents: 0.02, rootGbHourCents: 0.003 };

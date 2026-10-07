@@ -10,7 +10,7 @@ import {
 } from "@/lib/hostedai";
 import {
   configurationPricingSchema, launchConfigurationSchema,
-  type LaunchCapabilities, type LaunchConfiguration, type LaunchImage, type LaunchProfile,
+  type LaunchCapabilities, type LaunchConfiguration, type LaunchImage, type LaunchPool, type LaunchProfile,
   type LaunchStorageBlock, type ResolvedLaunchConfiguration, type ConfigurationPricing,
 } from "@/lib/launch-config";
 
@@ -152,7 +152,7 @@ async function permittedService(teamId: string, serviceId: string): Promise<Laun
   }
   throw new LaunchCapabilityError("This GPU service is not permitted for the active team.", 403, "SERVICE_NOT_PERMITTED");
 }
-export interface LaunchCapabilitySelection { gpuCount?: number; imageHash?: string; instanceTypeId?: string }
+export interface LaunchCapabilitySelection { gpuCount?: number; gpuSharePercent?: number; imageHash?: string; instanceTypeId?: string }
 
 async function discover(
   auth: AuthenticatedCustomer, context: ProductContext, serviceId: string,
@@ -227,7 +227,9 @@ async function discover(
     if (gpuModelId !== undefined) throw new LaunchCapabilityError("A pod offering requires a GPU pool, not a VM GPU model.");
     const offeredPoolIds = new Set(context.poolIds.length ? context.poolIds : [integer(gpuDefault?.id, "offering default GPU pool binding")]);
     const pools = rows(await provider("GPU pool capacity", () => getServiceCompatibleGPUPools(serviceId, teamId, regionId)), "GPU pools");
-    const wholeGpuPools = await Promise.all(pools.map(async row => {
+    // Fractional shares are priced only from a rate card; bundles and monthly plans include a whole GPU.
+    const priceFractions = context.pricing !== null && !fixed;
+    const offeredPools = await Promise.all(pools.map(async row => {
       if (!available(row)) return null;
       const id = integer(row.id, "pool identifier");
       if (!offeredPoolIds.has(id)) return null;
@@ -236,38 +238,61 @@ async function discover(
       if (ratioValue === undefined) metadata("GPU sharing ratio");
       const ratio = integer(ratioValue, "GPU sharing ratio", 0);
       let capacity: number;
-      let guaranteedGpuSharePercent: 100 | undefined;
+      let gpuShares: LaunchPool["gpuShares"];
       if (row.scheduler_mode === "disabled" && ratio <= 1) {
         capacity = integer(row.available_vgpus, "available GPU quantity", 0);
       } else if (row.scheduler_mode === "user_selected" && ratio >= 1) {
         const settings = object(row.scheduler_mode_settings, "GPU scheduling settings");
-        if (flag(settings.locked_to_minimum_guarantee, "GPU share lock") && number(settings.default_minimum_guarantee, "locked GPU share") !== 100) return null;
-        if (row.available_tq_percentages !== undefined) {
+        let percents: number[];
+        if (flag(settings.locked_to_minimum_guarantee, "GPU share lock")) {
+          percents = [integer(settings.default_minimum_guarantee, "locked GPU share")];
+        } else if (row.available_tq_percentages !== undefined) {
           if (!Array.isArray(row.available_tq_percentages)) metadata("available GPU shares");
-          if (!row.available_tq_percentages.some(value => number(value, "GPU share") === 100)) return null;
+          percents = row.available_tq_percentages.map(value => integer(value, "GPU share"));
+        } else {
+          percents = [100];
         }
-        // Native tq_slices=sharing_ratio reserves every slice: a whole GPU, never a fractional meter.
-        capacity = integer(await provider("whole-GPU pool capacity", () => getServicePoolMaxVgpus({ ...query, pool_id: id }, ratio)), "whole-GPU capacity", 0);
-        guaranteedGpuSharePercent = 100;
+        // A share must map onto whole time slices (tq_slices = ratio × share), or it cannot be reserved exactly.
+        percents = [...new Set(percents)].filter(percent => percent <= 100 && (percent === 100 || priceFractions) && Number.isInteger(ratio * percent / 100))
+          .sort((a, b) => b - a);
+        if (!percents.length) return null;
+        gpuShares = await Promise.all(percents.map(async percent => {
+          const slices = ratio * percent / 100;
+          const max = integer(await provider("GPU share capacity", () => getServicePoolMaxVgpus({ ...query, pool_id: id }, slices)), "GPU share capacity", 0);
+          // A fractional share is one guaranteed slice of one GPU, never a multi-GPU allocation.
+          return { percent, maxGpuCount: percent === 100 ? Math.min(max, maximum || 256) : Math.min(max, 1) };
+        }));
+        capacity = gpuShares.find(share => share.percent === 100)?.maxGpuCount ?? Math.max(...gpuShares.map(share => share.maxGpuCount));
       } else {
-        // VIP/time-sharing modes cannot promise the whole-GPU allocation priced here.
+        // VIP/time-sharing modes cannot promise any guaranteed allocation priced here.
         return null;
       }
       return { id, name: text(row.pool_label ?? row.pool_name ?? row.name, "pool name"),
         // Native pod max_quantity=0 removes only the service cap, never the pool capacity cap.
-        maxGpuCount: Math.min(capacity, maximum || 256), guaranteedGpuSharePercent,
+        maxGpuCount: Math.min(capacity, maximum || 256), ...(gpuShares ? { gpuShares } : {}),
         // Capability flags gate marketplace storage only; absent flags retain legacy defaults.
         rootfsEnabled: row.pool_source !== "marketplace" || row.rootfs_persistence_capable === undefined || flag(row.rootfs_persistence_capable, "root persistence capability"),
         sharedStorageEnabled: row.pool_source !== "marketplace" || row.shared_storage_capable === undefined || flag(row.shared_storage_capable, "shared storage capability"),
         ...hardwareMemory(row) };
     }));
-    capabilities.pools = unique(wholeGpuPools.filter(pool => pool !== null), "GPU pools");
+    capabilities.pools = unique(offeredPools.filter(pool => pool !== null), "GPU pools");
     query.pool_id = poolId ?? capabilities.pools.find(pool => pool.id === capabilities.defaults.poolId)?.id ?? (capabilities.pools.length === 1 ? capabilities.pools[0].id : undefined);
     if (query.pool_id !== undefined && !capabilities.pools.some(pool => pool.id === query.pool_id)) throw new LaunchCapabilityError("The selected pool is unavailable or does not provide supported whole-GPU allocations.", 409, "GPU_UNAVAILABLE");
     capabilities.defaults.poolId = query.pool_id;
-    capabilities.maxGpuCount = query.pool_id === undefined ? Math.max(0, ...capabilities.pools.map(pool => pool.maxGpuCount)) : capabilities.pools.find(pool => pool.id === query.pool_id)!.maxGpuCount;
+    const pool = capabilities.pools.find(item => item.id === query.pool_id);
+    capabilities.maxGpuCount = pool === undefined ? Math.max(0, ...capabilities.pools.map(item => item.maxGpuCount)) : pool.maxGpuCount;
+    if (pool?.gpuShares) {
+      const percent = selection.gpuSharePercent ?? (pool.gpuShares.some(share => share.percent === 100) ? 100 : pool.gpuShares[0].percent);
+      const share = pool.gpuShares.find(item => item.percent === percent);
+      if (!share) throw new LaunchCapabilityError("The selected GPU share is not offered for this pool. Refresh the configuration.", 409, "GPU_UNAVAILABLE");
+      capabilities.defaults.gpuSharePercent = percent;
+      capabilities.maxGpuCount = share.maxGpuCount;
+    } else if (selection.gpuSharePercent !== undefined && selection.gpuSharePercent !== 100) {
+      throw new LaunchCapabilityError("This GPU pool offers whole GPUs only.", 409, "GPU_UNAVAILABLE");
+    }
   } else {
     if (poolId !== undefined) throw new LaunchCapabilityError("A GPU VM offering requires a GPU model, not a pod pool.");
+    if (selection.gpuSharePercent !== undefined && selection.gpuSharePercent !== 100) throw new LaunchCapabilityError("GPU VM offerings provide whole GPUs only.", 409, "GPU_UNAVAILABLE");
     capabilities.locks.pool = true;
     capabilities.gpuModels = unique(rows(await provider("GPU models", () => getServiceCompatibleGpuModels(query)), "GPU models")
       .filter(row => available(row) && String(row.model_id) === capabilities.defaults.gpuModelId)
@@ -341,6 +366,10 @@ function selected<T extends { id: string | number }>(items: T[], id: string | nu
 function resolveResources(configuration: LaunchConfiguration, capabilities: LaunchCapabilities) {
   if (!capabilities.maxGpuCount || configuration.gpuCount > capabilities.maxGpuCount) throw new LaunchCapabilityError("No capacity is available for the requested GPU quantity.", 409, "NO_CAPACITY");
   const gpu = capabilities.serviceType === "pod_accelerator" ? selected(capabilities.pools, configuration.poolId, "GPU pool") : selected(capabilities.gpuModels, configuration.gpuModelId, "GPU model");
+  const sharePercent = configuration.gpuSharePercent ?? 100;
+  if ("gpuShares" in gpu && gpu.gpuShares ? !gpu.gpuShares.some(share => share.percent === sharePercent) : sharePercent !== 100) {
+    throw new LaunchCapabilityError("The selected GPU share is unavailable. Refresh the configuration.", 409, "RESOURCE_UNAVAILABLE");
+  }
   let sharedStorage: ResolvedLaunchConfiguration["sharedStorage"] = null;
   if (configuration.storage.mode === "new") {
     const item = selected(capabilities.sharedStorageBlocks, configuration.storage.blockId, "shared storage block");
@@ -354,7 +383,8 @@ function resolveResources(configuration: LaunchConfiguration, capabilities: Laun
     rootStorage: selected(capabilities.rootStorageBlocks, configuration.rootStorageBlockId, "root storage block"),
     sharedStorage, gpuName: gpu.name, gpuVramGb: gpu.vramGb ?? null,
     podOptions: "rootfsEnabled" in gpu
-      ? { rootfsEnabled: gpu.rootfsEnabled, ...(gpu.guaranteedGpuSharePercent === 100 ? { guaranteedGpuSharePercent: 100 as const } : {}) }
+      // Time-sliced pools always state the reserved share; dedicated pools need none.
+      ? { rootfsEnabled: gpu.rootfsEnabled, ...(gpu.gpuShares ? { guaranteedGpuSharePercent: sharePercent } : {}) }
       : undefined };
 }
 export async function resolveLaunchConfiguration(auth: AuthenticatedCustomer, input: LaunchConfiguration): Promise<ResolvedLaunchConfiguration> {
@@ -368,7 +398,8 @@ export async function resolveLaunchConfiguration(auth: AuthenticatedCustomer, in
   if (context.product.billingType === "hourly" && !context.pricing) {
     const included = capabilities.includedAllocation;
     if (configuration.instanceTypeId !== included.instanceTypeId || configuration.imageHash !== included.imageHash ||
-      configuration.rootStorageBlockId !== included.rootStorageBlockId || configuration.gpuCount !== included.gpuCount) {
+      configuration.rootStorageBlockId !== included.rootStorageBlockId || configuration.gpuCount !== included.gpuCount ||
+      (configuration.gpuSharePercent ?? 100) !== 100) {
       throw new LaunchCapabilityError("Pricing is not available for this resource allocation. Select the included allocation or contact support.", 422, "RESOURCE_PRICING_UNAVAILABLE");
     }
   }

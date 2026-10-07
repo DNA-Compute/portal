@@ -11,6 +11,7 @@ const querySchema = z.object({
   pool_id: z.coerce.number().int().positive().optional(),
   gpu_model_id: identifier.optional(),
   gpu_count: z.coerce.number().int().min(1).max(256).optional(),
+  gpu_share_percent: z.coerce.number().int().min(1).max(100).optional(),
   image_hash: identifier.optional(),
   instance_type_id: identifier.optional(),
 }).strict();
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
   try {
     const query = parsed.data;
     const capabilities = await getLaunchCapabilities(auth, query.product_id, query.region_id, query.pool_id, query.gpu_model_id, {
-      gpuCount: query.gpu_count, imageHash: query.image_hash, instanceTypeId: query.instance_type_id,
+      gpuCount: query.gpu_count, gpuSharePercent: query.gpu_share_percent, imageHash: query.image_hash, instanceTypeId: query.instance_type_id,
     });
     return NextResponse.json({ capabilities });
   } catch (error) {

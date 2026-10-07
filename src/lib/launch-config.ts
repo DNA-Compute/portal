@@ -33,6 +33,8 @@ export const launchConfigurationSchema = z.object({
   imageHash: identifier,
   rootStorageBlockId: identifier,
   gpuCount: z.number().int().min(1).max(256),
+  /** Guaranteed share of one time-sliced GPU; omitted means a whole GPU. */
+  gpuSharePercent: z.number().int().min(1).max(100).optional(),
   poolId: z.number().int().positive().optional(),
   gpuModelId: identifier.optional(),
   storage: launchStorageSchema,
@@ -54,7 +56,12 @@ export interface LaunchProfile { id: string; name: string; cpuCores: number; ram
 export interface LaunchImage { id: string; name: string }
 export interface LaunchStorageBlock { id: string; name: string; sizeGb: number }
 export interface LaunchVolume { id: number; name: string; sizeGb: number; regionId: number; status: string }
-export interface LaunchPool { id: number; name: string; maxGpuCount: number; rootfsEnabled: boolean; sharedStorageEnabled: boolean; vramGb?: number; guaranteedGpuSharePercent?: 100 }
+export interface LaunchGpuShare { percent: number; maxGpuCount: number }
+export interface LaunchPool {
+  id: number; name: string; maxGpuCount: number; rootfsEnabled: boolean; sharedStorageEnabled: boolean; vramGb?: number;
+  /** Present only for time-sliced pools: the guaranteed shares this offering can price, largest first. */
+  gpuShares?: LaunchGpuShare[];
+}
 export interface LaunchGpuModel { id: string; name: string; vramGb?: number; maxGpuCount?: number }
 export interface LaunchCapabilities {
   productId: string;
@@ -72,7 +79,7 @@ export interface LaunchCapabilities {
   gpuModels: LaunchGpuModel[];
   maxGpuCount: number;
   locks: { profile: boolean; image: boolean; rootStorage: boolean; pool: boolean; gpuCount: boolean };
-  defaults: { instanceTypeId?: string; imageHash?: string; rootStorageBlockId?: string; poolId?: number; gpuModelId?: string; gpuCount?: number };
+  defaults: { instanceTypeId?: string; imageHash?: string; rootStorageBlockId?: string; poolId?: number; gpuModelId?: string; gpuCount?: number; gpuSharePercent?: number };
   /** Original service defaults covered by a bundled price, not the current selections. */
   includedAllocation: LaunchCapabilities["defaults"];
 }
@@ -82,7 +89,7 @@ export interface ResolvedLaunchConfiguration {
   configuration: LaunchConfiguration;
   serviceId: string;
   serviceType: LaunchCapabilities["serviceType"];
-  podOptions?: { rootfsEnabled: boolean; guaranteedGpuSharePercent?: 100 };
+  podOptions?: { rootfsEnabled: boolean; guaranteedGpuSharePercent?: number };
   productName: string;
   billingType: "hourly" | "monthly";
   gpuBaseHourCents: number;
@@ -120,7 +127,7 @@ export interface LaunchRateSnapshot {
 export interface LaunchQuote {
   fingerprint: string;
   configuration: LaunchConfiguration;
-  resources: { gpuName: string; gpuCount: number; cpuCores: number; ramGb: number; rootStorageGb: number; sharedStorageGb: number; imageName: string };
+  resources: { gpuName: string; gpuCount: number; gpuSharePercent: number; cpuCores: number; ramGb: number; rootStorageGb: number; sharedStorageGb: number; imageName: string };
   rate: LaunchRateSnapshot;
   warnings: string[];
 }
