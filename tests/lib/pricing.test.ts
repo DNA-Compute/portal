@@ -54,6 +54,8 @@ describe("Configured launch pricing", () => {
     const resolved = allocation();
     resolved.configuration = { ...resolved.configuration, gpuCount: 1, gpuSharePercent: 25 };
     resolved.podOptions = { rootfsEnabled: true, guaranteedGpuSharePercent: 25 };
+    expect(() => calculateLaunchRate(resolved, 0.003, 25)).toThrow(LaunchPricingError); // rate card has not opted in
+    resolved.configurationPricing = { ...resolved.configurationPricing!, fractionalGpu: true };
     const rate = calculateLaunchRate(resolved, 0.003, 25);
     expect(rate.lines[0]).toMatchObject({ label: "GPU (25% guaranteed share)", quantity: 0.25, hourlyCents: 50 });
     expect(rate.instanceHourlyCents).toBe(92); // 0.25×200 + 8×3 + 32×0.5 + 200×0.01

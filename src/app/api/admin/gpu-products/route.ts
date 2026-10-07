@@ -343,7 +343,8 @@ export async function POST(request: NextRequest) {
           (oldRates === null) !== (newRates === null) ||
           oldRates?.cpuCoreHourCents !== newRates?.cpuCoreHourCents ||
           oldRates?.ramGbHourCents !== newRates?.ramGbHourCents ||
-          oldRates?.rootGbHourCents !== newRates?.rootGbHourCents;
+          oldRates?.rootGbHourCents !== newRates?.rootGbHourCents ||
+          (oldRates?.fractionalGpu ?? false) !== (newRates?.fractionalGpu ?? false);
         const pricingChanged = rateCardChanged ||
           pricing.data.billingType !== existing.billingType ||
           pricing.data.pricePerHourCents !== existing.pricePerHourCents ||

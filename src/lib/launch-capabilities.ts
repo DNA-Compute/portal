@@ -227,8 +227,8 @@ async function discover(
     if (gpuModelId !== undefined) throw new LaunchCapabilityError("A pod offering requires a GPU pool, not a VM GPU model.");
     const offeredPoolIds = new Set(context.poolIds.length ? context.poolIds : [integer(gpuDefault?.id, "offering default GPU pool binding")]);
     const pools = rows(await provider("GPU pool capacity", () => getServiceCompatibleGPUPools(serviceId, teamId, regionId)), "GPU pools");
-    // Fractional shares are priced only from a rate card; bundles and monthly plans include a whole GPU.
-    const priceFractions = context.pricing !== null && !fixed;
+    // Fractional shares need an explicit rate-card opt-in; bundles and monthly plans include a whole GPU.
+    const priceFractions = context.pricing?.fractionalGpu === true && !fixed;
     const offeredPools = await Promise.all(pools.map(async row => {
       if (!available(row)) return null;
       const id = integer(row.id, "pool identifier");

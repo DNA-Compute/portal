@@ -304,6 +304,7 @@ describe("launch capabilities trust boundary", () => {
       available_tq_percentages: [25, 50, 100], scheduler_mode_settings: { locked_to_minimum_guarantee: false } };
     const half: LaunchConfiguration = { ...configuration, gpuCount: 1, gpuSharePercent: 50 };
     beforeEach(() => {
+      mocks.product.mockResolvedValue({ ...product, configurationPricing: { ...product.configurationPricing, fractionalGpu: true } });
       mocks.pools.mockResolvedValue([fractionalPool]);
       // Capacity is asked per share in native time slices: 2 slices = whole GPU, 1 slice = half.
       mocks.wholeGpuCapacity.mockImplementation(async (_query: unknown, slices: number) => (slices === 2 ? 3 : 6));
@@ -334,6 +335,15 @@ describe("launch capabilities trust boundary", () => {
       await expect(resolveLaunchConfiguration(auth(), { ...half, gpuSharePercent: 25 })).rejects.toMatchObject({ code: "GPU_UNAVAILABLE" });
       mocks.wholeGpuCapacity.mockResolvedValue(0);
       await expect(resolveLaunchConfiguration(auth(), half)).rejects.toMatchObject({ code: "NO_CAPACITY" });
+    });
+
+    it("sells only whole GPUs from a time-sliced pool unless the rate card opts in", async () => {
+      mocks.product.mockResolvedValue(product);
+      const capabilities = await getLaunchCapabilities(auth(), "offering", 2, 7, undefined, { gpuCount: 1 });
+      expect(capabilities.pools[0].gpuShares).toEqual([{ percent: 100, maxGpuCount: 3 }]);
+      await expect(resolveLaunchConfiguration(auth(), half)).rejects.toMatchObject({ code: "GPU_UNAVAILABLE" });
+      const whole = await resolveLaunchConfiguration(auth(), { ...half, gpuSharePercent: undefined });
+      expect(whole.podOptions?.guaranteedGpuSharePercent).toBe(100);
     });
 
     it("keeps bundled and monthly offerings on whole GPUs", async () => {

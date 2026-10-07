@@ -129,8 +129,8 @@ export function calculateLaunchRate(
     if (!Number.isInteger(sharePercent) || sharePercent < 1 || sharePercent > 100) {
       throw new LaunchPricingError("The GPU share is invalid.");
     }
-    if (sharePercent < 100 && (resolved.configurationPricing === null || resolved.configuration.gpuCount !== 1)) {
-      throw new LaunchPricingError("Fractional GPU shares need a resource rate card and a single GPU.");
+    if (sharePercent < 100 && (resolved.configurationPricing?.fractionalGpu !== true || resolved.configuration.gpuCount !== 1)) {
+      throw new LaunchPricingError("Fractional GPU shares need a rate card that allows them and a single GPU.");
     }
     // A guaranteed share is billed as that fraction of the whole-GPU base rate.
     lines.push(hourlyLine(

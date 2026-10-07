@@ -8,6 +8,8 @@ export const configurationPricingSchema = z.object({
   cpuCoreHourCents: rate,
   ramGbHourCents: rate,
   rootGbHourCents: rate,
+  /** Opt-in: sell guaranteed shares of time-sliced GPUs at that fraction of the GPU base price. */
+  fractionalGpu: z.boolean().optional(),
 }).strict();
 export type ConfigurationPricing = z.infer<typeof configurationPricingSchema>;
 

@@ -73,6 +73,7 @@ export function ProductsTab() {
     description: "",
     billingType: "hourly" as "hourly" | "monthly",
     configurable: false,
+    fractionalGpu: false,
     cpuCoreHourCents: "",
     ramGbHourCents: "",
     rootGbHourCents: "",
@@ -394,6 +395,7 @@ export function ProductsTab() {
       description: "",
       billingType: "hourly",
       configurable: false,
+      fractionalGpu: false,
       cpuCoreHourCents: "",
       ramGbHourCents: "",
       rootGbHourCents: "",
@@ -421,6 +423,7 @@ export function ProductsTab() {
       description: product.description || "",
       billingType: product.billingType || "hourly",
       configurable: product.configurationPricing != null,
+      fractionalGpu: product.configurationPricing?.fractionalGpu === true,
       cpuCoreHourCents: product.configurationPricing?.cpuCoreHourCents.toString() ?? "",
       ramGbHourCents: product.configurationPricing?.ramGbHourCents.toString() ?? "",
       rootGbHourCents: product.configurationPricing?.rootGbHourCents.toString() ?? "",
@@ -480,6 +483,7 @@ export function ProductsTab() {
         cpuCoreHourCents: formData.cpuCoreHourCents.trim() === "" ? undefined : Number(formData.cpuCoreHourCents),
         ramGbHourCents: formData.ramGbHourCents.trim() === "" ? undefined : Number(formData.ramGbHourCents),
         rootGbHourCents: formData.rootGbHourCents.trim() === "" ? undefined : Number(formData.rootGbHourCents),
+        ...(formData.fractionalGpu ? { fractionalGpu: true } : {}),
       });
       if (!parsed.success) {
         alert("Enter all three nonnegative resource rates in cents. Explicit zero is allowed; blank rates are not.");
@@ -1275,6 +1279,20 @@ export function ProductsTab() {
                       <p className="text-xs text-[var(--fg-muted)]">
                         Resource rates are in cents, not dollars: 1 cent = $0.01. Fractional cents and explicit zero are allowed; every rate is required. Shared storage uses the separate global storage rate, not the root disk rate.
                       </p>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.fractionalGpu}
+                          onChange={(e) => setFormData({ ...formData, fractionalGpu: e.target.checked })}
+                          className="mt-0.5 w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
+                        />
+                        <span className="text-sm text-[var(--fg)]">
+                          Allow fractional GPU shares
+                          <span className="block text-xs text-[var(--fg-muted)]">
+                            On time-sliced pools, customers can also pick a guaranteed share of one GPU (for example 25% or 50%), billed at that fraction of the GPU base price. Leave off to sell whole GPUs only, even from a time-sliced pool.
+                          </span>
+                        </span>
+                      </label>
                     </>
                   )}
                 </div>
@@ -1545,6 +1563,21 @@ export function ProductsTab() {
                   For GPU pods, select only this offering&apos;s priced GPU pools. Leave empty only when HAI defines exactly one default pool; that default is preserved. GPU VM offerings use the service&apos;s default GPU model. Pool edits never change HAI lock policy.
                 </p>
                 <div className="border border-[var(--line)] rounded-lg max-h-48 overflow-y-auto">
+                  {formData.poolIds.filter((id) => !pools.some((pool) => pool.id === id)).map((id) => (
+                    // A pool deleted in HAI keeps its ID here until removed, and would block launches.
+                    <label key={`missing-${id}`} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer border-b border-[var(--line)] bg-amber-50 hover:bg-amber-100">
+                      <input
+                        type="checkbox"
+                        checked
+                        onChange={() => togglePoolAssignment(id)}
+                        className="w-4 h-4 rounded border-[var(--line)] text-[var(--acid)] focus:ring-[var(--acid)]"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-[var(--fg)]">Pool {id}</span>
+                        <span className="text-xs text-amber-800 ml-2">· no longer exists in HAI. Untick to remove it.</span>
+                      </div>
+                    </label>
+                  ))}
                   {pools.length === 0 ? (
                     <div className="p-4 text-center text-[var(--fg-muted)] text-sm">
                       No pools available
