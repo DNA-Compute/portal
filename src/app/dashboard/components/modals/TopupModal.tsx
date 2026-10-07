@@ -14,7 +14,7 @@ import { CUSTOM_TOP_UP, isValidTopUpAmount } from "@/lib/wallet-topup";
 
 /** Rough GPU time a top-up buys, at the ~$2/hour the tiles have always quoted. */
 const gpuHours = (cents: number) => Math.floor(cents / 200);
-const presets = [2500, 5000, 10000];
+const presets = [10000, 25000, 100000];
 
 interface ValidatedVoucher {
   code: string;
@@ -239,57 +239,65 @@ export function TopupModal({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  {presets.map((value) => {
-                    const belowMinimum = !!validatedVoucher?.minTopupCents && value < validatedVoucher.minTopupCents;
-                    return (
-                      <button
-                        key={value}
-                        onClick={() => handleTopupWithVoucher(value)}
-                        disabled={topupLoading || belowMinimum}
-                        className="flex flex-col items-center justify-center gap-1 p-4 border border-[var(--line)] bg-[var(--ink-sink)] hover:border-[var(--acid)] hover:bg-[var(--ink-raise)] transition-colors disabled:opacity-50"
-                      >
-                        <span className="text-xl font-bold text-zinc-900">${value / 100}</span>
-                        <GpuTime cents={value} bonusCents={validatedVoucher?.creditCents} />
-                      </button>
-                    );
-                  })}
-                  <form
-                    onSubmit={(event) => { event.preventDefault(); if (customValid) handleTopupWithVoucher(customCents); }}
-                    className="flex flex-col justify-center gap-2 p-3 border border-[var(--line)] bg-[var(--ink-sink)] focus-within:border-[var(--acid)] transition-colors"
-                  >
-                    <label htmlFor="custom-topup" className="text-xs font-medium text-center text-[var(--fg-muted)]">Custom amount</label>
-                    <div className="flex items-stretch border border-[var(--line)] bg-[var(--ink)]">
-                      <span aria-hidden className="flex items-center pl-2.5 text-sm text-[var(--fg-muted)]">$</span>
-                      <input
-                        id="custom-topup"
-                        type="number"
-                        inputMode="numeric"
-                        min={customMinCents / 100}
-                        max={CUSTOM_TOP_UP.maxCents / 100}
-                        step={1}
-                        value={customDollars}
-                        onChange={(event) => setCustomDollars(event.target.value)}
-                        placeholder={`${customMinCents / 100}+`}
-                        className="w-full min-w-0 bg-transparent px-1.5 py-1.5 text-sm font-semibold text-zinc-900 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <button
-                        type="submit"
-                        disabled={topupLoading || !customValid}
-                        className="px-3 text-xs font-semibold bg-[var(--acid)] text-[var(--ink)] hover:bg-[var(--acid-deep)] disabled:opacity-40 transition-colors"
-                      >
-                        Pay
-                      </button>
-                    </div>
-                    {customDollars && !customValid ? (
-                      <span className="text-xs text-center text-[var(--danger)]">
-                        Whole dollars, ${customMinCents / 100} to ${(CUSTOM_TOP_UP.maxCents / 100).toLocaleString("en-US")}
+                <form
+                  onSubmit={(event) => { event.preventDefault(); if (customValid) handleTopupWithVoucher(customCents); }}
+                  className="mb-6 space-y-3"
+                >
+                  <div className="grid grid-cols-2 auto-rows-fr gap-3">
+                    {presets.map((value) => {
+                      const belowMinimum = !!validatedVoucher?.minTopupCents && value < validatedVoucher.minTopupCents;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => handleTopupWithVoucher(value)}
+                          disabled={topupLoading || belowMinimum}
+                          className="flex flex-col items-center justify-center gap-1 p-4 border border-[var(--line)] bg-[var(--ink-sink)] hover:border-[var(--acid)] hover:bg-[var(--ink-raise)] transition-colors disabled:opacity-50"
+                        >
+                          <span className="text-xl font-bold text-zinc-900">${(value / 100).toLocaleString("en-US")}</span>
+                          <GpuTime cents={value} bonusCents={validatedVoucher?.creditCents} />
+                        </button>
+                      );
+                    })}
+                    {/* The custom tile mirrors the presets: the amount sits where their price does. */}
+                    <label className={`flex cursor-text flex-col items-center justify-center gap-1 p-4 border bg-[var(--ink-sink)] transition-colors hover:bg-[var(--ink-raise)] focus-within:border-[var(--acid)] ${customDollars && !customValid ? "border-[var(--danger-line)]" : "border-[var(--line)]"}`}>
+                      <span className="flex items-baseline text-xl font-bold">
+                        <span className={customDollars ? "text-zinc-900" : "text-[var(--fg-faint)]"}>$</span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          aria-label="Custom amount"
+                          min={customMinCents / 100}
+                          max={CUSTOM_TOP_UP.maxCents / 100}
+                          step={1}
+                          value={customDollars}
+                          onChange={(event) => setCustomDollars(event.target.value)}
+                          placeholder="Other"
+                          style={{ width: `${(customDollars ? customDollars.length : 5) + 0.5}ch` }}
+                          className="bg-transparent p-0 text-center text-xl font-bold text-zinc-900 placeholder:text-[var(--fg-faint)] focus-visible:outline-none! [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                        />
                       </span>
-                    ) : (
-                      <GpuTime cents={customValid ? customCents : 0} bonusCents={validatedVoucher?.creditCents} />
-                    )}
-                  </form>
-                </div>
+                      {customDollars && !customValid ? (
+                        <span className="text-xs text-center text-[var(--danger)]">
+                          ${customMinCents / 100} to ${(CUSTOM_TOP_UP.maxCents / 100).toLocaleString("en-US")}, whole dollars
+                        </span>
+                      ) : customValid ? (
+                        <GpuTime cents={customCents} bonusCents={validatedVoucher?.creditCents} />
+                      ) : (
+                        <span className="text-xs text-center text-[var(--muted)]">Type any amount</span>
+                      )}
+                    </label>
+                  </div>
+                  {customDollars && (
+                    <button
+                      type="submit"
+                      disabled={topupLoading || !customValid}
+                      className="w-full py-3 text-sm font-semibold bg-[var(--acid)] text-[var(--ink)] hover:bg-[var(--acid-deep)] disabled:cursor-not-allowed disabled:bg-[var(--ink-raise)] disabled:text-[var(--fg-faint)] transition-colors"
+                    >
+                      {customValid ? `Pay $${(customCents / 100).toLocaleString("en-US")}` : "Pay"}
+                    </button>
+                  )}
+                </form>
 
                 <p className="text-xs text-zinc-400 text-center">
                   You&apos;ll be redirected to Stripe to complete payment securely.
