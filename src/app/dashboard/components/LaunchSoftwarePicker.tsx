@@ -74,7 +74,7 @@ export function LaunchSoftwarePicker({ token, value, onChange, selected, onSelec
       }}><span className="pr-6 text-sm font-semibold">{item.name}</span><span className="text-xs text-[var(--fg-muted)]">{item.detail}</span></ChoiceCard>)}</div>
     </fieldset>
     {value.kind === "huggingface" && <>
-      <label className={ui.label}>Search Hugging Face models
+      <label className="block"><span className={ui.label}>Search Hugging Face models</span>
         <input className={ui.field} value={query} onChange={event => setQuery(event.target.value)} placeholder="Search model name or organization" type="search" />
       </label>
       <p className="text-xs text-[var(--fg-muted)]">Model launch uses float16 vLLM. Unsupported featured models cannot be selected. Unverified models, including search results and gated models, require a compatibility check before launch.</p>
@@ -87,7 +87,7 @@ export function LaunchSoftwarePicker({ token, value, onChange, selected, onSelec
           <span className={`block text-xs ${item.launchSupport?.status === "unsupported" ? "text-[var(--danger)]" : "text-[var(--fg-muted)]"}`}>{item.launchSupport?.message || "Runtime compatibility unverified. Model access and float16 resource requirements will be checked before launch."}</span>
         </button>)}
       </div>
-      <label className={ui.label}>Hugging Face access token {selected?.id === value.hfItemId && selected.gated ? "(required for gated model)" : "(optional for public models)"}
+      <label className="block"><span className={ui.label}>Hugging Face access token {selected?.id === value.hfItemId && selected.gated ? "(required for gated model)" : "(optional for public models)"}</span>
         <input className={ui.field} type="password" autoComplete="off" value={value.hfToken || ""} onChange={event => onChange({ ...value, hfToken: event.target.value })} placeholder="hf_…" />
         <span className={ui.hint}>Required for gated/private models. Accept the model license first. Tokens are never saved in the launch draft.</span>
       </label>
@@ -95,7 +95,7 @@ export function LaunchSoftwarePicker({ token, value, onChange, selected, onSelec
       <label className="flex items-center gap-2 text-sm accent-[var(--acid)]"><input type="checkbox" checked={value.netdata || false} onChange={event => onChange({ ...value, netdata: event.target.checked })} /> Add Netdata monitoring</label>
     </>}
     {value.kind === "recipe" && <>
-      <label className={ui.label}>Deployable managed recipe
+      <label className="block"><span className={ui.label}>Deployable managed recipe</span>
         <Select value={value.appId} onChange={event => {
           const recipe = recipes.find(item => item.id === event.target.value);
           onChange({ kind: "recipe", appId: event.target.value });
@@ -108,12 +108,12 @@ export function LaunchSoftwarePicker({ token, value, onChange, selected, onSelec
       <p className="text-sm text-[var(--fg-muted)]">{recipes.find(recipe => recipe.id === value.appId)?.description}</p>
     </>}
     {value.kind === "startup" && <>
-      <label className={ui.label}>Startup script
+      <label className="block"><span className={ui.label}>Startup script</span>
         <Select value={value.presetId || "custom"} onChange={event => onChange(event.target.value === "custom" ? { kind: "startup", script: "" } : { kind: "startup", presetId: event.target.value })}>
           <option value="custom">Custom script</option>{STARTUP_SCRIPT_PRESETS.map(preset => <option value={preset.id} key={preset.id}>{preset.name}</option>)}
         </Select>
       </label>
-      {value.presetId ? <p className="text-sm text-[var(--fg-muted)]">{STARTUP_SCRIPT_PRESETS.find(preset => preset.id === value.presetId)?.description}</p> : <label className={ui.label}>Custom startup script
+      {value.presetId ? <p className="text-sm text-[var(--fg-muted)]">{STARTUP_SCRIPT_PRESETS.find(preset => preset.id === value.presetId)?.description}</p> : <label className="block"><span className={ui.label}>Custom startup script</span>
         <textarea className={`${ui.field} min-h-48 font-mono`} maxLength={65536} value={value.script || ""} onChange={event => onChange({ kind: "startup", script: event.target.value })} spellCheck={false} placeholder="#!/bin/bash" />
         <span className={ui.hint}>Runs after provisioning. Custom scripts are never saved; re-enter after checkout or reopening this wizard.</span>
       </label>}

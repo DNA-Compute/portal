@@ -3,8 +3,8 @@ import type { ReactNode, SelectHTMLAttributes } from "react";
 /** Shared look for the Launch GPU wizard: ink surfaces, hairlines, and the acid accent for choices. */
 export const ui = {
   label: "label-mono block",
-  hint: "mt-2 block font-sans text-xs font-normal normal-case leading-relaxed tracking-normal text-[var(--fg-muted)]",
-  field: "mt-2 w-full appearance-none font-sans font-normal normal-case tracking-normal border border-[var(--line)] bg-[var(--ink-sink)] px-3 py-2.5 text-sm text-[var(--fg)] transition-colors hover:border-[var(--line-strong)] focus:border-[var(--acid)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+  hint: "mt-2 block text-xs font-normal leading-relaxed text-[var(--fg-muted)]",
+  field: "mt-2 w-full appearance-none border border-[var(--line)] bg-[var(--ink-sink)] px-3 py-2.5 text-sm text-[var(--fg)] transition-colors hover:border-[var(--line-strong)] focus:border-[var(--acid)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
   primary: "inline-flex items-center justify-center gap-2 bg-[var(--acid)] px-5 py-2.5 text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--acid-deep)] disabled:cursor-not-allowed disabled:opacity-40",
   secondary: "inline-flex items-center justify-center gap-2 border border-[var(--line)] px-4 py-2.5 text-sm font-medium text-[var(--fg)] transition-colors hover:border-[var(--line-strong)] hover:bg-[var(--ink-raise)] disabled:cursor-not-allowed disabled:opacity-40",
   notice: {

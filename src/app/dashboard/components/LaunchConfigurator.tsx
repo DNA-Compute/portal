@@ -404,10 +404,10 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                 <div className="mt-4 flex flex-wrap gap-3"><button type="button" className={ui.secondary} onClick={() => go(0)}>Change GPU or region</button><button type="button" className={ui.secondary} onClick={() => setCapabilityRevision(value => value + 1)}>Check again</button></div>
               </div> : <>
                 <div className="space-y-5 border border-[var(--line)] bg-[var(--ink)] p-5">
-                  {capabilities.serviceType === "pod_accelerator" ? capabilities.pools.length > 1 && !capabilities.locks.pool ? <label className={ui.label}>GPU pool
+                  {capabilities.serviceType === "pod_accelerator" ? capabilities.pools.length > 1 && !capabilities.locks.pool ? <label className="block"><span className={ui.label}>GPU pool</span>
                     <Select value={configuration.poolId || ""} onChange={event => update({ poolId: Number(event.target.value), gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.pools.map(item => <option key={item.id} value={item.id}>{item.name}{item.vramGb != null ? ` · ${item.vramGb} GB VRAM` : ""}</option>)}</Select>
                   </label> : <div><p className={ui.label}>GPU pool</p><p className="mt-2 text-sm font-medium">{pool?.name || "Provider default"}{pool?.vramGb != null ? <span className="text-[var(--fg-muted)]"> · {pool.vramGb} GB VRAM</span> : null}</p></div>
-                    : <label className={ui.label}>GPU model
+                    : <label className="block"><span className={ui.label}>GPU model</span>
                       <Select value={configuration.gpuModelId || ""} disabled={capabilities.locks.pool} onChange={event => update({ gpuModelId: event.target.value, gpuCount: 0, instanceTypeId: "", imageHash: "", rootStorageBlockId: "" })}>{capabilities.gpuModels.map(model => <option key={model.id} value={model.id}>{model.name}{model.vramGb != null ? ` · ${model.vramGb} GB VRAM` : ""}</option>)}</Select>
                     </label>}
                   {gpuShares.some(share => share.percent < 100) && <fieldset>
@@ -439,13 +439,13 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                   </div>}
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <label className={`${ui.label} sm:col-span-2`}>CPU & RAM profile {capabilities.locks.profile && <span className="text-[var(--fg-faint)]">{product?.billingType === "monthly" ? "· monthly included" : "· provider locked"}</span>}
+                  <label className="block sm:col-span-2"><span className={ui.label}>CPU & RAM profile {capabilities.locks.profile && <span className="text-[var(--fg-faint)]">{product?.billingType === "monthly" ? "· monthly included" : "· provider locked"}</span>}</span>
                     <Select value={configuration.instanceTypeId} disabled={capabilities.locks.profile} onChange={event => update({ instanceTypeId: event.target.value, rootStorageBlockId: "" })}>{capabilities.profiles.map(item => <option key={item.id} value={item.id}>{item.cpuCores} CPU cores · {item.ramGb} GB RAM · {item.name}</option>)}</Select>
                   </label>
-                  <label className={ui.label}>System image {capabilities.locks.image && <span className="text-[var(--fg-faint)]">· provider locked</span>}
+                  <label className="block"><span className={ui.label}>System image {capabilities.locks.image && <span className="text-[var(--fg-faint)]">· provider locked</span>}</span>
                     <Select value={configuration.imageHash} disabled={capabilities.locks.image} onChange={event => update({ imageHash: event.target.value, instanceTypeId: "", rootStorageBlockId: "" })}>{capabilities.images.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</Select>
                   </label>
-                  <label className={ui.label}>Root disk {capabilities.locks.rootStorage && <span className="text-[var(--fg-faint)]">{product?.billingType === "monthly" ? "· monthly included" : "· provider locked"}</span>}
+                  <label className="block"><span className={ui.label}>Root disk {capabilities.locks.rootStorage && <span className="text-[var(--fg-faint)]">{product?.billingType === "monthly" ? "· monthly included" : "· provider locked"}</span>}</span>
                     <Select value={configuration.rootStorageBlockId} disabled={capabilities.locks.rootStorage} onChange={event => update({ rootStorageBlockId: event.target.value })}>{capabilities.rootStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</Select>
                   </label>
                 </div>
@@ -458,14 +458,14 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                     <ChoiceCard name="launch-storage" checked={storage.mode === "existing"} disabled={!capabilities.volumes.length} onChange={() => update({ storage: { mode: "existing", volumeId: capabilities.volumes[0]?.id || 0 } })}><span className="pr-6 text-sm font-semibold">Existing volume</span><span className="text-xs text-[var(--fg-muted)]">{capabilities.volumes.length ? `${capabilities.volumes.length} available` : "None yet"}</span></ChoiceCard>
                   </div>
                   {capabilities.sharedStorageUnavailable && <p className="text-xs text-[var(--fg-muted)]">Persistent storage is not available in this region right now. You can still launch without it.</p>}
-                  {storage.mode === "new" && <label className={ui.label}>Volume size<Select value={storage.blockId} onChange={event => update({ storage: { mode: "new", blockId: event.target.value } })}>{capabilities.sharedStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</Select></label>}
-                  {storage.mode === "existing" && <label className={ui.label}>Volume<Select value={storage.volumeId} onChange={event => update({ storage: { mode: "existing", volumeId: Number(event.target.value) } })}>{capabilities.volumes.filter(volume => volume.regionId === configuration.regionId).map(item => <option key={item.id} value={item.id}>{item.name} · {item.sizeGb} GB</option>)}</Select></label>}
+                  {storage.mode === "new" && <label className="block"><span className={ui.label}>Volume size</span><Select value={storage.blockId} onChange={event => update({ storage: { mode: "new", blockId: event.target.value } })}>{capabilities.sharedStorageBlocks.map(item => <option key={item.id} value={item.id}>{item.sizeGb} GB · {item.name}</option>)}</Select></label>}
+                  {storage.mode === "existing" && <label className="block"><span className={ui.label}>Volume</span><Select value={storage.volumeId} onChange={event => update({ storage: { mode: "existing", volumeId: Number(event.target.value) } })}>{capabilities.volumes.filter(volume => volume.regionId === configuration.regionId).map(item => <option key={item.id} value={item.id}>{item.name} · {item.sizeGb} GB</option>)}</Select></label>}
                   <p className="text-xs leading-relaxed text-[var(--fg-muted)]">Persistent volumes are billed separately for as long as they exist, including while the GPU is stopped or after it is deleted. Attaching an existing volume does not charge for a second copy.</p>
                 </fieldset>
               </>)}
               {step === 2 && <LaunchSoftwarePicker token={token} value={configuration.software} onChange={software => update({ software })} selected={metadata} onSelect={setMetadata} />}
               {step === 3 && <>
-                <label className={ui.label}>Instance name<input className={ui.field} required maxLength={128} value={name} onChange={event => setName(event.target.value)} autoComplete="off" placeholder="training-workspace" /></label>
+                <label className="block"><span className={ui.label}>Instance name</span><input className={ui.field} required maxLength={128} value={name} onChange={event => setName(event.target.value)} autoComplete="off" placeholder="training-workspace" /></label>
                 <fieldset className="space-y-3"><legend className={ui.label}>SSH keys <span className="text-[var(--fg-faint)]">· optional</span></legend>{options.sshKeys.length ? <div className="grid gap-3 sm:grid-cols-2">{options.sshKeys.map(key => <ChoiceCard key={key.id} type="checkbox" name="launch-ssh-keys" checked={sshKeyIds.includes(key.id)} onChange={checked => setSshKeyIds(current => checked ? [...current, key.id] : current.filter(id => id !== key.id))}><span className="pr-6 text-sm font-semibold">{key.name}</span><span className="break-all font-mono text-[11px] text-[var(--fg-muted)]">{key.fingerprint}</span></ChoiceCard>)}</div> : <p className="text-sm text-[var(--fg-muted)]">No SSH keys saved. Add a key in Dashboard settings before launch if you need SSH access.</p>}</fieldset>
               </>}
               {step === 4 && <>
@@ -493,7 +493,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
             {(insufficientFunds || bootstrapError.toLowerCase().includes("no team")) && <div className={`${ui.notice.warn} space-y-3`}><h4 className="font-semibold">Add funds to continue</h4><p className="text-[var(--fg-soft)]">Your non-secret configuration is saved for your return from checkout. {options && `Wallet: ${money(options.walletBalanceCents)}.`}</p><div className="flex flex-wrap gap-2">{amounts.map(amount => <button key={amount.value} type="button" disabled={funding || launching} className={ui.secondary} onClick={() => void topUp(amount.value)}>{funding ? "Opening checkout…" : `Add ${amount.label}`}</button>)}</div>{!amounts.length && <p className="text-[var(--fg-soft)]">Top-up options are unavailable. Try again or use Dashboard billing.</p>}</div>}
           </section>
           <aside aria-label="Live configuration summary" className="h-fit border border-[var(--line)] bg-[var(--ink)] lg:sticky lg:top-0">
-            <h3 className="label-mono border-b border-[var(--line)] px-5 py-4">Your configuration</h3>
+            <h3 className="border-b border-[var(--line)] px-5 py-4"><span className="label-mono">Your configuration</span></h3>
             <dl className="space-y-4 px-5 py-5 text-sm">
               <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">GPU</dt><dd className="mt-1 font-semibold">{product?.name || "Choose a GPU"}{product && configuration.gpuCount > 0 && <span className="font-normal text-[var(--fg-soft)]">{gpuSummary}</span>}</dd></div>
               <div><dt className="label-mono text-[10px] text-[var(--fg-faint)]">Region</dt><dd className="mt-1">{region?.name || <span className="text-[var(--fg-muted)]">Not chosen yet</span>}</dd></div>
