@@ -21,11 +21,13 @@ const {
   mockGetStripe,
   mockGetWebhookSecret,
   mockProcessedEventCreate,
+  mockProcessedEventDeleteMany,
 } = vi.hoisted(() => ({
   mockConstructEvent: vi.fn(),
   mockGetStripe: vi.fn(),
   mockGetWebhookSecret: vi.fn(),
   mockProcessedEventCreate: vi.fn(),
+  mockProcessedEventDeleteMany: vi.fn().mockResolvedValue({ count: 1 }),
 }));
 
 vi.mock("@/lib/stripe", () => ({
@@ -39,6 +41,7 @@ vi.mock("@/lib/prisma", () => ({
       create: mockProcessedEventCreate,
       findUnique: vi.fn(),
       upsert: vi.fn().mockResolvedValue({}),
+      deleteMany: mockProcessedEventDeleteMany,
     },
   },
 }));
@@ -293,6 +296,21 @@ describe("POST /api/webhooks/stripe", () => {
       expect(res.status).toBe(500);
       const body = await res.json();
       expect(body.error).toBe("Webhook handler failed");
+      // The claim is released, otherwise Stripe's retry would be skipped as already processed.
+      expect(mockProcessedEventDeleteMany).toHaveBeenCalledWith({ where: { stripeEventId: "evt_throws_1" } });
+    });
+
+    it("keeps the claim when the handler succeeds, so re-deliveries stay skipped", async () => {
+      mockConstructEvent.mockReturnValue({
+        id: "evt_ok_keep_claim",
+        type: "checkout.session.completed",
+        data: { object: { id: "cs_ok", metadata: { type: "wallet_topup" } } },
+      });
+      mockProcessedEventCreate.mockResolvedValue({});
+
+      const res = await POST(makeRequest("{}", "t=1,v1=valid"));
+      expect(res.status).toBe(200);
+      expect(mockProcessedEventDeleteMany).not.toHaveBeenCalled();
     });
 
     it("documents: handlers' internal error swallowing means many failures still return 200", async () => {

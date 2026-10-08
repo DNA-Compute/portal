@@ -48,6 +48,7 @@ const {
     processedStripeEvent: {
       create: vi.fn(),
       upsert: vi.fn(),
+      deleteMany: vi.fn(),
       findUnique: vi.fn(),
     },
     podMetadata: {
@@ -239,7 +240,8 @@ describe("handleWalletTopup", () => {
         amount: -5000, // negative = credit
         currency: "usd",
         metadata: expect.objectContaining({ checkout_session_id: "cs_topup_1" }),
-      })
+      }),
+      { idempotencyKey: "wallet-topup-cs_topup_1" }
     );
     expect(mockCreateInvoiceForPayment).toHaveBeenCalledWith(
       stripeMock,
@@ -662,5 +664,37 @@ describe("handleSubscriptionUpdated", () => {
     await deliver(updatedEvent());
 
     expect(hostedaiMock.changeTeamPackage).toHaveBeenCalled();
+  });
+});
+
+describe("handleWalletTopup — Stripe retry after a failed delivery", () => {
+  it("credits a custom top-up exactly once when the first delivery failed to credit it", async () => {
+    stripeMock.customers.retrieve.mockResolvedValue(makeCustomer());
+    const claims = new Set<string>();
+    const ledger: Array<{ amount: number; metadata: Record<string, string> }> = [];
+    prismaMock.processedStripeEvent.create.mockImplementation(async ({ data }: { data: { stripeEventId: string } }) => {
+      if (claims.has(data.stripeEventId)) throw Object.assign(new Error("duplicate"), { code: "P2002" });
+      claims.add(data.stripeEventId);
+      return {};
+    });
+    prismaMock.processedStripeEvent.deleteMany.mockImplementation(async ({ where }: { where: { stripeEventId: string } }) => {
+      claims.delete(where.stripeEventId);
+      return { count: 1 };
+    });
+    stripeMock.customers.listBalanceTransactions.mockImplementation(async () => ({ data: [...ledger] }));
+    stripeMock.customers.createBalanceTransaction
+      .mockRejectedValueOnce(new Error("stripe_api_error"))
+      .mockImplementation(async (_id: string, params: { amount: number; metadata: Record<string, string> }) => {
+        ledger.push(params);
+        return {};
+      });
+    const event = topupEvent({ amount_total: 37500 });
+
+    expect((await deliver(event)).status).toBe(500);
+    expect((await deliver(event)).status).toBe(200);
+    expect(await (await deliver(event)).json()).toEqual({ received: true, skipped: true });
+
+    expect(ledger).toEqual([expect.objectContaining({ amount: -37500 })]);
+    expect(mockCreateInvoiceForPayment).toHaveBeenCalledTimes(1);
   });
 });

@@ -37,6 +37,7 @@ const {
     processedStripeEvent: {
       create: vi.fn(),
       upsert: vi.fn(),
+      deleteMany: vi.fn(),
       findUnique: vi.fn(),
     },
     gpuProduct: { findUnique: vi.fn() },
@@ -200,7 +201,8 @@ describe("handleCheckoutCompleted — hourly wallet provisioning", () => {
           type: "wallet_funding",
           checkout_session_id: "cs_checkout_1",
         }),
-      })
+      }),
+      { idempotencyKey: "initial-deposit-cs_checkout_1" }
     );
 
     // Invoice covers what was paid.
@@ -274,7 +276,8 @@ describe("handleCheckoutCompleted — hourly wallet provisioning", () => {
     // The customer gets the full deposit value...
     expect(stripeMock.customers.createBalanceTransaction).toHaveBeenCalledWith(
       CUSTOMER_ID,
-      expect.objectContaining({ amount: -10000 })
+      expect.objectContaining({ amount: -10000 }),
+      { idempotencyKey: "initial-deposit-cs_checkout_1" }
     );
     // ...but the invoice reflects only the money that changed hands.
     expect(mockCreateInvoiceForPayment).toHaveBeenCalledWith(
@@ -342,7 +345,8 @@ describe("handleCheckoutCompleted — hourly wallet provisioning", () => {
     expect(res.status).toBe(200);
     expect(stripeMock.customers.createBalanceTransaction).toHaveBeenCalledWith(
       CUSTOMER_ID,
-      expect.objectContaining({ amount: -10000 })
+      expect.objectContaining({ amount: -10000 }),
+      { idempotencyKey: "initial-deposit-cs_checkout_1" }
     );
     // Nothing was paid, so no invoice.
     expect(mockCreateInvoiceForPayment).not.toHaveBeenCalled();
@@ -391,7 +395,8 @@ describe("handleCheckoutCompleted — customer resolution (payment-mode sessions
     });
     expect(stripeMock.customers.createBalanceTransaction).toHaveBeenCalledWith(
       "cus_existing_9",
-      expect.anything()
+      expect.anything(),
+      { idempotencyKey: "initial-deposit-cs_checkout_1" }
     );
   });
 
@@ -412,7 +417,8 @@ describe("handleCheckoutCompleted — customer resolution (payment-mode sessions
     );
     expect(stripeMock.customers.createBalanceTransaction).toHaveBeenCalledWith(
       "cus_brand_new",
-      expect.anything()
+      expect.anything(),
+      { idempotencyKey: "initial-deposit-cs_checkout_1" }
     );
   });
 });
@@ -485,5 +491,79 @@ describe("handleCheckoutCompleted — monthly subscriptions", () => {
     // Monthly still skips the wallet deposit even on the fallback path.
     expect(stripeMock.customers.createBalanceTransaction).not.toHaveBeenCalled();
     expect(lifecycleMock.recordSubscription).toHaveBeenCalledWith(CUSTOMER_ID);
+  });
+});
+
+describe("handleCheckoutCompleted — Stripe retry after a failed delivery", () => {
+  // Stateful claim table and Stripe ledger, so the second delivery sees what the first left behind.
+  function statefulDeliveries() {
+    const claims = new Set<string>();
+    const ledger: Array<{ amount: number; metadata: Record<string, string> }> = [];
+    const keys = new Set<string>();
+    prismaMock.processedStripeEvent.create.mockImplementation(async ({ data }: { data: { stripeEventId: string } }) => {
+      if (claims.has(data.stripeEventId)) throw Object.assign(new Error("duplicate"), { code: "P2002" });
+      claims.add(data.stripeEventId);
+      return {};
+    });
+    prismaMock.processedStripeEvent.upsert.mockImplementation(async ({ create }: { create: { stripeEventId: string } }) => {
+      claims.add(create.stripeEventId);
+      return {};
+    });
+    prismaMock.processedStripeEvent.deleteMany.mockImplementation(async ({ where }: { where: { stripeEventId: string } }) => {
+      claims.delete(where.stripeEventId);
+      return { count: 1 };
+    });
+    stripeMock.customers.createBalanceTransaction.mockImplementation(
+      async (_id: string, params: { amount: number; metadata: Record<string, string> }, opts?: { idempotencyKey?: string }) => {
+        if (opts?.idempotencyKey && keys.has(opts.idempotencyKey)) return {};
+        if (opts?.idempotencyKey) keys.add(opts.idempotencyKey);
+        ledger.push(params);
+        return {};
+      });
+    stripeMock.customers.listBalanceTransactions.mockImplementation(async () => ({ data: [...ledger] }));
+    return { ledger };
+  }
+
+  it("provisions the team on retry when the first delivery failed at team creation", async () => {
+    const { ledger } = statefulDeliveries();
+    prismaMock.voucher.findUnique.mockResolvedValue({ id: 42, code: "BONUS25" });
+    hostedaiMock.createTeam.mockRejectedValueOnce(new Error("hosted.ai API down"));
+    const event = checkoutEvent({
+      amount_total: 7500,
+      metadata: {
+        gpu_product_id: "prod-gpu-1", billing_type: "hourly",
+        voucher_code: "BONUS25", voucher_credit_cents: "2500", original_deposit_cents: "10000",
+      },
+    });
+
+    expect((await deliver(event)).status).toBe(500);
+    expect((await deliver(event)).status).toBe(200);
+
+    expect(ledger).toEqual([expect.objectContaining({ amount: -10000 })]);
+    expect(mockCreateInvoiceForPayment).toHaveBeenCalledTimes(1);
+    expect(prismaMock.voucherRedemption.create).toHaveBeenCalledTimes(1);
+    expect(hostedaiMock.createTeam).toHaveBeenCalledTimes(2);
+    expect(stripeMock.customers.update).toHaveBeenCalledWith(CUSTOMER_ID, expect.objectContaining({
+      metadata: expect.objectContaining({ hostedai_team_id: TEAM.id }),
+    }));
+    // A third delivery after success is skipped outright.
+    const third = await deliver(event);
+    expect(await third.json()).toEqual({ received: true, skipped: true });
+    expect(hostedaiMock.createTeam).toHaveBeenCalledTimes(2);
+  });
+
+  it("credits the deposit on retry when the first delivery failed to credit it", async () => {
+    const { ledger } = statefulDeliveries();
+    stripeMock.customers.createBalanceTransaction.mockRejectedValueOnce(new Error("stripe_api_error"));
+    const event = checkoutEvent();
+
+    expect((await deliver(event)).status).toBe(500);
+    expect((await deliver(event)).status).toBe(200);
+
+    expect(ledger).toEqual([expect.objectContaining({ amount: -10000 })]);
+    expect(stripeMock.customers.createBalanceTransaction).toHaveBeenLastCalledWith(
+      CUSTOMER_ID, expect.anything(), { idempotencyKey: "initial-deposit-cs_checkout_1" });
+    expect(mockCreateInvoiceForPayment).toHaveBeenCalledTimes(1);
+    expect(hostedaiMock.createTeam).toHaveBeenCalledTimes(1);
   });
 });

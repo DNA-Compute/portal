@@ -62,6 +62,18 @@ async function claimEventForProcessing(
   }
 }
 
+/**
+ * Give up a claim whose handler failed, so Stripe's retry of the same event is processed
+ * instead of skipped. Every handler step that moves money or provisions is safe to repeat.
+ */
+async function releaseEventClaim(eventId: string): Promise<void> {
+  try {
+    await prisma.processedStripeEvent.deleteMany({ where: { stripeEventId: eventId } });
+  } catch (error) {
+    console.error(`[Webhook] Failed to release claim for ${eventId}; Stripe retries will be skipped:`, error);
+  }
+}
+
 // Keep legacy function signatures as aliases for backward compatibility within the file
 async function isEventProcessed(eventId: string): Promise<boolean> {
   try {
@@ -107,8 +119,9 @@ async function hasExistingBalanceTransaction(
   sessionId: string
 ): Promise<boolean> {
   try {
+    // Billing writes a transaction per interval, so look well past the most recent few.
     const transactions = await stripe.customers.listBalanceTransactions(customerId, {
-      limit: 20,
+      limit: 100,
     });
 
     return transactions.data.some(
@@ -168,10 +181,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  let claimed = false;
   try {
     // IDEMPOTENCY CHECK: Atomically claim this event for processing.
     // The first request to insert wins; subsequent requests get a unique constraint error.
-    const claimed = await claimEventForProcessing(event.id, event.type);
+    claimed = await claimEventForProcessing(event.id, event.type);
     if (!claimed) {
       console.log(`[Webhook] Skipping already processed event: ${event.id} (${event.type})`);
       return NextResponse.json({ received: true, skipped: true });
@@ -220,6 +234,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook handler error:", error);
+    if (claimed) await releaseEventClaim(event.id);
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 }
@@ -264,7 +279,7 @@ async function handleWalletTopup(
       type: "wallet_topup",
       checkout_session_id: session.id,
     },
-  });
+  }, { idempotencyKey: `wallet-topup-${session.id}` });
 
   // Mark event as processed AFTER successful balance transaction
   await markEventProcessed(eventId, "checkout.session.completed", session.id, customerId);
@@ -631,15 +646,17 @@ async function handleCheckoutCompleted(
           type: "wallet_funding",
           checkout_session_id: session.id,
         },
-      });
+      }, { idempotencyKey: `initial-deposit-${session.id}` });
       console.log(`✅ Added $${depositAmount / 100} credit to customer ${customerId}`);
 
       // Mark event as processed AFTER successful balance transaction
       await markEventProcessed(eventId, "checkout.session.completed", session.id, customerId);
     }
 
+    // The invoice and voucher record belong to the attempt that made the deposit. A retry
+    // after a later failure (e.g. team creation) must not issue them a second time.
     // Create invoice for the initial deposit (only for what they paid, not voucher portion)
-    if (amountPaid > 0) {
+    if (!existingDeposit && amountPaid > 0) {
       await createInvoiceForPayment(
         stripe,
         customerId,
@@ -651,7 +668,7 @@ async function handleCheckoutCompleted(
 
     // Record voucher redemption if a voucher was used
     const voucherCode = session.metadata?.voucher_code;
-    if (voucherCode && voucherCreditCents > 0) {
+    if (!existingDeposit && voucherCode && voucherCreditCents > 0) {
       try {
         const voucher = await prisma.voucher.findUnique({
           where: { code: voucherCode },
@@ -665,6 +682,7 @@ async function handleCheckoutCompleted(
                 customerEmail: customerEmail,
                 topupCents: amountPaid,
                 creditCents: voucherCreditCents,
+                stripeSessionId: session.id,
               },
             }),
             prisma.voucher.update({
