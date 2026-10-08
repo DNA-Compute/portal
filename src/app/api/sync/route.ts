@@ -798,7 +798,8 @@ export async function POST(request: NextRequest) {
         }
 
         // === Wallet refill check ===
-        if (!customerRefills.has(customerId)) {
+        // Auto-refill charges the saved card, so it stays hourly-only even though storage reaches monthly accounts.
+        if (customer.metadata?.billing_type === "hourly" && !customerRefills.has(customerId)) {
           const refillResult = await checkAndRefillWallet(customerId);
           customerRefills.set(customerId, refillResult);
         }

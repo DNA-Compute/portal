@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   charge: vi.fn().mockResolvedValue({}),
   volumes: vi.fn(),
   pods: vi.fn().mockResolvedValue([]),
+  refill: vi.fn().mockResolvedValue({ refilled: false }),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   customerCache: { findMany: mocks.customers },
@@ -26,7 +27,7 @@ vi.mock("@/lib/hostedai", () => ({
 vi.mock("@/lib/customer-cache", () => ({ cacheCustomer: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/pool-overview", () => ({ readPoolOverviewCache: () => null }));
 vi.mock("@/lib/pricing", () => ({ getStoragePricePerGBHourCents: () => 1, getStoppedInstanceRatePercent: () => 25 }));
-vi.mock("@/lib/wallet", () => ({ checkAndRefillWallet: vi.fn().mockResolvedValue({ refilled: false }), WALLET_CONFIG: {} }));
+vi.mock("@/lib/wallet", () => ({ checkAndRefillWallet: mocks.refill, WALLET_CONFIG: {} }));
 vi.mock("@/lib/email", () => ({ sendNegativeBalanceShutdownEmail: vi.fn() }));
 import { POST } from "@/app/api/sync/route";
 
@@ -101,5 +102,16 @@ describe("persistent shared storage account billing", () => {
     expect((await sync()).status).toBe(200);
     expect(mocks.charge).toHaveBeenCalledTimes(1);
     expect(mocks.charge).toHaveBeenCalledWith("primary", expect.objectContaining({ amount: 10 }));
+  });
+
+  it("auto-refills only hourly wallets, never a monthly account reached for storage", async () => {
+    // Auto-refill charges the saved card; monthly customers never opted into it.
+    customers.set("monthly", { id: "monthly", email: "monthly@example.com", balance: 500,
+      metadata: { hostedai_team_id: "team", billing_type: "monthly" } });
+    customers.set("hourly", { id: "hourly", email: "hourly@example.com", balance: 500,
+      metadata: { hostedai_team_id: "other-team", billing_type: "hourly" } });
+    expect((await sync()).status).toBe(200);
+    expect(mocks.refill).toHaveBeenCalledWith("hourly");
+    expect(mocks.refill).not.toHaveBeenCalledWith("monthly");
   });
 });
