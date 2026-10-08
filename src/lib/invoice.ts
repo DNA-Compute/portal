@@ -46,15 +46,13 @@ export async function createInvoiceForPayment(
     const currentBalance = "deleted" in customer ? 0 : customer.balance;
 
     // Step 4: If customer has ANY non-zero balance, temporarily zero it out
-    // so Stripe doesn't apply credit or add debt to the invoice when we finalize
+    // so Stripe doesn't apply credit or add debt to the invoice when we finalize.
+    // Hold and restore are keyed per invoice and retried once: a lost response must
+    // never leave the wallet zeroed, and a retry must never move the balance twice.
     let balanceNeutralized = false;
     if (currentBalance !== 0) {
-      await stripe.customers.createBalanceTransaction(customerId, {
-        amount: -currentBalance, // negate current balance to reach zero
-        currency: "usd",
-        description: "Temporary hold for invoice generation",
-        metadata: { type: "invoice_balance_hold", invoice_id: invoice.id },
-      });
+      await moveBalanceOnce(stripe, customerId, -currentBalance, "Temporary hold for invoice generation",
+        { type: "invoice_balance_hold", invoice_id: invoice.id }, `invoice-hold-${invoice.id}`);
       balanceNeutralized = true;
     }
 
@@ -68,13 +66,9 @@ export async function createInvoiceForPayment(
       });
     } finally {
       // Step 7: ALWAYS restore the balance, even if finalize/pay fails
-      if (balanceNeutralized && currentBalance !== 0) {
-        await stripe.customers.createBalanceTransaction(customerId, {
-          amount: currentBalance, // restore original balance
-          currency: "usd",
-          description: "Restore after invoice generation",
-          metadata: { type: "invoice_balance_restore", invoice_id: invoice.id },
-        });
+      if (balanceNeutralized) {
+        await moveBalanceOnce(stripe, customerId, currentBalance, "Restore after invoice generation",
+          { type: "invoice_balance_restore", invoice_id: invoice.id }, `invoice-restore-${invoice.id}`);
       }
     }
 
@@ -86,3 +80,28 @@ export async function createInvoiceForPayment(
   }
 }
 
+/**
+ * Apply one balance adjustment exactly once. The idempotency key makes the retry return
+ * the first attempt's result if that attempt landed but its response was lost.
+ */
+async function moveBalanceOnce(
+  stripe: Stripe,
+  customerId: string,
+  amount: number,
+  description: string,
+  metadata: Record<string, string>,
+  idempotencyKey: string
+) {
+  const params = { amount, currency: "usd", description, metadata };
+  try {
+    return await stripe.customers.createBalanceTransaction(customerId, params, { idempotencyKey });
+  } catch (firstError) {
+    console.error(`[Invoice] Balance adjustment ${idempotencyKey} failed, retrying once:`, firstError);
+    try {
+      return await stripe.customers.createBalanceTransaction(customerId, params, { idempotencyKey });
+    } catch (retryError) {
+      console.error(`[Invoice] CRITICAL: balance adjustment ${idempotencyKey} for ${customerId} (${amount} cents) may be incomplete; check the customer's balance in Stripe:`, retryError);
+      throw retryError;
+    }
+  }
+}

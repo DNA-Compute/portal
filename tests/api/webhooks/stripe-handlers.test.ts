@@ -698,3 +698,60 @@ describe("handleWalletTopup — Stripe retry after a failed delivery", () => {
     expect(mockCreateInvoiceForPayment).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("handleWalletTopup — existing-credit lookup", () => {
+  beforeEach(() => {
+    stripeMock.customers.retrieve.mockResolvedValue(makeCustomer());
+  });
+
+  it("finds the credit past the first page of interval billing, so it is not credited twice", async () => {
+    const billing = Array.from({ length: 100 }, (_, i) => ({ id: `cbtxn_${i}`, created: 2000 - i, metadata: { type: "hourly" } }));
+    stripeMock.customers.listBalanceTransactions
+      .mockResolvedValueOnce({ data: billing, has_more: true })
+      .mockResolvedValueOnce({ data: [{ id: "cbtxn_credit", created: 1500, metadata: { checkout_session_id: "cs_topup_1" } }], has_more: false });
+
+    const res = await deliver(topupEvent({ created: 1000 }));
+
+    expect(res.status).toBe(200);
+    expect(stripeMock.customers.listBalanceTransactions).toHaveBeenLastCalledWith(CUSTOMER_ID, { limit: 100, starting_after: "cbtxn_99" });
+    expect(stripeMock.customers.createBalanceTransaction).not.toHaveBeenCalled();
+  });
+
+  it("stops paging once it reaches transactions older than the session", async () => {
+    stripeMock.customers.listBalanceTransactions.mockResolvedValueOnce({
+      data: [{ id: "cbtxn_new", created: 2000, metadata: {} }, { id: "cbtxn_old", created: 900, metadata: {} }],
+      has_more: true,
+    });
+
+    const res = await deliver(topupEvent({ created: 1000 }));
+
+    expect(res.status).toBe(200);
+    expect(stripeMock.customers.listBalanceTransactions).toHaveBeenCalledTimes(1);
+    expect(stripeMock.customers.createBalanceTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails the delivery instead of crediting when Stripe cannot be read, so Stripe retries", async () => {
+    stripeMock.customers.listBalanceTransactions.mockRejectedValue(new Error("stripe_api_error"));
+
+    const res = await deliver(topupEvent({}));
+
+    expect(res.status).toBe(500);
+    expect(stripeMock.customers.createBalanceTransaction).not.toHaveBeenCalled();
+    expect(prismaMock.processedStripeEvent.deleteMany).toHaveBeenCalledWith({ where: { stripeEventId: "evt_topup_1" } });
+  });
+
+  it("does not credit twice when the first credit landed but its response was lost", async () => {
+    const ledger: Array<{ id: string; created: number; metadata: Record<string, string> }> = [];
+    stripeMock.customers.listBalanceTransactions.mockImplementation(async () => ({ data: [...ledger], has_more: false }));
+    stripeMock.customers.createBalanceTransaction.mockImplementationOnce(async (_id: string, params: { metadata: Record<string, string> }) => {
+      ledger.push({ id: "cbtxn_credit", created: 1500, metadata: params.metadata });
+      throw new Error("socket hang up");
+    });
+
+    expect((await deliver(topupEvent({ created: 1000 }))).status).toBe(500);
+    expect((await deliver(topupEvent({ created: 1000 }))).status).toBe(200);
+
+    expect(ledger).toHaveLength(1);
+    expect(stripeMock.customers.createBalanceTransaction).toHaveBeenCalledTimes(1);
+  });
+});

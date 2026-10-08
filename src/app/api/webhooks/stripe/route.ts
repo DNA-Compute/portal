@@ -64,7 +64,8 @@ async function claimEventForProcessing(
 
 /**
  * Give up a claim whose handler failed, so Stripe's retry of the same event is processed
- * instead of skipped. Every handler step that moves money or provisions is safe to repeat.
+ * instead of skipped. Wallet credits dedupe on the checkout session; team creation runs
+ * last among the steps that can fail, so a retry repeats it only if it did not complete.
  */
 async function releaseEventClaim(eventId: string): Promise<void> {
   try {
@@ -110,26 +111,27 @@ async function markEventProcessed(
 }
 
 /**
- * Check if a balance transaction already exists for a checkout session
- * This is a secondary check in case the event tracking fails
+ * Whether this checkout session's wallet credit already exists, e.g. from an earlier delivery
+ * whose later step failed. Pages back to the session's creation time, since interval billing
+ * writes many newer transactions. Throws rather than guessing when Stripe cannot be read: a
+ * false "no" would double-credit once the 24h idempotency key has expired.
  */
 async function hasExistingBalanceTransaction(
   stripe: Stripe,
   customerId: string,
-  sessionId: string
+  session: Stripe.Checkout.Session
 ): Promise<boolean> {
-  try {
-    // Billing writes a transaction per interval, so look well past the most recent few.
-    const transactions = await stripe.customers.listBalanceTransactions(customerId, {
+  let startingAfter: string | undefined;
+  for (;;) {
+    const page = await stripe.customers.listBalanceTransactions(customerId, {
       limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
     });
-
-    return transactions.data.some(
-      (txn) => txn.metadata?.checkout_session_id === sessionId
-    );
-  } catch (error) {
-    console.error("[Webhook] Error checking existing balance transactions:", error);
-    return false;
+    if (page.data.some((txn) => txn.metadata?.checkout_session_id === session.id)) return true;
+    const oldest = page.data[page.data.length - 1];
+    // Newest first: once past the session's creation, nothing older can belong to it.
+    if (!page.has_more || !oldest || (session.created && oldest.created < session.created)) return false;
+    startingAfter = oldest.id;
   }
 }
 
@@ -262,7 +264,7 @@ async function handleWalletTopup(
   console.log("Session metadata:", JSON.stringify(session.metadata));
 
   // IDEMPOTENCY CHECK: Verify no balance transaction already exists for this session
-  const existingTxn = await hasExistingBalanceTransaction(stripe, customerId, session.id);
+  const existingTxn = await hasExistingBalanceTransaction(stripe, customerId, session);
   if (existingTxn) {
     console.log(`[Webhook] Skipping duplicate wallet top-up for session ${session.id} - balance transaction already exists`);
     // Mark as processed anyway to prevent future retries
@@ -631,7 +633,7 @@ async function handleCheckoutCompleted(
     console.log(`Adding $${depositAmount / 100} credit for wallet...`);
 
     // IDEMPOTENCY CHECK: Verify no balance transaction already exists for this session
-    const existingDeposit = await hasExistingBalanceTransaction(stripe, customerId, session.id);
+    const existingDeposit = await hasExistingBalanceTransaction(stripe, customerId, session);
     if (existingDeposit) {
       console.log(`[Webhook] Skipping duplicate initial wallet deposit for session ${session.id} - balance transaction already exists`);
       // Mark as processed anyway to prevent future retries
@@ -712,6 +714,11 @@ async function handleCheckoutCompleted(
     }
   }
 
+  // Generate a magic link token for the dashboard. Signed before the team exists: a throw
+  // after createTeam would make Stripe's retry create a second team.
+  const token = generateCustomerToken(customerEmail.toLowerCase(), customerId);
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}`;
+
   // Generate a password and create team with pre-onboarded user
   const generatedPassword = generateSecurePassword();
 
@@ -791,10 +798,6 @@ async function handleCheckoutCompleted(
     console.error("❌ WARNING: Failed to create OTL (non-fatal):", error);
     // Don't throw - OTL is optional, user can still log in with password
   }
-
-  // Generate a magic link token for the dashboard
-  const token = generateCustomerToken(customerEmail.toLowerCase(), customerId);
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}`;
 
   console.log(`Dashboard URL: ${dashboardUrl.split("?")[0]}?token=***`);
 

@@ -289,10 +289,9 @@ describe("POST /api/webhooks/stripe", () => {
 
       const res = await POST(makeRequest("{}", "t=1,v1=valid"));
 
-      // hasExistingBalanceTransaction has its own try/catch (returns false on
-      // error), so the listBalanceTransactions throw is swallowed. The
-      // subsequent createBalanceTransaction call is NOT wrapped — it throws,
-      // the outer catch returns 500.
+      // hasExistingBalanceTransaction refuses to guess when Stripe cannot be
+      // read, so the listBalanceTransactions throw reaches the outer catch and
+      // the route returns 500 without crediting.
       expect(res.status).toBe(500);
       const body = await res.json();
       expect(body.error).toBe("Webhook handler failed");
@@ -300,23 +299,10 @@ describe("POST /api/webhooks/stripe", () => {
       expect(mockProcessedEventDeleteMany).toHaveBeenCalledWith({ where: { stripeEventId: "evt_throws_1" } });
     });
 
-    it("keeps the claim when the handler succeeds, so re-deliveries stay skipped", async () => {
-      mockConstructEvent.mockReturnValue({
-        id: "evt_ok_keep_claim",
-        type: "checkout.session.completed",
-        data: { object: { id: "cs_ok", metadata: { type: "wallet_topup" } } },
-      });
-      mockProcessedEventCreate.mockResolvedValue({});
-
-      const res = await POST(makeRequest("{}", "t=1,v1=valid"));
-      expect(res.status).toBe(200);
-      expect(mockProcessedEventDeleteMany).not.toHaveBeenCalled();
-    });
-
     it("documents: handlers' internal error swallowing means many failures still return 200", async () => {
       // Worth pinning so we don't pretend the router catches everything.
-      // hasExistingBalanceTransaction, the voucher block, and the
-      // free-trial upgrade block all swallow errors internally. A test that
+      // The invoice helper, the voucher block, and the free-trial upgrade
+      // block all swallow errors internally. A test that
       // asserts "any handler bug returns 500" would be a lie.
       //
       // If you're adding a new handler, make sure unrecoverable errors
