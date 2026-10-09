@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/** "2 GPUs", or "25% GPU share" for a fractional launch. */
+export function gpuAllocationLabel(gpuCount: number, sharePercent?: number): string {
+  return sharePercent !== undefined && sharePercent < 100 ? `${sharePercent}% GPU share` : `${gpuCount} GPU${gpuCount === 1 ? "" : "s"}`;
+}
+
 const identifier = z.string().trim().min(1).max(256);
 const rate = z.number().finite().nonnegative().max(100_000_000);
 

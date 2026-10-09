@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { gpuAllocationLabel } from "@/lib/launch-config";
 
 // Event types for customer activity
 export type ActivityEventType =
@@ -143,16 +144,18 @@ export function logGPULaunched(
   poolName: string,
   gpuCount: number = 1,
   podName?: string,
-  subscriptionId?: string
+  subscriptionId?: string,
+  gpuSharePercent?: number
 ): Promise<ActivityEvent> {
+  const allocation = gpuAllocationLabel(gpuCount, gpuSharePercent);
   const desc = podName
-    ? `Launched ${gpuCount} GPU${gpuCount > 1 ? "s" : ""} "${podName}" on ${poolName}`
-    : `Launched ${gpuCount} GPU${gpuCount > 1 ? "s" : ""} on ${poolName}`;
+    ? `Launched ${allocation} "${podName}" on ${poolName}`
+    : `Launched ${allocation} on ${poolName}`;
   return logActivity(
     customerId,
     "gpu_launched",
     desc,
-    { poolName, gpuCount, podName, subscriptionId }
+    { poolName, gpuCount, podName, subscriptionId, ...(gpuSharePercent !== undefined ? { gpuSharePercent } : {}) }
   );
 }
 

@@ -150,7 +150,8 @@ async function permittedService(teamId: string, serviceId: string): Promise<Laun
       offset = next;
     }
   }
-  throw new LaunchCapabilityError("This GPU service is not permitted for the active team.", 403, "SERVICE_NOT_PERMITTED");
+  // hosted.ai also hides a team's scenarios while every compatible pool is full, so this cannot tell sold out from not allowed.
+  throw new LaunchCapabilityError("This GPU offering is unavailable for your account right now. It may be fully booked, so try again later or contact support.", 403, "SERVICE_NOT_PERMITTED");
 }
 export interface LaunchCapabilitySelection { gpuCount?: number; gpuSharePercent?: number; imageHash?: string; instanceTypeId?: string }
 

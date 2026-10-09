@@ -135,7 +135,8 @@ async function notifyWhenReady(auth: AuthenticatedCustomer, input: ConfiguredLau
   const { customer, payload } = auth;
   const gpuCount = resolved.configuration.gpuCount;
   const priorLaunch = await getFirstGpuLaunch(customer.id);
-  await logGPULaunched(customer.id, resolved.productName, gpuCount, input.name, instanceId);
+  const gpuSharePercent = resolved.podOptions?.gpuShare?.percent;
+  await logGPULaunched(customer.id, resolved.productName, gpuCount, input.name, instanceId, gpuSharePercent);
   sendOnboardingEvent({
     type: "gpu.launched", email: payload.email,
     name: customer.name || customer.email?.split("@")[0] || "Unknown",
@@ -143,7 +144,7 @@ async function notifyWhenReady(auth: AuthenticatedCustomer, input: ConfiguredLau
   });
   if (customer.email) {
     const token = generateCustomerToken(payload.email.toLowerCase(), customer.id);
-    await sendGpuLaunchedEmail({ to: customer.email, customerName: customer.name || customer.email.split("@")[0], poolName: resolved.productName, gpuCount, dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}` });
+    await sendGpuLaunchedEmail({ to: customer.email, customerName: customer.name || customer.email.split("@")[0], poolName: resolved.productName, gpuCount, gpuSharePercent, dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}` });
   }
 }
 

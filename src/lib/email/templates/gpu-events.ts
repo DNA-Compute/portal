@@ -2,6 +2,7 @@ import { sendEmail } from "../client";
 import { escapeHtml, emailLayout, emailGreeting, emailText, emailButton, emailSuccessBox, emailWarningBox, emailDangerBox, emailInfoBox, emailSignoff, plainTextFooter } from "../utils";
 import { loadTemplate } from "../template-loader";
 import { getBrandName } from "@/lib/branding";
+import { gpuAllocationLabel } from "@/lib/launch-config";
 
 export async function sendHfDeploymentEmail(params: {
   to: string;
@@ -73,9 +74,11 @@ export async function sendGpuLaunchedEmail(params: {
   customerName: string;
   poolName: string;
   gpuCount: number;
+  gpuSharePercent?: number;
   dashboardUrl: string;
 }) {
-  const { to, customerName, poolName, gpuCount, dashboardUrl } = params;
+  const { to, customerName, poolName, gpuCount, gpuSharePercent, dashboardUrl } = params;
+  const allocation = gpuAllocationLabel(gpuCount, gpuSharePercent);
   const safeCustomerName = escapeHtml(customerName);
   const safePoolName = escapeHtml(poolName);
 
@@ -83,19 +86,19 @@ export async function sendGpuLaunchedEmail(params: {
     ${emailGreeting(safeCustomerName)}
     ${emailSuccessBox(`<p style="margin: 0; font-size: 15px; color: #065f46;">
       <strong>GPU Instance Started</strong><br>
-      ${gpuCount} GPU${gpuCount > 1 ? "s" : ""} on <code style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 13px;">${safePoolName}</code>
+      ${allocation} on <code style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 13px;">${safePoolName}</code>
     </p>`)}
     ${emailText("Your GPU is being provisioned. View connection details in your dashboard.")}
     ${emailButton("Open Dashboard", dashboardUrl)}
     ${emailSignoff()}
   `;
 
-  const subject = `GPU instance started: ${gpuCount} GPU${gpuCount > 1 ? "s" : ""} on ${poolName}`;
-  const fallbackHtml = emailLayout({ preheader: `${gpuCount} GPU${gpuCount > 1 ? "s" : ""} provisioned on ${poolName}`, body });
+  const subject = `GPU instance started: ${allocation} on ${poolName}`;
+  const fallbackHtml = emailLayout({ preheader: `${allocation} provisioned on ${poolName}`, body });
   const fallbackText = `Hi ${customerName},
 
 GPU Instance Started
-${gpuCount} GPU${gpuCount > 1 ? "s" : ""} on ${poolName}
+${allocation} on ${poolName}
 
 Your GPU is being provisioned. View connection details in your dashboard.
 
@@ -106,7 +109,7 @@ ${plainTextFooter()}`;
 
   const template = await loadTemplate(
     "gpu-launched",
-    { customerName: safeCustomerName, poolName: safePoolName, gpuCount: String(gpuCount), dashboardUrl },
+    { customerName: safeCustomerName, poolName: safePoolName, gpuCount: String(gpuCount), gpuAllocation: allocation, dashboardUrl },
     { subject, html: fallbackHtml, text: fallbackText }
   );
 

@@ -16,6 +16,7 @@ import { GPUCardServices } from "./GPUCardServices";
 import { GPUCardHfDeployment } from "./GPUCardHfDeployment";
 import { AddStorageModal } from "./AddStorageModal";
 import { SaveSnapshotModal } from "./SaveSnapshotModal";
+import { gpuAllocationLabel } from "@/lib/launch-config";
 
 export interface PoolSubscriptionCardProps {
   subscription: PoolSubscription;
@@ -462,7 +463,7 @@ export function PoolSubscriptionCard({
   // Don't show running quip when terminating - show termination status instead
   const runningQuip = isActive && !isTerminating ? getRunningTimeQuip(subscription.created_at) : null;
   const gpuCount = subscription.gpuCount ?? subscription.per_pod_info?.vgpu_count ?? subscription.pods?.[0]?.gpu_count ?? 1;
-  const gpuLabel = subscription.gpuSharePercent ? `${subscription.gpuSharePercent}% GPU share` : `${gpuCount} GPU`;
+  const gpuLabel = gpuAllocationLabel(gpuCount, subscription.gpuSharePercent);
 
   // Get pods for SSH info display (deduplicated by pod_name to prevent transient backend duplicates)
   const podsForSSH = (connectionInfo?.pods || subscription.pods || []).map((pod, idx) => ({
