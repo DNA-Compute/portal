@@ -124,6 +124,7 @@ export interface PodMetadata {
   hourlyRate?: number;
   hourlyRateBasis?: string;
   gpuCount?: number;
+  gpuSharePercent?: number;
   stoppedHourlyRate?: number;
   stoppedRatePercent?: number;
   startupScriptStatus?: string | null;
@@ -147,6 +148,7 @@ export interface PoolSubscription {
   hourlyRate?: number;
   hourlyRateBasis?: string;
   gpuCount?: number;
+  gpuSharePercent?: number;
   stoppedHourlyRate?: number;
   stoppedRatePercent?: number;
   billingType?: string;

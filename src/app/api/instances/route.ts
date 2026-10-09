@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch pod metadata for unified instances
     const instanceIds = poolSubscriptions.map(s => String(s.id));
-    type MetaValue = { displayName: string | null; notes: string | null; gpuCount?: number; hourlyRate?: number; hourlyRateBasis?: string; stoppedRatePercent?: number; stoppedHourlyRate?: number; startupScriptStatus?: string | null; stripeSubscriptionId?: string; billingType?: string; deployStatus?: string | null; deployStatusReason?: string | null };
+    type MetaValue = { displayName: string | null; notes: string | null; gpuCount?: number; gpuSharePercent?: number; hourlyRate?: number; hourlyRateBasis?: string; stoppedRatePercent?: number; stoppedHourlyRate?: number; startupScriptStatus?: string | null; stripeSubscriptionId?: string; billingType?: string; deployStatus?: string | null; deployStatusReason?: string | null };
     let podMetadata: Record<string, MetaValue> = {};
     let hfDeployments: Record<string, {
       id: string;
@@ -191,12 +191,16 @@ export async function GET(request: NextRequest) {
         podMetadata = sortedMeta.reduce((acc, m) => {
           const snapshot = m.rateSnapshot && typeof m.rateSnapshot === "object" && !Array.isArray(m.rateSnapshot) ? m.rateSnapshot : null;
           const configuration = m.launchConfiguration && typeof m.launchConfiguration === "object" && !Array.isArray(m.launchConfiguration) ? m.launchConfiguration : null;
+          const resources = configuration && configuration.resources && typeof configuration.resources === "object" && !Array.isArray(configuration.resources) ? configuration.resources : null;
+          const sharePercent = resources?.gpuSharePercent;
           const hourlyRateCents = getPodHourlyRateCents(m, 1);
           const stoppedHourlyRateCents = m.hourlyRateBasis === "per_instance" ? getPodStoppedHourlyRateCents(m, 1, 0) : null;
           const metaValue: MetaValue = {
             displayName: m.displayName,
             notes: m.notes,
             gpuCount: configuration && typeof configuration.gpuCount === "number" && Number.isInteger(configuration.gpuCount) && configuration.gpuCount > 0 ? configuration.gpuCount : undefined,
+            // A fractional launch is one share of one GPU; whole-GPU launches omit it.
+            gpuSharePercent: typeof sharePercent === "number" && Number.isInteger(sharePercent) && sharePercent > 0 && sharePercent < 100 ? sharePercent : undefined,
             hourlyRate: hourlyRateCents !== null ? hourlyRateCents / 100 : undefined,
             hourlyRateBasis: m.hourlyRateBasis || "per_gpu",
             stoppedRatePercent: hourlyRateCents !== null && snapshot && typeof snapshot.stoppedRatePercent === "number" && Number.isFinite(snapshot.stoppedRatePercent) && snapshot.stoppedRatePercent >= 0 && snapshot.stoppedRatePercent <= 100 ? snapshot.stoppedRatePercent : undefined,

@@ -123,4 +123,24 @@ describe("GET /api/instances — PA-183 GPU count backfill", () => {
     const body = await res.json();
     expect(body.poolSubscriptions[0].pods[0].gpu_count).toBe(1);
   });
+
+  it("reports a fractional launch as its GPU share, and a whole-GPU launch without one", async () => {
+    mockGetUnifiedInstances.mockResolvedValue({
+      items: [
+        { id: "i-share", name: "share", status: "Running", pod_info: { vgpu_count: 1 }, instance_type: { cpu_cores: 4, ram_mb: 8192 } },
+        { id: "i-whole", name: "whole", status: "Running", pod_info: { vgpu_count: 2 }, instance_type: { cpu_cores: 4, ram_mb: 8192 } },
+      ],
+      total_items: 2,
+    });
+    mockGetUnifiedInstanceDetail.mockImplementation(async (id: string) => ({ id, pod_info: { vgpu_count: id === "i-share" ? 1 : 2 } }));
+    const meta = (instanceId: string, gpuCount: number, gpuSharePercent: number) => ({
+      instanceId, subscriptionId: `instance-${instanceId}`, displayName: instanceId, notes: null, billingType: "hourly",
+      hourlyRateCents: 17, hourlyRateBasis: "per_instance", launchConfiguration: { gpuCount, resources: { gpuCount, gpuSharePercent } },
+    });
+    mockFindManyPodMeta.mockResolvedValue([meta("i-share", 1, 25), meta("i-whole", 2, 100)]);
+
+    const body = await (await GET(req())).json();
+    expect(body.podMetadata["i-share"]).toMatchObject({ gpuCount: 1, gpuSharePercent: 25 });
+    expect(body.podMetadata["i-whole"].gpuSharePercent).toBeUndefined();
+  });
 });

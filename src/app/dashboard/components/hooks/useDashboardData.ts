@@ -147,6 +147,7 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
           return {
             ...sub,
             gpuCount,
+            gpuSharePercent: meta?.gpuSharePercent,
             hourlyRate,
             hourlyRateBasis: basis,
             billingType: meta?.billingType ?? sub.billingType,

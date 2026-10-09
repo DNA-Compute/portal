@@ -462,6 +462,7 @@ export function PoolSubscriptionCard({
   // Don't show running quip when terminating - show termination status instead
   const runningQuip = isActive && !isTerminating ? getRunningTimeQuip(subscription.created_at) : null;
   const gpuCount = subscription.gpuCount ?? subscription.per_pod_info?.vgpu_count ?? subscription.pods?.[0]?.gpu_count ?? 1;
+  const gpuLabel = subscription.gpuSharePercent ? `${subscription.gpuSharePercent}% GPU share` : `${gpuCount} GPU`;
 
   // Get pods for SSH info display (deduplicated by pod_name to prevent transient backend duplicates)
   const podsForSSH = (connectionInfo?.pods || subscription.pods || []).map((pod, idx) => ({
@@ -495,7 +496,7 @@ export function PoolSubscriptionCard({
           </span>
         </div>
         <div className="text-2xl font-bold text-white">{isMonthly ? monthlyPriceDisplay || "Monthly" : subscription.hourlyRate !== undefined ? `$${subscription.hourlyRate.toFixed(2)}/hr` : "--"}</div>
-        <div className="text-xs text-white/70 mt-1">{gpuCount} GPU</div>
+        <div className="text-xs text-white/70 mt-1">{gpuLabel}</div>
       </div>
     );
   }
@@ -793,7 +794,7 @@ export function PoolSubscriptionCard({
                 );
               })}
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-[var(--line)] text-zinc-600 text-xs rounded-lg">
-                {gpuCount} GPU · {subscription.per_pod_info?.vcpu_count || 4} vCPU · {Math.round((subscription.per_pod_info?.ram_mb || 8192) / 1024)}GB RAM
+                {gpuLabel} · {subscription.per_pod_info?.vcpu_count || 4} vCPU · {Math.round((subscription.per_pod_info?.ram_mb || 8192) / 1024)}GB RAM
               </span>
             </div>
           )}
