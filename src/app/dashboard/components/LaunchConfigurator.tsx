@@ -395,7 +395,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                     onChange={() => update({ regionId: item.id, gpuCount: 0, gpuSharePercent: undefined, instanceTypeId: "", imageHash: "", rootStorageBlockId: "", poolId: undefined, gpuModelId: undefined, storage: { mode: "none" } })}>
                     <span className="pr-6 text-sm font-semibold">{item.name}</span>
                     {item.country && <span className="text-xs text-[var(--fg-muted)]">{item.country}</span>}
-                  </ChoiceCard>)}</div> : <p className="text-sm text-[var(--fg-muted)]">{configuration.productId ? "Checking where this GPU is available…" : "Choose a GPU to see its regions."}</p>}
+                  </ChoiceCard>)}</div> : <p className="text-sm text-[var(--fg-muted)]">{!configuration.productId ? "Choose a GPU to see its regions." : capabilityError ? "No region is available for this GPU right now." : "Checking where this GPU is available…"}</p>}
                 </fieldset>
               </>}
               {step === 1 && capabilities && (noCapacity ? <div className="border border-dashed border-[var(--line-strong)] p-6">

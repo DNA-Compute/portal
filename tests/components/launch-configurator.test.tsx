@@ -56,4 +56,26 @@ describe("GPU configuration availability", () => {
     expect(screen.getByRole("spinbutton", { name: /Whole GPUs/ })).toHaveValue(1);
     expect(screen.getByRole("combobox", { name: /CPU & RAM profile/ })).toHaveValue("cpu");
   });
+
+  it("reports a fully booked GPU without also claiming to still check its regions", async () => {
+    const message = "This GPU offering is unavailable for your account right now. It may be fully booked, so try again later or contact support.";
+    vi.stubGlobal("fetch", vi.fn(async (input: string) => {
+      const url = new URL(input, "http://localhost");
+      if (url.pathname === "/api/instances/launch-options") return Response.json({
+        products: [{ id: "gpu", name: "GPU", gpuFamily: "GPU", billingType: "hourly", configurationPricing: null, vramGb: null }],
+        sshKeys: [], teamId: "team", walletBalanceCents: 0,
+      });
+      if (url.pathname === "/api/account/wallet-topup") return Response.json({ amounts: [] });
+      if (url.pathname === "/api/instances/configuration") return Response.json({ error: message, code: "SERVICE_NOT_PERMITTED" }, { status: 403 });
+      throw new Error(`Unexpected request: ${url.pathname}`);
+    }));
+
+    await act(async () => {
+      render(<LaunchConfigurator isOpen token="local-session" onClose={vi.fn()} onSuccess={vi.fn()} />);
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(screen.queryByText("Checking where this GPU is available…")).toBeNull();
+    expect(screen.getByText("No region is available for this GPU right now.")).toBeInTheDocument();
+  });
 });
+
