@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { create } = vi.hoisted(() => ({ create: vi.fn() }));
-vi.mock("@/lib/prisma", () => ({ prisma: { activityEvent: { create } } }));
+const { create, product } = vi.hoisted(() => ({ create: vi.fn(), product: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({ prisma: { activityEvent: { create }, gpuProduct: { findUnique: product } } }));
 
 import { gpuAllocationLabel } from "@/lib/launch-config";
-import { logGPULaunched } from "@/lib/activity";
+import { instanceProductName, logGPULaunched } from "@/lib/activity";
 
 beforeEach(() => {
   create.mockReset();
@@ -25,5 +25,16 @@ describe("GPU allocation wording", () => {
     expect(JSON.parse(create.mock.calls[0][0].data.metadata)).toMatchObject({ gpuCount: 1, gpuSharePercent: 50 });
     await logGPULaunched("cus", "H100", 2, "trainer", "instance");
     expect(create.mock.calls[1][0].data.description).toBe('Launched 2 GPUs "trainer" on H100');
+  });
+
+  it("names an instance by its offering, falling back when the offering is unknown or unreadable", async () => {
+    product.mockResolvedValueOnce({ name: "H100 fractional" });
+    expect(await instanceProductName("product")).toBe("H100 fractional");
+    expect(product).toHaveBeenCalledWith({ where: { id: "product" }, select: { name: true } });
+    expect(await instanceProductName(null)).toBe("GPU Instance");
+    product.mockResolvedValueOnce(null);
+    expect(await instanceProductName("deleted")).toBe("GPU Instance");
+    product.mockRejectedValueOnce(new Error("Database unavailable"));
+    expect(await instanceProductName("product")).toBe("GPU Instance");
   });
 });

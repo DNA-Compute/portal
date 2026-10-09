@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   deleteMetadata: vi.fn().mockResolvedValue({}),
   findMany: vi.fn().mockResolvedValue([]),
   updateMetadata: vi.fn().mockResolvedValue({}),
+  logTerminated: vi.fn().mockResolvedValue(undefined),
+  productName: vi.fn().mockResolvedValue("GPU Instance"),
 }));
 vi.mock("@/lib/customer-auth", () => ({
   verifyCustomerToken: () => ({ customerId: "cus_owner", email: "owner@example.com" }),
@@ -44,7 +46,7 @@ vi.mock("@/lib/hostedai", () => ({
   getSharedVolumes: vi.fn().mockResolvedValue([]),
   deleteSharedVolume: vi.fn(),
 }));
-vi.mock("@/lib/activity", () => ({ logGPUTerminated: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/activity", () => ({ logGPUTerminated: mocks.logTerminated, instanceProductName: mocks.productName }));
 vi.mock("@/lib/email", () => ({
   sendGpuTerminatedEmail: vi.fn().mockResolvedValue(undefined),
   sendNegativeBalanceShutdownEmail: vi.fn(),
@@ -97,6 +99,14 @@ describe("termination settlement uses the purchased rate basis", () => {
     mocks.metadata.mockResolvedValue(savedRate("per_instance"));
     expect((await terminate(id)).status).toBe(200);
     expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -300 }));
+  });
+
+  it("names the launched offering, not a placeholder, in the termination activity", async () => {
+    mocks.metadata.mockResolvedValue({ ...savedRate("per_instance"), productId: "product_h100" });
+    mocks.productName.mockResolvedValueOnce("H100 fractional");
+    expect((await terminate(instanceId)).status).toBe(200);
+    expect(mocks.productName).toHaveBeenCalledWith("product_h100");
+    expect(mocks.logTerminated).toHaveBeenCalledWith("cus_owner", "H100 fractional", "GPU", instanceId);
   });
 
   it.each(["per_gpu", null])("preserves legacy GPU quantity when refunding (%s)", async basis => {

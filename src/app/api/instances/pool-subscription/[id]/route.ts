@@ -3,7 +3,7 @@ import { verifyCustomerToken } from "@/lib/customer-auth";
 import { getStripe } from "@/lib/stripe";
 import { unsubscribeFromPool, getPoolSubscriptions, deleteInstance, getUnifiedInstanceDetail } from "@/lib/hostedai";
 import type { PoolSubscription } from "@/lib/hostedai";
-import { logGPUTerminated } from "@/lib/activity";
+import { instanceProductName, logGPUTerminated } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { sendGpuTerminatedEmail } from "@/lib/email";
 import { generateCustomerToken } from "@/lib/customer-auth";
@@ -322,7 +322,7 @@ export async function DELETE(
         }
       }
 
-      await logGPUTerminated(ctx.accountId, "GPU Instance", displayName, id);
+      await logGPUTerminated(ctx.accountId, await instanceProductName(podMetadata?.productId), displayName, id);
 
       try {
         const dashboardToken = generateCustomerToken(payload.email.toLowerCase(), payload.customerId);
@@ -467,7 +467,7 @@ export async function DELETE(
         where: { subscriptionId: String(subscriptionId) },
       });
       console.log(`[Billing] Cleaned up PodMetadata for subscription ${subscriptionId}`);
-    } catch (deleteError) {
+    } catch {
       // PodMetadata may not exist (e.g. hourly pods) - that's fine
       console.log(`[Billing] No PodMetadata to clean up for subscription ${subscriptionId}`);
     }

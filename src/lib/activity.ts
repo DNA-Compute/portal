@@ -210,6 +210,16 @@ export function logGPUStarted(
   });
 }
 
+/** The offering a configured instance was launched from, for activity wording. */
+export async function instanceProductName(productId: string | null | undefined): Promise<string> {
+  if (!productId) return "GPU Instance";
+  try {
+    return (await prisma.gpuProduct.findUnique({ where: { id: productId }, select: { name: true } }))?.name || "GPU Instance";
+  } catch {
+    return "GPU Instance";
+  }
+}
+
 export function logGPUTerminated(
   customerId: string,
   poolName: string,

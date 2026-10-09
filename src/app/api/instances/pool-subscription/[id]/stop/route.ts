@@ -6,7 +6,7 @@ import {
   stopInstance,
   getUnifiedInstances,
 } from "@/lib/hostedai";
-import { logGPUStopped } from "@/lib/activity";
+import { instanceProductName, logGPUStopped } from "@/lib/activity";
 
 // POST - Stop an instance
 export async function POST(
@@ -42,14 +42,16 @@ export async function POST(
     await stopInstance(id);
 
     let displayNameForLog: string | undefined;
+    let productIdForLog: string | null | undefined;
     try {
       const meta = await prisma.podMetadata.findFirst({
         where: { OR: [{ instanceId: id }, { subscriptionId: id }] },
-        select: { displayName: true },
+        select: { displayName: true, productId: true },
       });
       displayNameForLog = meta?.displayName || undefined;
+      productIdForLog = meta?.productId;
     } catch { /* ignore */ }
-    await logGPUStopped(payload.customerId, "GPU Instance", displayNameForLog, id);
+    await logGPUStopped(payload.customerId, await instanceProductName(productIdForLog), displayNameForLog, id);
 
     return NextResponse.json({
       success: true,
