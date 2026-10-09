@@ -332,7 +332,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
   </div>;
 
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(5,12,11,0.75)] p-0 backdrop-blur-sm sm:p-5">
-    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="launch-title" className="flex max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden border border-[var(--line)] bg-[var(--ink-soft)] text-[var(--fg)] sm:max-h-[92dvh]">
+    <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="launch-title" className="flex h-[100dvh] w-full max-w-6xl flex-col overflow-hidden border border-[var(--line)] bg-[var(--ink-soft)] text-[var(--fg)] sm:h-[min(820px,92dvh)]">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--line)] px-5 pb-5 pt-6 sm:px-8">
         <div className="min-w-0">
           <p className="label-mono text-[var(--acid)]">GPU workspace</p>
