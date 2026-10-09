@@ -241,6 +241,14 @@ async function discover(
       let gpuShares: LaunchPool["gpuShares"];
       if (row.scheduler_mode === "disabled" && ratio <= 1) {
         capacity = integer(row.available_vgpus, "available GPU quantity", 0);
+      } else if (row.scheduler_mode === "disabled") {
+        // Without a scheduler each vGPU is one of `ratio` equal slots on a single GPU, as on GPU Mesh
+        // shared pools. Several vGPUs may land on different GPUs, so a launch sells exactly one slot.
+        const percent = 100 / ratio;
+        if (!priceFractions || !Number.isInteger(percent)) return null;
+        const free = Math.min(integer(row.available_vgpus, "available GPU quantity", 0), 1);
+        gpuShares = [{ percent, maxGpuCount: free, guaranteed: false }];
+        capacity = free;
       } else if (row.scheduler_mode === "user_selected" && ratio >= 1) {
         const settings = object(row.scheduler_mode_settings, "GPU scheduling settings");
         let percents: number[];
@@ -260,11 +268,11 @@ async function discover(
           const slices = ratio * percent / 100;
           const max = integer(await provider("GPU share capacity", () => getServicePoolMaxVgpus({ ...query, pool_id: id }, slices)), "GPU share capacity", 0);
           // A fractional share is one guaranteed slice of one GPU, never a multi-GPU allocation.
-          return { percent, maxGpuCount: percent === 100 ? Math.min(max, maximum || 256) : Math.min(max, 1) };
+          return { percent, maxGpuCount: percent === 100 ? Math.min(max, maximum || 256) : Math.min(max, 1), guaranteed: true };
         }));
         capacity = gpuShares.find(share => share.percent === 100)?.maxGpuCount ?? Math.max(...gpuShares.map(share => share.maxGpuCount));
       } else {
-        // VIP/time-sharing modes cannot promise any guaranteed allocation priced here.
+        // VIP and other scheduler modes have no allocation that can be priced here.
         return null;
       }
       return { id, name: text(row.pool_label ?? row.pool_name ?? row.name, "pool name"),
@@ -383,8 +391,8 @@ function resolveResources(configuration: LaunchConfiguration, capabilities: Laun
     rootStorage: selected(capabilities.rootStorageBlocks, configuration.rootStorageBlockId, "root storage block"),
     sharedStorage, gpuName: gpu.name, gpuVramGb: gpu.vramGb ?? null,
     podOptions: "rootfsEnabled" in gpu
-      // Time-sliced pools always state the reserved share; dedicated pools need none.
-      ? { rootfsEnabled: gpu.rootfsEnabled, ...(gpu.gpuShares ? { guaranteedGpuSharePercent: sharePercent } : {}) }
+      // Shared pools always state the share; dedicated pools need none.
+      ? { rootfsEnabled: gpu.rootfsEnabled, ...(gpu.gpuShares ? { gpuShare: { percent: sharePercent, guaranteed: gpu.gpuShares[0].guaranteed } } : {}) }
       : undefined };
 }
 export async function resolveLaunchConfiguration(auth: AuthenticatedCustomer, input: LaunchConfiguration): Promise<ResolvedLaunchConfiguration> {
@@ -414,7 +422,7 @@ export async function assertServiceSupportsLaunch(auth: AuthenticatedCustomer, r
   const configuration = resolved.configuration;
   const capabilities = await discover(auth, context, serviceId, configuration.regionId, configuration.poolId, configuration.gpuModelId, configuration);
   const resources = resolveResources(configuration, capabilities);
-  if (capabilities.serviceType !== resolved.serviceType || resources.profile.cpuCores !== resolved.profile.cpuCores || resources.profile.ramGb !== resolved.profile.ramGb || resources.rootStorage.sizeGb !== resolved.rootStorage.sizeGb || resources.podOptions?.rootfsEnabled !== resolved.podOptions?.rootfsEnabled || resources.podOptions?.guaranteedGpuSharePercent !== resolved.podOptions?.guaranteedGpuSharePercent) {
+  if (capabilities.serviceType !== resolved.serviceType || resources.profile.cpuCores !== resolved.profile.cpuCores || resources.profile.ramGb !== resolved.profile.ramGb || resources.rootStorage.sizeGb !== resolved.rootStorage.sizeGb || resources.podOptions?.rootfsEnabled !== resolved.podOptions?.rootfsEnabled || resources.podOptions?.gpuShare?.percent !== resolved.podOptions?.gpuShare?.percent || resources.podOptions?.gpuShare?.guaranteed !== resolved.podOptions?.gpuShare?.guaranteed) {
     throw new LaunchCapabilityError("This managed recipe changes the quoted allocation. Choose a compatible recipe or GPU offering.", 409, "RECIPE_INCOMPATIBLE");
   }
 }

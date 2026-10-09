@@ -421,12 +421,14 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                           onChange={() => update({ gpuSharePercent: share.percent, gpuCount: 1, imageHash: "", instanceTypeId: "", rootStorageBlockId: "" })}>
                           <span className="font-mono text-xl font-bold tabular-nums">{share.percent}%</span>
                           <span aria-hidden className="h-1 w-full bg-[var(--line)]"><span className={`block h-full ${chosen ? "bg-[var(--acid)]" : "bg-[var(--fg-faint)]"}`} style={{ width: `${share.percent}%` }} /></span>
-                          <span className="text-xs text-[var(--fg-soft)]">{shareNames[share.percent] ?? "Guaranteed share"}</span>
+                          <span className="text-xs text-[var(--fg-soft)]">{shareNames[share.percent] ?? (share.guaranteed ? "Guaranteed share" : "GPU share")}</span>
                           <span className="text-xs font-medium tabular-nums">{soldOut ? "Sold out" : gpuCents == null ? " " : `${money(gpuCents)} / hr`}</span>
                         </ChoiceCard>;
                       })}
                     </div>
-                    <p className={ui.hint}>A share guarantees that fraction of one GPU&apos;s compute time, billed at the same fraction of the GPU rate.</p>
+                    <p className={ui.hint}>{gpuShares[0]?.guaranteed === false
+                      ? `This pool splits each GPU into ${Math.round(100 / gpuShares[0].percent)} equal shares; you get one, billed at that fraction of the GPU rate.`
+                      : "A share guarantees that fraction of one GPU's compute time, billed at the same fraction of the GPU rate."}</p>
                   </fieldset>}
                   {sharePercent === 100 && <div>
                     <label htmlFor="launch-gpu-count" className={ui.label}>Whole GPUs</label>

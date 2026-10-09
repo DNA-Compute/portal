@@ -58,10 +58,11 @@ export interface LaunchProfile { id: string; name: string; cpuCores: number; ram
 export interface LaunchImage { id: string; name: string }
 export interface LaunchStorageBlock { id: string; name: string; sizeGb: number }
 export interface LaunchVolume { id: number; name: string; sizeGb: number; regionId: number; status: string }
-export interface LaunchGpuShare { percent: number; maxGpuCount: number }
+/** guaranteed: a scheduler reserves this compute; otherwise the share is one of `ratio` equal slots on one GPU. */
+export interface LaunchGpuShare { percent: number; maxGpuCount: number; guaranteed: boolean }
 export interface LaunchPool {
   id: number; name: string; maxGpuCount: number; rootfsEnabled: boolean; sharedStorageEnabled: boolean; vramGb?: number;
-  /** Present only for time-sliced pools: the guaranteed shares this offering can price, largest first. */
+  /** Present only for shared pools: the shares this offering can price, largest first. */
   gpuShares?: LaunchGpuShare[];
 }
 export interface LaunchGpuModel { id: string; name: string; vramGb?: number; maxGpuCount?: number }
@@ -91,7 +92,7 @@ export interface ResolvedLaunchConfiguration {
   configuration: LaunchConfiguration;
   serviceId: string;
   serviceType: LaunchCapabilities["serviceType"];
-  podOptions?: { rootfsEnabled: boolean; guaranteedGpuSharePercent?: number };
+  podOptions?: { rootfsEnabled: boolean; gpuShare?: { percent: number; guaranteed: boolean } };
   productName: string;
   billingType: "hourly" | "monthly";
   gpuBaseHourCents: number;

@@ -314,6 +314,15 @@ describe("configured instance launch", () => {
     }));
   });
 
+  it("asks the provider to reserve a scheduled share but not a slot of an unscheduled pool", async () => {
+    resolved.podOptions = { rootfsEnabled: true, gpuShare: { percent: 50, guaranteed: true } };
+    await launchInstance(request());
+    expect(mocks.create.mock.calls[0][0].pod_opts).toMatchObject({ vgpus: 2, guaranteed_gpu_share_percent: 50 });
+    resolved.podOptions = { rootfsEnabled: true, gpuShare: { percent: 50, guaranteed: false } };
+    await launchInstance(request());
+    expect(mocks.create.mock.calls[1][0].pod_opts).not.toHaveProperty("guaranteed_gpu_share_percent");
+  });
+
   it("returns and persists the instance ID from a native string creation response", async () => {
     mocks.create.mockResolvedValue("instance");
     const response = await launchInstance(request());

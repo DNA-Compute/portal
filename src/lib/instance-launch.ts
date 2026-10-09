@@ -201,8 +201,9 @@ export async function launchInstance(request: NextRequest): Promise<NextResponse
         : { pod_opts: {
           pool_id: configuration.poolId, vgpus: configuration.gpuCount, shared_volumes: sharedVolumes,
           rootfs_enabled: resolved.podOptions?.rootfsEnabled ?? false,
-          ...(resolved.podOptions?.guaranteedGpuSharePercent !== undefined
-            ? { guaranteed_gpu_share_percent: resolved.podOptions.guaranteedGpuSharePercent }
+          // Only a scheduler can reserve compute; an unscheduled pool's slot is the vGPU itself.
+          ...(resolved.podOptions?.gpuShare?.guaranteed
+            ? { guaranteed_gpu_share_percent: resolved.podOptions.gpuShare.percent }
             : {}),
         } }),
     });

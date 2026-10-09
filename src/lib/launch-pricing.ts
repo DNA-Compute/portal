@@ -21,7 +21,7 @@ export function quoteResolvedConfiguration(
   const resources = {
     gpuName: resolved.gpuName,
     gpuCount: configuration.gpuCount,
-    gpuSharePercent: resolved.podOptions?.guaranteedGpuSharePercent ?? 100,
+    gpuSharePercent: resolved.podOptions?.gpuShare?.percent ?? 100,
     cpuCores: resolved.profile.cpuCores,
     ramGb: resolved.profile.ramGb,
     rootStorageGb: resolved.rootStorage.sizeGb,
@@ -125,17 +125,17 @@ export function calculateLaunchRate(
     if (!Number.isSafeInteger(resolved.gpuBaseHourCents)) {
       throw new LaunchPricingError("GPU pricing must be configured in whole cents.");
     }
-    const sharePercent = resolved.podOptions?.guaranteedGpuSharePercent ?? 100;
+    const sharePercent = resolved.podOptions?.gpuShare?.percent ?? 100;
     if (!Number.isInteger(sharePercent) || sharePercent < 1 || sharePercent > 100) {
       throw new LaunchPricingError("The GPU share is invalid.");
     }
     if (sharePercent < 100 && (resolved.configurationPricing?.fractionalGpu !== true || resolved.configuration.gpuCount !== 1)) {
       throw new LaunchPricingError("Fractional GPU shares need a rate card that allows them and a single GPU.");
     }
-    // A guaranteed share is billed as that fraction of the whole-GPU base rate.
+    // A share is billed as that fraction of the whole-GPU base rate.
     lines.push(hourlyLine(
       "gpu",
-      resolved.configurationPricing === null ? "GPU preset (CPU, RAM and root disk included)" : sharePercent < 100 ? `GPU (${sharePercent}% guaranteed share)` : "GPU",
+      resolved.configurationPricing === null ? "GPU preset (CPU, RAM and root disk included)" : sharePercent < 100 ? `GPU (${sharePercent}%${resolved.podOptions?.gpuShare?.guaranteed ? " guaranteed" : ""} share)` : "GPU",
       resolved.configuration.gpuCount * sharePercent / 100,
       "GPU-hour",
       resolved.gpuBaseHourCents,
