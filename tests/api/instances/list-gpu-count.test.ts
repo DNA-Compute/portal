@@ -127,8 +127,8 @@ describe("GET /api/instances — PA-183 GPU count backfill", () => {
   it("reports a fractional launch as its GPU share, and a whole-GPU launch without one", async () => {
     mockGetUnifiedInstances.mockResolvedValue({
       items: [
-        { id: "i-share", name: "share", status: "Running", pod_info: { vgpu_count: 1 }, instance_type: { cpu_cores: 4, ram_mb: 8192 } },
-        { id: "i-whole", name: "whole", status: "Running", pod_info: { vgpu_count: 2 }, instance_type: { cpu_cores: 4, ram_mb: 8192 } },
+        { id: "i-share", name: "share", status: "Running", pod_info: { vgpu_count: 1, vendor: "NVIDIA", model: "NVIDIA-H100-SXM5-80GB" }, instance_type: { cpu_cores: 4, ram_mb: 8192 } },
+        { id: "i-whole", name: "whole", status: "Running", pod_info: { vgpu_count: 2, vendor: "NVIDIA", model: "Tesla T4" }, instance_type: { cpu_cores: 4, ram_mb: 8192 } },
       ],
       total_items: 2,
     });
@@ -142,5 +142,7 @@ describe("GET /api/instances — PA-183 GPU count backfill", () => {
     const body = await (await GET(req())).json();
     expect(body.podMetadata["i-share"]).toMatchObject({ gpuCount: 1, gpuSharePercent: 25 });
     expect(body.podMetadata["i-whole"].gpuSharePercent).toBeUndefined();
+    // The vendor is shown once, whether or not the provider's model name already carries it.
+    expect(body.poolSubscriptions.map((sub: { per_pod_info: { image_name: string } }) => sub.per_pod_info.image_name)).toEqual(["NVIDIA-H100-SXM5-80GB", "NVIDIA Tesla T4"]);
   });
 });

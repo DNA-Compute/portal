@@ -6,11 +6,15 @@ import {
   getUnifiedInstanceDetail,
   PoolSubscription,
 } from "@/lib/hostedai";
-import type { UnifiedInstance } from "@/lib/hostedai";
 import { prisma } from "@/lib/prisma";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { launchInstance } from "@/lib/instance-launch";
 import { getPodHourlyRateCents, getPodStoppedHourlyRateCents } from "@/lib/pod-billing";
+
+/** Some providers already prefix the model with its vendor ("NVIDIA-H100-SXM5-80GB"). */
+function gpuDisplayName(vendor: string | undefined, model: string): string {
+  return vendor && !model.toLowerCase().startsWith(vendor.toLowerCase()) ? `${vendor} ${model}` : model;
+}
 
 // GET - List team instances
 export async function GET(request: NextRequest) {
@@ -75,7 +79,7 @@ export async function GET(request: NextRequest) {
           city: ui.region.city,
         } : undefined,
         per_pod_info: {
-          image_name: ui.pod_info?.model ? `${ui.pod_info.vendor || ""} ${ui.pod_info.model}`.trim() : undefined,
+          image_name: ui.pod_info?.model ? gpuDisplayName(ui.pod_info.vendor, ui.pod_info.model) : undefined,
           vgpu_count: ui.pod_info?.vgpu_count || 1,
           vcpu_count: ui.instance_type?.cpu_cores,
           ram_mb: ui.instance_type?.ram_mb,
