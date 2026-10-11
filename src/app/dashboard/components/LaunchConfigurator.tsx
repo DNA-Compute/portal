@@ -53,6 +53,15 @@ const emptyConfiguration: LaunchConfiguration = { productId: "", regionId: 0, in
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 6 });
 const money = (cents: number) => usd.format(cents / 100);
 const shareNames: Record<number, string> = { 100: "Whole GPU", 75: "Three quarters of a GPU", 50: "Half a GPU", 25: "Quarter of a GPU" };
+/**
+ * A response body as JSON. A proxy's HTML page (Cloudflare replaces origin errors and timeouts with
+ * one, sometimes with a 200) is not an answer from the portal, so it throws the caller's message.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- each caller reads its own response shape, as with response.json()
+async function readJson(response: Response, unreadable: string): Promise<any> {
+  try { return await response.json(); } catch { throw new Error(unreadable); }
+}
+const UNCONFIRMED_LAUNCH = "We could not confirm whether this GPU launched. Check your GPU instances on the dashboard before launching again.";
 function draftConfiguration(configuration: LaunchConfiguration): LaunchConfiguration {
   const software = configuration.software;
   if (software.kind === "huggingface") return { ...configuration, software: { kind: software.kind, hfItemId: software.hfItemId, openWebUI: software.openWebUI, netdata: software.netdata } };
@@ -107,6 +116,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
   const [restored, setRestored] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
+  const review = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = () => {
     if (accepted) onSuccess({ name: name.trim(), poolName: options?.products.find(item => item.id === configuration.productId)?.name || "GPU", instanceId: accepted.instanceId });
@@ -146,7 +156,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
     async function load() {
       try {
         const response = await fetch("/api/instances/launch-options", { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
-        const data: LaunchOptions & { error?: string } = await response.json();
+        const data: LaunchOptions & { error?: string } = await readJson(response, "Unable to load GPU offerings");
         if (!response.ok) throw new Error(data.error || "Unable to load GPU offerings");
         if (controller.signal.aborted) return;
         const draft = readDraft();
@@ -201,7 +211,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
         if (configuration.imageHash) params.set("image_hash", configuration.imageHash);
         if (configuration.instanceTypeId) params.set("instance_type_id", configuration.instanceTypeId);
         const response = await fetch(`/api/instances/configuration?${params}`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
-        const data = await response.json();
+        const data = await readJson(response, "Unable to load supported resources");
         if (!response.ok) throw new Error(data.error || "Unable to load supported resources");
         if (controller.signal.aborted) return;
         const caps: LaunchCapabilities = data.capabilities;
@@ -250,7 +260,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
     const timer = setTimeout(async () => {
       try {
         const response = await fetch("/api/instances/quote", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ configuration: JSON.parse(configurationKey) }), signal: controller.signal });
-        const data = await response.json();
+        const data = await readJson(response, "Unable to quote this configuration");
         if (!response.ok) throw new Error(data.error || "Unable to quote this configuration");
         if (!controller.signal.aborted) setQuoteResult({ key: configurationKey, value: data.quote });
       } catch (err) { if (!controller.signal.aborted) setQuoteError(err instanceof Error ? err.message : "Unable to quote this configuration"); }
@@ -273,9 +283,15 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
   const regionOptions = capabilityResult?.value.productId === configuration.productId ? capabilityResult.value.regions : [];
   const storage = configuration.storage;
   const insufficientFunds = !!quote && quote.rate.prepayCents > 0 && !!options && options.walletBalanceCents < quote.rate.prepayCents;
-  const launchReady = !!quote && !quoteLoading && !launching && !funding && !!name.trim() && name.trim().length <= 128 && !insufficientFunds && reviewedFingerprint === quote.fingerprint;
+  const readyForReview = !!quote && !quoteLoading && !launching && !funding && !!name.trim() && name.trim().length <= 128 && !insufficientFunds;
+  const launchReady = readyForReview && reviewedFingerprint === quote?.fingerprint;
   const update = (patch: Partial<LaunchConfiguration>) => { setConfiguration(current => ({ ...current, ...patch })); setError(""); };
   const go = (next: number) => { setStep(next); title.current?.focus(); };
+  // The review box can sit below the fold on short screens, and it is the last thing Launch waits for.
+  const showReview = () => {
+    review.current?.querySelector("input")?.focus({ preventScroll: true });
+    review.current?.scrollIntoView?.({ block: "center", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
 
   async function topUp(amount: number) {
     setFunding(true); setError("");
@@ -285,7 +301,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
     }
     try {
       const response = await fetch("/api/account/wallet-topup", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ amount, launchProductId: configuration.productId || initialProductId || "resume" }) });
-      const data = await response.json();
+      const data = await readJson(response, "Unable to start checkout");
       if (!response.ok || !data.url) throw new Error(data.error || "Unable to start checkout");
       window.location.assign(data.url);
     } catch (err) { setError(err instanceof Error ? err.message : "Unable to start checkout"); setFunding(false); }
@@ -295,7 +311,8 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
     setLaunching(true); setError("");
     try {
       const response = await fetch("/api/instances", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ configuration, quoteFingerprint: quote.fingerprint, name: name.trim(), sshKeyIds, stripeSubscriptionId: entitlement.subscriptionId }) });
-      const data = await response.json();
+      // The launch may still be running behind that page, so require a fresh review before any retry.
+      const data = await readJson(response, UNCONFIRMED_LAUNCH).catch(err => { setReviewedFingerprint(""); throw err; });
       if (!response.ok) {
         if (response.status === 409) { setQuoteRevision(value => value + 1); setReviewedFingerprint(""); }
         throw new Error(data.error || "Launch was not accepted. Review your configuration and try again.");
@@ -484,7 +501,7 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
                   </table></div>
                   <div className="space-y-2 text-sm text-[var(--fg-muted)]"><p>Due at launch: <strong className="text-[var(--fg)]">{money(quote.rate.prepayCents)}</strong>. Minimum billing period: {quote.rate.minimumBillingMinutes} minutes.</p><p>Stopped instance: {money(quote.rate.stoppedInstanceHourlyCents)}/hour. Persistent storage: {money(quote.rate.sharedStorageHourlyCents)}/hour, separately metered while the volume exists.</p>{product?.billingType === "monthly" && <p>GPU and included resources are paid by your monthly subscription; persistent storage is not included.</p>}</div>
                   {quote.warnings.map(warning => <p key={warning} className={ui.notice.warn}>{warning}</p>)}
-                  <ChoiceCard type="checkbox" name="launch-reviewed" checked={reviewedFingerprint === quote.fingerprint} onChange={checked => setReviewedFingerprint(checked ? quote.fingerprint : "")}><span className="pr-6 text-sm">I have reviewed this configuration, {money(quote.rate.totalHourlyCents)}/hour total and {money(quote.rate.prepayCents)} due at launch. If the quote changes, I will review it again.</span></ChoiceCard>
+                  <div ref={review}><ChoiceCard type="checkbox" name="launch-reviewed" checked={reviewedFingerprint === quote.fingerprint} onChange={checked => setReviewedFingerprint(checked ? quote.fingerprint : "")}><span className="pr-6 text-sm">I have reviewed this configuration, {money(quote.rate.totalHourlyCents)}/hour total and {money(quote.rate.prepayCents)} due at launch. If the quote changes, I will review it again.</span></ChoiceCard></div>
                 </>}
               </>}
             </fieldset>}
@@ -515,7 +532,9 @@ function ConfiguratorSession({ onClose, token, onSuccess, onError, initialProduc
       </div>
       <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--ink)] px-5 py-4 sm:px-8">
         <button type="button" className={ui.secondary} disabled={launching || funding} onClick={() => step ? go(step - 1) : onClose()}>{step ? "Back" : "Cancel"}</button>
-        <span className="label-mono hidden text-[var(--fg-faint)] sm:block">Step {step + 1} of {steps.length}</span>
+        {step === 4 && readyForReview && !launchReady
+          ? <button type="button" className="text-right text-sm text-[var(--warn)] underline decoration-dotted underline-offset-4 hover:decoration-solid" onClick={showReview}>Tick the price review to launch</button>
+          : <span className="label-mono hidden text-[var(--fg-faint)] sm:block">Step {step + 1} of {steps.length}</span>}
         {step < 4 ? <button type="button" className={ui.primary} disabled={continueDisabled} onClick={() => go(step + 1)}>Continue</button>
           : <button type="button" className={ui.primary} disabled={!launchReady} onClick={() => void launch()}>{launching ? "Submitting launch…" : "Launch GPU"}</button>}
       </footer>
