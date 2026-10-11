@@ -156,6 +156,13 @@ if ! command -v git &>/dev/null; then
   fail "git is not installed. Install with: apt-get install -y git"
 fi
 
+# Check sshpass: the app runs workspace setup, startup scripts and metrics on every GPU over
+# password SSH, and without it each of those fails as soon as the GPU is reachable.
+if ! command -v sshpass &>/dev/null; then
+  run_with_progress "Installing sshpass" bash -c "export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a && apt-get install -y -qq sshpass"
+fi
+success "sshpass detected"
+
 success "All prerequisites met"
 
 # ── Gather configuration ────────────────────────────────────────────────────

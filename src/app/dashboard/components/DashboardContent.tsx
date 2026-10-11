@@ -6,7 +6,6 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { isPro, hasPremiumFeature } from "@/lib/edition";
 import dynamic from "next/dynamic";
 
-const XTerminal = dynamic(() => import("@/components/XTerminal"), { ssr: false });
 import TeamMembers from "@/components/TeamMembers";
 import HuggingFaceTab from "@/components/HuggingFaceTab";
 import { TwoFactorSettings } from "@/components/two-factor";
@@ -114,9 +113,7 @@ export function DashboardContent() {
 
   const {
     topupLoading,
-    hostedaiLoginLoading,
     billingPortalLoading,
-    openHostedaiDashboard,
     openBillingPortal,
     downloadActivityCSV,
     downloadTransactionsCSV,
@@ -667,7 +664,6 @@ export function DashboardContent() {
 
   // Treat users as hourly if they have wallet credit (e.g. voucher users with billing_type "free")
   const isHourly = data.customer.billingType === "hourly" || (data.wallet?.balance || 0) > 0;
-  const isFree = data.customer.billingType === "free" || data.customer.billingType === "free_trial";
   const activeSubscriptions = poolSubscriptions.filter((s) => s.status === "subscribed" || s.status === "active" || s.status === "running" || s.status === "pending" || s.status === "starting" || s.status === "restarting");
   const totalRunning = instances.filter((i) => i.status === "running" || i.status === "active").length + activeSubscriptions.length;
 
@@ -683,20 +679,12 @@ export function DashboardContent() {
     totalHourlyRate += sub.hourlyRate || 0; // Saved whole-instance rate, normalized once by useDashboardData
   });
   const totalVramGb = totalVramKb / (1024 * 1024); // KB -> GB
-  // Average hourly rate per subscription (for display purposes)
-  const avgHourlyRate = activeSubscriptions.length > 0 && totalHourlyRate > 0
-    ? totalHourlyRate / activeSubscriptions.length
-    : 0;
 
   // PA-271: gate every financial surface (sidebar balance, stat cards, monthly
   // subscriptions, transactions modal, billing tab) on billing.view. The verify
   // payload is already redacted server-side; this also hides the empty widgets.
   const canViewBilling = !!data.can?.["billing.view"];
 
-
-  // Estimated runtime from balance (use total hourly rate from all active subscriptions)
-  const balanceAmount = data.wallet?.balance ? data.wallet.balance / 100 : 0;
-  const runtimeHours = totalHourlyRate > 0 ? balanceAmount / totalHourlyRate : (balanceAmount / avgHourlyRate);
 
   // PA-224: per-context display name.
   // - In the user's OWN workspace (isOwner=true): prefer the Stripe customer
@@ -1290,7 +1278,6 @@ export function DashboardContent() {
                           token={token!}
                           onRefresh={fetchInstances}
                           onSnapshotCreated={fetchSnapshots}
-                          gpuDashboardUrl={data?.gpuDashboardUrl}
                           metadata={meta}
                           hfDeployment={hfDeployments[String(subscription.id)]}
                           isMonthly={isMonthly}
@@ -1729,7 +1716,6 @@ export function DashboardContent() {
         topupLoading={topupLoading}
         onTopup={handleTopup}
         onVoucherRedeemed={refreshAccountData}
-        customerEmail={data?.customer?.email}
       />
 
       {/* Mobile Bottom Navigation */}

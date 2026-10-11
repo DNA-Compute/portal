@@ -23,7 +23,6 @@ export interface PoolSubscriptionCardProps {
   token: string;
   onRefresh: () => void;
   onSnapshotCreated?: () => void;
-  gpuDashboardUrl?: string | null;
   compact?: boolean;
   metadata?: { displayName: string | null; notes: string | null; startupScriptStatus?: string | null; deployStatus?: string | null; deployStatusReason?: string | null };
   hfDeployment?: HfDeploymentInfo;
@@ -40,7 +39,6 @@ export function PoolSubscriptionCard({
   token,
   onRefresh,
   onSnapshotCreated,
-  gpuDashboardUrl,
   compact = false,
   metadata,
   hfDeployment,
@@ -102,6 +100,8 @@ export function PoolSubscriptionCard({
   useEffect(() => {
     if (!editingName) setDisplayName(metadata?.displayName || "");
     if (!editingNotes) setNotes(metadata?.notes || "");
+    // Only a metadata change re-syncs; finishing an edit must not overwrite it with the old prop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadata]);
 
   // Fetch stopped instance rate for cost warnings
@@ -436,24 +436,24 @@ export function PoolSubscriptionCard({
     if (isStopped) return { status: "stopped", label: "Stopped" };
     if (isStarting) return { status: "starting", label: "Starting..." };
 
+    // Don't show green/running until connection info (SSH) is actually available.
+    // For viewers without gpu.access (Finance Manager) we never fetch SSH info,
+    // so trust the pod's own status from HAI directly. This comes before the startup
+    // script checks, which need to know whether SSH works.
+    const hasSshAvailable = connectionInfo?.pods?.some((p) => p.ssh_info);
+    if (canSsh && isActive && (loadingConnection || (!hasSshAvailable && !connectionInfo))) {
+      return { status: "starting", label: "Connecting..." };
+    }
+
     // Check startup script status before showing "running" state
     // Only show "setting up" if script is actively pending/running AND we don't have SSH yet
     // This prevents getting stuck if the runner crashes or PM2 restarts
     const scriptStatus = metadata?.startupScriptStatus;
-    const hasSshAvailable = connectionInfo?.pods?.some((p) => p.ssh_info);
     if (isActive && scriptStatus === "pending" && !hasSshAvailable) return { status: "setting-up", label: "Setting up..." };
     if (isActive && scriptStatus === "running") return { status: "setting-up", label: "Setting up..." };
     // Only show "setup-failed" if SSH is NOT available - if SSH works, the pod is functional
     // even if the startup script had warnings or non-zero exit
     if (isActive && scriptStatus === "failed" && !hasSshAvailable) return { status: "setup-failed", label: "Setup failed" };
-
-    // Don't show green/running until connection info (SSH) is actually available.
-    // For viewers without gpu.access (Finance Manager) we never fetch SSH info,
-    // so trust the pod's own status from HAI directly.
-    const hasSshInfo = connectionInfo?.pods?.some((p) => p.ssh_info);
-    if (canSsh && isActive && (loadingConnection || (!hasSshInfo && !connectionInfo))) {
-      return { status: "starting", label: "Connecting..." };
-    }
 
     if (isActive) return { status: "running", label: getGpuStatusText("Running", true) };
     return { status: subscription.status, label: subscription.status };
