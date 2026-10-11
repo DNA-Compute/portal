@@ -18,7 +18,7 @@ import {
 import { loadTemplate } from "@/lib/email/template-loader";
 import { generateCustomerToken } from "@/lib/customer-auth";
 import { getTeamMemberships, acceptTeamInvite } from "@/lib/team-members";
-import { logLoginLinkSent } from "@/lib/admin-activity";
+import { logLoginLinkFailed, logLoginLinkSent } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 import { getBrandName, getDashboardUrl } from "@/lib/branding";
 import { findSuspension } from "@/lib/customer-suspension";
@@ -310,11 +310,11 @@ export async function sendLoginEmailForCustomer(
           accountUrl,
           billingUrl: portalSession.url,
         });
+        logLoginLinkSent(normalizedEmail, false).catch(() => {});
       } catch (emailError) {
         console.error(`[LoginEmail] Failed to send login email to ${normalizedEmail} (non-fatal):`, emailError);
+        logLoginLinkFailed(normalizedEmail, false).catch(() => {});
       }
-
-      logLoginLinkSent(normalizedEmail, false).catch(() => {});
       return true;
     } else if (billingType === "free" || billingType === "free_trial") {
       // Free trial customer — send free trial email (no billing portal)
@@ -328,11 +328,11 @@ export async function sendLoginEmailForCustomer(
           customerName: customer.name || normalizedEmail.split("@")[0],
           accountUrl,
         });
+        logLoginLinkSent(normalizedEmail, false).catch(() => {});
       } catch (emailError) {
         console.error(`[LoginEmail] Failed to send free trial login email to ${normalizedEmail} (non-fatal):`, emailError);
+        logLoginLinkFailed(normalizedEmail, false).catch(() => {});
       }
-
-      logLoginLinkSent(normalizedEmail, false).catch(() => {});
       return true;
     }
   }
@@ -377,11 +377,11 @@ export async function sendLoginEmailForCustomer(
         teamOwnerName: ownerCustomer.name || "your team",
         accountUrl,
       });
+      logLoginLinkSent(normalizedEmail, true).catch(() => {});
     } catch (emailError) {
       console.error(`[LoginEmail] Failed to send team member login email to ${normalizedEmail} (non-fatal):`, emailError);
+      logLoginLinkFailed(normalizedEmail, true).catch(() => {});
     }
-
-    logLoginLinkSent(normalizedEmail, true).catch(() => {});
     return true;
   }
 

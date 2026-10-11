@@ -39,7 +39,7 @@ const TYPE_CATEGORIES: Record<string, string[]> = {
   "API/SSH Keys": ["api_key_created", "api_key_deleted", "ssh_key_added", "ssh_key_deleted"],
   "Team": ["team_member_invited", "team_member_removed", "team_member_joined"],
   "Token Factory": ["inference", "batch_created", "batch_cancelled", "lora_created", "lora_training_started", "lora_training_completed", "lora_deleted"],
-  "Admin": ["admin_login", "admin_added", "admin_removed", "customer_viewed", "customer_credit_added", "wallet_adjustment", "login_link_sent", "customer_login"],
+  "Admin": ["admin_login", "admin_added", "admin_removed", "customer_viewed", "customer_credit_added", "wallet_adjustment", "login_link_sent", "login_link_failed", "login_link_no_account", "customer_login"],
   "Quotes": ["quote_created", "quote_updated", "quote_deleted", "quote_sent", "quote_reminder_sent", "quote_request_received"],
   "Snapshots": ["snapshot_created", "snapshot_restored", "snapshot_deleted"],
   "HuggingFace": ["hf_deployment_started", "hf_deployment_running", "hf_deployment_failed", "hf_deployment_deleted"],

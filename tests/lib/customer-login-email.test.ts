@@ -30,6 +30,7 @@ vi.mock('../../src/lib/team-members', () => ({
 }));
 vi.mock('../../src/lib/admin-activity', () => ({
   logLoginLinkSent: vi.fn().mockResolvedValue(undefined),
+  logLoginLinkFailed: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('../../src/lib/prisma', () => ({
   prisma: {
@@ -50,12 +51,13 @@ import { sendLoginEmailForCustomer } from '../../src/lib/customer-login-email';
 import { getStripe } from '../../src/lib/stripe';
 import { sendEmail } from '../../src/lib/email';
 import { getTeamMemberships } from '../../src/lib/team-members';
-import { logLoginLinkSent } from '../../src/lib/admin-activity';
+import { logLoginLinkFailed, logLoginLinkSent } from '../../src/lib/admin-activity';
 
 const mockGetStripe = vi.mocked(getStripe);
 const mockSendEmail = vi.mocked(sendEmail);
 const mockGetTeamMemberships = vi.mocked(getTeamMemberships);
 const mockLogLoginLinkSent = vi.mocked(logLoginLinkSent);
+const mockLogLoginLinkFailed = vi.mocked(logLoginLinkFailed);
 
 describe('sendLoginEmailForCustomer', () => {
   const mockStripe = {
@@ -71,7 +73,7 @@ describe('sendLoginEmailForCustomer', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetStripe.mockReturnValue(mockStripe as any);
+    mockGetStripe.mockReturnValue(mockStripe as never);
     mockGetTeamMemberships.mockResolvedValue([]);
     process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
   });
@@ -132,7 +134,7 @@ describe('sendLoginEmailForCustomer', () => {
       role: 'member',
       invitedBy: 'owner@example.com',
       createdAt: new Date(),
-    }] as any);
+    }] as never);
 
     // Mock the owner customer retrieval
     const mockRetrieve = vi.fn().mockResolvedValue({
@@ -147,7 +149,7 @@ describe('sendLoginEmailForCustomer', () => {
         list: mockStripe.customers.list,
         retrieve: mockRetrieve,
       },
-    } as any);
+    } as never);
 
     const result = await sendLoginEmailForCustomer('member@example.com');
     expect(result).toBe(true);
@@ -191,6 +193,23 @@ describe('sendLoginEmailForCustomer', () => {
     // Should not throw — errors are caught internally
     const result = await sendLoginEmailForCustomer('user@example.com');
     expect(result).toBe(true);
+  });
+
+  it('records a failed send as failed, not as a sent link', async () => {
+    mockStripe.customers.list.mockResolvedValue({
+      data: [{
+        id: 'cus_123',
+        name: 'User',
+        email: 'user@example.com',
+        metadata: { billing_type: 'free' },
+      }],
+    });
+    mockSendEmail.mockRejectedValueOnce(new Error('SMTP connection failed'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await sendLoginEmailForCustomer('user@example.com');
+    expect(mockLogLoginLinkSent).not.toHaveBeenCalled();
+    expect(mockLogLoginLinkFailed).toHaveBeenCalledWith('user@example.com', false);
   });
 
   it('should prefer hourly customer with team over free customer', async () => {

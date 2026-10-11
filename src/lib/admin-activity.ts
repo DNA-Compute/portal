@@ -19,6 +19,8 @@ export type AdminActivityType =
   | "settings_updated"
   | "quote_request_received"
   | "login_link_sent"
+  | "login_link_failed"
+  | "login_link_no_account"
   | "customer_login"
   | "email_template_created"
   | "email_template_updated"
@@ -316,6 +318,28 @@ export function logLoginLinkSent(
     "login_link_sent",
     `Login link sent to ${userType} ${customerEmail}`,
     { customerEmail, isTeamMember }
+  );
+}
+
+export function logLoginLinkFailed(
+  customerEmail: string,
+  isTeamMember: boolean = false
+): Promise<AdminActivity> {
+  const userType = isTeamMember ? "team member" : "customer";
+  return logAdminActivity(
+    "system",
+    "login_link_failed",
+    `Login link email failed to send to ${userType} ${customerEmail}`,
+    { customerEmail, isTeamMember }
+  );
+}
+
+export function logLoginLinkNoAccount(customerEmail: string): Promise<AdminActivity> {
+  return logAdminActivity(
+    "system",
+    "login_link_no_account",
+    `Login link requested for ${customerEmail}, which has no account; no email sent`,
+    { customerEmail }
   );
 }
 

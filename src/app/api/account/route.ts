@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { isServiceConfigured } from "@/lib/settings";
 import { rateLimit, getClientIp } from "@/lib/ratelimit";
-import { logLoginLinkSent } from "@/lib/admin-activity";
+import { logLoginLinkNoAccount } from "@/lib/admin-activity";
 import {
   createTeam,
   getDefaultPolicies,
@@ -146,8 +146,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (!emailSent) {
-      // No account found — log the attempt for admin visibility
-      logLoginLinkSent(normalizedEmail, false).catch(() => {});
+      // No account found, so no email went out. Log the attempt for admin visibility.
+      logLoginLinkNoAccount(normalizedEmail).catch(() => {});
     }
 
     // Always return identical response (anti-enumeration: don't reveal
