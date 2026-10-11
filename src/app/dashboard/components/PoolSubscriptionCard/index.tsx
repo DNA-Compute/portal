@@ -18,6 +18,12 @@ import { AddStorageModal } from "./AddStorageModal";
 import { SaveSnapshotModal } from "./SaveSnapshotModal";
 import { gpuAllocationLabel } from "@/lib/launch-config";
 
+/**
+ * Waits before each new SSH lookup while one fails or hosted.ai has not issued the login yet,
+ * which is normal for a few minutes after launch (about 5 minutes in all).
+ */
+const CONNECTION_RETRY_DELAYS_MS = [3_000, 10_000, 30_000, 30_000, 60_000, 60_000, 120_000];
+
 export interface PoolSubscriptionCardProps {
   subscription: PoolSubscription;
   token: string;
@@ -59,6 +65,9 @@ export function PoolSubscriptionCard({
   const [loading, setLoading] = useState<string | null>(null);
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo | null>(null);
   const [loadingConnection, setLoadingConnection] = useState(false);
+  // The SSH lookup gave up without a login after its retries; the Retry link starts a new round.
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [connectionRound, setConnectionRound] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
   // Modal state
@@ -169,26 +178,45 @@ export function PoolSubscriptionCard({
       setLoadingConnection(false);
       return;
     }
-    async function fetchConnectionInfo() {
-      const s = subscription.status;
-      if (s !== "subscribed" && s !== "active" && s !== "running") return;
+    const s = subscription.status;
+    if (s !== "subscribed" && s !== "active" && s !== "running") {
+      // A lookup cut short by a stop must not leave the card loading.
+      setLoadingConnection(false);
+      return;
+    }
+    let cancelled = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    // Asks again until the SSH login is there, then stops saying Connecting either way.
+    async function fetchConnectionInfo(attempt: number) {
       setLoadingConnection(true);
+      let ok = false;
       try {
         const response = await fetch(`/api/instances/connection-info?instance_id=${subscription.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
           const data = await response.json();
-          setConnectionInfo(data.connectionInfo?.[0] || null);
+          const info: ConnectionInfo | null = data.connectionInfo?.[0] || null;
+          if (!cancelled) setConnectionInfo(info);
+          ok = !!info?.pods?.some((p) => p.ssh_info);
         }
       } catch (error) {
         console.error("Failed to fetch connection info:", error);
-      } finally {
-        setLoadingConnection(false);
       }
+      if (cancelled) return;
+      if (!ok && attempt < CONNECTION_RETRY_DELAYS_MS.length) {
+        retry = setTimeout(() => void fetchConnectionInfo(attempt + 1), CONNECTION_RETRY_DELAYS_MS[attempt]);
+        return;
+      }
+      setConnectionFailed(!ok);
+      setLoadingConnection(false);
     }
-    fetchConnectionInfo();
-  }, [subscription.id, subscription.status, token, canSsh]);
+    void fetchConnectionInfo(0);
+    return () => {
+      cancelled = true;
+      clearTimeout(retry);
+    };
+  }, [subscription.id, subscription.status, token, canSsh, connectionRound]);
 
   // Fetch exposed services when card is expanded
   useEffect(() => {
@@ -436,24 +464,22 @@ export function PoolSubscriptionCard({
     if (isStopped) return { status: "stopped", label: "Stopped" };
     if (isStarting) return { status: "starting", label: "Starting..." };
 
-    // Don't show green/running until connection info (SSH) is actually available.
-    // For viewers without gpu.access (Finance Manager) we never fetch SSH info,
-    // so trust the pod's own status from HAI directly. This comes before the startup
-    // script checks, which need to know whether SSH works.
+    // A running startup script says so first: it is what the GPU is busy with.
+    const scriptStatus = metadata?.startupScriptStatus;
     const hasSshAvailable = connectionInfo?.pods?.some((p) => p.ssh_info);
-    if (canSsh && isActive && (loadingConnection || (!hasSshAvailable && !connectionInfo))) {
+    if (isActive && scriptStatus === "running") return { status: "setting-up", label: "Setting up..." };
+    if (isActive && scriptStatus === "pending" && !hasSshAvailable) return { status: "setting-up", label: "Setting up..." };
+
+    // Don't show green/running until SSH is actually available. Viewers without gpu.access
+    // (Finance Manager) never fetch SSH info, so for them trust the pod's own status from HAI.
+    // This comes before the failed-script check, which needs to know whether SSH works.
+    if (canSsh && isActive && (loadingConnection || (!hasSshAvailable && !connectionFailed))) {
       return { status: "starting", label: "Connecting..." };
     }
 
-    // Check startup script status before showing "running" state
-    // Only show "setting up" if script is actively pending/running AND we don't have SSH yet
-    // This prevents getting stuck if the runner crashes or PM2 restarts
-    const scriptStatus = metadata?.startupScriptStatus;
-    if (isActive && scriptStatus === "pending" && !hasSshAvailable) return { status: "setting-up", label: "Setting up..." };
-    if (isActive && scriptStatus === "running") return { status: "setting-up", label: "Setting up..." };
-    // Only show "setup-failed" if SSH is NOT available - if SSH works, the pod is functional
-    // even if the startup script had warnings or non-zero exit
+    // A failed script only matters while SSH is missing: if SSH works, the pod is usable.
     if (isActive && scriptStatus === "failed" && !hasSshAvailable) return { status: "setup-failed", label: "Setup failed" };
+    if (canSsh && isActive && !hasSshAvailable) return { status: "ssh-unavailable", label: "SSH unavailable" };
 
     if (isActive) return { status: "running", label: getGpuStatusText("Running", true) };
     return { status: subscription.status, label: subscription.status };
@@ -819,7 +845,11 @@ export function PoolSubscriptionCard({
               pods={podsForSSH}
               subscriptionPods={subscription.pods}
               loadingConnection={loadingConnection}
-              onOpenTerminal={() => setShowTerminal(true)}
+              connectionFailed={connectionFailed}
+              onRetryConnection={() => {
+                setConnectionFailed(false);
+                setConnectionRound((round) => round + 1);
+              }}
             />
           )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { LOGIN_AS_TOKEN_KEY } from "./hooks/useDashboardData";
+import { endLoginAs } from "./hooks/useDashboardData";
 
 /**
  * Sticky bar shown only in an admin "Login as" (impersonation) session, so the
@@ -31,11 +31,7 @@ export function ImpersonationBanner({
       <button
         type="button"
         onClick={() => {
-          try {
-            sessionStorage.removeItem(LOGIN_AS_TOKEN_KEY);
-          } catch {
-            /* storage disabled */
-          }
+          endLoginAs();
           try {
             window.close();
           } catch {

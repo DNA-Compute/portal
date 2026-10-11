@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ConnectionInfo, PoolSubscription } from "../types";
+import { PoolSubscription } from "../types";
 
 interface PodInfo {
   pod_name: string;
@@ -22,14 +22,16 @@ interface GPUCardSSHInfoProps {
   pods: PodInfo[];
   subscriptionPods?: PoolSubscription["pods"];
   loadingConnection: boolean;
-  onOpenTerminal: () => void;
+  connectionFailed?: boolean;
+  onRetryConnection?: () => void;
 }
 
 export function GPUCardSSHInfo({
   pods,
   subscriptionPods,
   loadingConnection,
-  onOpenTerminal,
+  connectionFailed = false,
+  onRetryConnection,
 }: GPUCardSSHInfoProps) {
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
 
@@ -39,6 +41,8 @@ export function GPUCardSSHInfo({
         const sshInfo = pod.ssh_info;
         const internalIP = pod.internal_ip;
         const podStatus = pod.pod_status || (subscriptionPods?.[idx]?.pod_status || 'Unknown');
+        // The portal sends pod status in lower case ("running"); hosted.ai has used "Running".
+        const podRunning = podStatus.toLowerCase() === "running";
 
         return (
           <div key={idx} className="space-y-3">
@@ -107,26 +111,25 @@ export function GPUCardSSHInfo({
               </div>
             )}
 
-            {loadingConnection && !sshInfo && podStatus === "Running" && (
+            {loadingConnection && !sshInfo && podRunning && (
               <div className="text-xs text-zinc-400 flex items-center gap-1 py-2">
                 <span className="animate-spin">⟳</span> Loading connection info...
               </div>
             )}
 
+            {connectionFailed && !loadingConnection && !sshInfo && podRunning && (
+              <div className="text-xs text-zinc-400 flex items-center gap-2 py-2">
+                <span>Couldn&apos;t load SSH details.</span>
+                {onRetryConnection && (
+                  <button type="button" onClick={onRetryConnection} className="font-medium text-teal-600 underline underline-offset-2 hover:no-underline">
+                    Retry
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Quick Action Buttons */}
             <div className="flex flex-wrap gap-2 pt-2">
-              {/* Only show terminal when pod is actually running - not during ContainerCreating/ContainerStatusUnknown */}
-              {sshInfo && podStatus === "Running" && (
-                <button
-                  onClick={onOpenTerminal}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-colors bg-emerald-500 hover:bg-emerald-600 text-white"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Terminal
-                </button>
-              )}
               {subscriptionPods?.[idx]?.discovered_services?.map((svc, svcIdx) => {
                 const isJupyter = svc.name.toLowerCase().includes('jupyter');
                 return (

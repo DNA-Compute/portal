@@ -4,7 +4,7 @@ import { cleanup, renderHook, waitFor } from "@testing-library/react";
 const nav = vi.hoisted(() => ({ params: new URLSearchParams() }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => nav.params }));
 
-import { useDashboardData } from "@/app/dashboard/components/hooks/useDashboardData";
+import { endLoginAs, useDashboardData } from "@/app/dashboard/components/hooks/useDashboardData";
 
 const account = {
   customer: { id: "cus_1", email: "customer@example.com", name: "Customer" }, userEmail: "customer@example.com",
@@ -56,5 +56,56 @@ describe("admin Login As tab", () => {
 
     expect(reloaded.result.current.data).toBeNull();
     expect(requests().some(r => r.path === "/api/account/session")).toBe(false);
+  });
+
+  it("moves to a new Login as opened in the same tab, and does not drift back to the previous one", async () => {
+    nav.params = new URLSearchParams("token=login-as-token");
+    const first = renderHook(() => useDashboardData());
+    await waitFor(() => expect(first.result.current.data).not.toBeNull());
+    first.unmount();
+
+    // The admin pastes a Login as link for another customer into the same tab.
+    nav.params = new URLSearchParams("token=second-login-as-token");
+    vi.mocked(fetch).mockClear();
+    const second = renderHook(() => useDashboardData());
+    await waitFor(() => expect(second.result.current.data).not.toBeNull());
+    // The page strips the one-time token from the URL.
+    nav.params = new URLSearchParams();
+    second.rerender();
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(second.result.current.token).toBe("second-login-as-token");
+    expect(sessionStorage.getItem("dna.login-as-token")).toBe("second-login-as-token");
+    expect(requests().filter(r => r.path === "/api/account/verify").every(r => !r.body.includes('"login-as-token"'))).toBe(true);
+  });
+
+  it("still says the Login as session ended when the browser refuses to store it", async () => {
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("blocked"); });
+    nav.params = new URLSearchParams("token=login-as-token");
+    const tab = renderHook(() => useDashboardData());
+    await waitFor(() => expect(tab.result.current.data).not.toBeNull());
+    nav.params = new URLSearchParams();
+    verifyStatus = 401;
+    tab.rerender();
+    await waitFor(() => expect(tab.result.current.error).toMatch(/Login as session has ended/i));
+    expect(requests().some(r => r.path === "/api/account/session")).toBe(false);
+    setItem.mockRestore();
+  });
+
+  it("ends with sign-out, so the tab's next dashboard load uses the browser's own session", async () => {
+    nav.params = new URLSearchParams("token=login-as-token");
+    const first = renderHook(() => useDashboardData());
+    await waitFor(() => expect(first.result.current.data).not.toBeNull());
+    endLoginAs();
+    first.unmount();
+
+    nav.params = new URLSearchParams();
+    vi.mocked(fetch).mockClear();
+    const next = renderHook(() => useDashboardData());
+    await waitFor(() => expect(requests().some(r => r.path === "/api/account/verify")).toBe(true));
+
+    expect(requests().find(r => r.path === "/api/account/verify")?.body).not.toContain("login-as-token");
+    expect(requests().some(r => r.path === "/api/account/session")).toBe(true);
+    next.unmount();
   });
 });

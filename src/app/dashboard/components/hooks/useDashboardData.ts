@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   AccountData,
@@ -81,12 +81,16 @@ export interface DashboardDataActions {
  * in sessionStorage lets that tab survive a reload instead of silently switching to the session cookie,
  * which belongs to whoever is signed in on this browser, usually the admin's own account.
  */
-export const LOGIN_AS_TOKEN_KEY = "dna.login-as-token";
+const LOGIN_AS_TOKEN_KEY = "dna.login-as-token";
 function readLoginAsToken(): string | null {
   try { return typeof window === "undefined" ? null : sessionStorage.getItem(LOGIN_AS_TOKEN_KEY); } catch { return null; }
 }
 function storeLoginAsToken(value: string | null) {
   try { if (value) sessionStorage.setItem(LOGIN_AS_TOKEN_KEY, value); else sessionStorage.removeItem(LOGIN_AS_TOKEN_KEY); } catch { /* Storage may be disabled; the tab then lasts until reload. */ }
+}
+/** Ends this tab's Login as, so its next dashboard load uses the browser's own session. Call on Exit and sign-out. */
+export function endLoginAs() {
+  storeLoginAsToken(null);
 }
 
 export function useDashboardData(): DashboardDataState & DashboardDataActions & { ticketId: string | null } {
@@ -100,6 +104,9 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
   const [cookieToken, setCookieToken] = useState<string | null>(null);
   const [urlTokenDead, setUrlTokenDead] = useState(false);
   const [loginAsToken, setLoginAsToken] = useState<string | null>(readLoginAsToken);
+  // Read by the verify effect without re-running it; storage alone fails when the browser blocks it.
+  const loginAsRef = useRef(loginAsToken);
+  loginAsRef.current = loginAsToken;
   const token = (urlTokenDead ? null : urlToken) || loginAsToken || cookieToken;
 
   // UI personalization state
@@ -290,7 +297,8 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
 
         if (!response.ok) {
           // An expired Login as must not fall through to the cookie, which would open another account.
-          if (response.status === 401 && token === loginAsToken && token !== urlToken) {
+          if (response.status === 401 && token !== urlToken && token === loginAsRef.current) {
+            // Storage only: clearing the state too would re-run this effect on the cookie session.
             storeLoginAsToken(null);
             setError("Your Login as session has ended. Start Login as again from the admin page.");
             setLoading(false);
@@ -343,9 +351,11 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
         // (which useSearchParams reacts to) can't momentarily null out `token` and
         // fire a burst of spurious 401s. A token already marked dead isn't promoted.
         if (token === urlToken) {
-          // A normal sign-in in this tab ends any Login as it held.
-          storeLoginAsToken(result.skipTwoFactor ? token : null);
-          if (!result.skipTwoFactor && loginAsToken) setLoginAsToken(null);
+          // This link's session is the tab's now: a Login as link replaces any earlier one, and a
+          // normal sign-in ends it. State and storage move together so stripping the URL keeps it.
+          const nextLoginAs = result.skipTwoFactor ? token : null;
+          storeLoginAsToken(nextLoginAs);
+          setLoginAsToken(nextLoginAs);
         }
         if (typeof window !== "undefined" && urlToken) {
           if (!urlTokenDead && token) setCookieToken(token);
@@ -379,7 +389,7 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
     return () => {
       cancelled = true;
     };
-  }, [token, urlToken, urlTokenDead, loginAsToken, fetchInstances, fetchActivityEvents, fetchBillingStats, fetchSnapshots, twoFactorRequired, twoFactorVerified]);
+  }, [token, urlToken, urlTokenDead, fetchInstances, fetchActivityEvents, fetchBillingStats, fetchSnapshots, twoFactorRequired, twoFactorVerified]);
 
   // Polling interval for live updates
   useEffect(() => {

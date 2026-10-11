@@ -58,7 +58,7 @@ import { BudgetSettings } from "./BudgetSettings";
 import { getBrandName, getAppUrl, getLogoUrl } from "@/lib/branding-client";
 import { useBranding } from "@/hooks/useBranding";
 import SSHKeys from "@/components/SSHKeys";
-import { useDashboardData, useDashboardActions, useModals, TabType } from "./hooks";
+import { useDashboardData, useDashboardActions, useModals, TabType, endLoginAs } from "./hooks";
 import { OnboardingChecklist } from "./OnboardingChecklist";
 import { AccountSwitcher } from "@/components/AccountSwitcher";
 import { InvitationAcceptModal } from "@/components/InvitationAcceptModal";
@@ -557,6 +557,7 @@ export function DashboardContent() {
     } catch {
       // best-effort — navigate away regardless
     }
+    endLoginAs();
     window.location.href = "/account";
   };
 

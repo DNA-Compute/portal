@@ -2,7 +2,7 @@
  * Dashboard hooks - extracted from DashboardContent for better maintainability
  */
 
-export { useDashboardData } from "./useDashboardData";
+export { useDashboardData, endLoginAs } from "./useDashboardData";
 export type { DashboardDataState, DashboardDataActions } from "./useDashboardData";
 
 export { useDashboardActions } from "./useDashboardActions";
