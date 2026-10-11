@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { startInstance } from "@/lib/hostedai";
 
 // PUT - Start instance
@@ -44,6 +45,9 @@ export async function PUT(
       extra: { instanceId: id, action: "start" },
     });
     if (denial) return denial;
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
 
     await startInstance(id);
 

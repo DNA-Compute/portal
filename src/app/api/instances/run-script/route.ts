@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getConnectionInfo } from "@/lib/hostedai";
 import { spawn } from "child_process";
-import Stripe from "stripe";
 import { validateSSHParams } from "@/lib/ssh-validation";
 
 // Parse SSH command to extract host and port
@@ -174,6 +174,9 @@ export async function POST(request: NextRequest) {
       extra: { subscriptionId, action: "run-script" },
     });
     if (denial) return denial;
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, subscriptionId);
+    if (notOwned) return notOwned;
 
     // Get connection info from hosted.ai
     const connectionInfo = await getConnectionInfo(teamId, subscriptionId);

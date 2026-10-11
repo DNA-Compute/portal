@@ -44,6 +44,8 @@ vi.mock("@/lib/auth/account-resolver", () => ({
   resolveOperatingContext: mockResolveOperatingContext,
 }));
 vi.mock("@/lib/auth/gate", () => ({ gatePermission: mockGatePermission }));
+// Ownership has its own tests (instance-ownership-routes); these cover what happens once it passes.
+vi.mock("@/lib/auth/instance-ownership", () => ({ ownsInstance: async () => true, rejectUnownedInstance: async () => null, rejectUnownedService: async () => null }));
 vi.mock("@/lib/hostedai", () => ({
   getInstance: mockGetInstance,
   deleteInstance: mockDeleteInstance,

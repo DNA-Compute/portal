@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
+import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getExposedServices } from "@/lib/hostedai";
 
 interface GPUMetrics {
@@ -126,6 +128,16 @@ export async function GET(
     if (!payload) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
     }
+    const ctx = await resolveOperatingContext({
+      email: payload.email,
+      jwtCustomerId: payload.customerId,
+      activeAccountId: payload.activeAccountId,
+    });
+    if (!ctx) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, subscriptionId);
+    if (notOwned) return notOwned;
 
     // HAI 2.2: fetch exposed services for this instance
     let exposedServices;

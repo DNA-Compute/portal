@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { startVNCSession, stopVNCSession, getPoolSubscriptions } from "@/lib/hostedai";
 
 // POST - Start VNC session for an instance
@@ -54,6 +55,9 @@ export async function POST(
       extra: { instanceId, action: "vnc-start" },
     });
     if (denial) return denial;
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, instanceId);
+    if (notOwned) return notOwned;
 
     // Check if this is a GPUaaS pod (VNC not supported)
     const subscriptions = await getPoolSubscriptions(teamId);
@@ -122,6 +126,9 @@ export async function DELETE(
         { status: 400 }
       );
     }
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, instanceId);
+    if (notOwned) return notOwned;
 
     // Stop VNC session
     await stopVNCSession(instanceId);

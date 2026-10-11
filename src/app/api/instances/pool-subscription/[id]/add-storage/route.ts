@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import {
   getUnifiedInstanceDetail,
   getSharedVolumes,
@@ -9,7 +10,6 @@ import {
   createSharedVolume,
   podVolumeAction,
 } from "@/lib/hostedai";
-import Stripe from "stripe";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -44,6 +44,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     if (!teamId) {
       return NextResponse.json({ error: "No team associated with this account" }, { status: 400 });
     }
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, instanceId);
+    if (notOwned) return notOwned;
 
     // Get instance details (region, attached volumes)
     const instance = await getUnifiedInstanceDetail(instanceId);

@@ -15,6 +15,8 @@ vi.mock("@/lib/auth/account-resolver", () => ({ resolveOperatingContext: async (
 vi.mock("@/lib/auth/gate", () => ({ gatePermission: async () => null }));
 vi.mock("@/lib/prisma", () => ({ prisma: { podMetadata: { findFirst: mocks.metadata } } }));
 vi.mock("@/lib/activity", () => ({ logGPUScaled: vi.fn() }));
+// Ownership has its own tests (instance-ownership-routes); these cover what happens once it passes.
+vi.mock("@/lib/auth/instance-ownership", () => ({ ownsInstance: async () => true, rejectUnownedInstance: async () => null, rejectUnownedService: async () => null }));
 vi.mock("@/lib/hostedai", () => ({
   scalePoolSubscription: mocks.scale,
   getPoolSubscriptions: async () => [{ id: "instance", pool_id: "1", per_pod_info: { vgpu_count: 2 }, storage_details: {} }],

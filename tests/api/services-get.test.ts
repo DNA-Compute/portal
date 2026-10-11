@@ -31,6 +31,8 @@ vi.mock("@/lib/auth/helpers", () => ({
   getAuthenticatedCustomer: vi.fn(),
 }));
 
+// Ownership has its own tests (instance-ownership-routes); these cover what happens once it passes.
+vi.mock("@/lib/auth/instance-ownership", () => ({ ownsInstance: async () => true, rejectUnownedInstance: async () => null, rejectUnownedService: async () => null }));
 vi.mock("@/lib/hostedai", () => ({
   getExposedServices: vi.fn(),
   exposeService: vi.fn(),

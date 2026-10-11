@@ -75,6 +75,7 @@ export function GPUCardServices({
         },
         body: JSON.stringify(editingServiceId ? {
           id: editingServiceId,
+          instanceId: subscriptionId,
           service_name: serviceForm.service_name,
           port: Number(serviceForm.port),
           protocol: serviceForm.protocol,
@@ -117,7 +118,7 @@ export function GPUCardServices({
     if (!confirm('Remove this exposed service?')) return;
 
     try {
-      const response = await fetch(`/api/services?id=${serviceId}`, {
+      const response = await fetch(`/api/services?id=${serviceId}&instanceId=${encodeURIComponent(subscriptionId)}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -361,7 +362,7 @@ export function GPUCardServices({
         )}
 
         {!loadingServices && exposedServices.length === 0 && !showExposeServiceForm && (
-          <p className="text-xs text-zinc-400 py-2">No services exposed yet. Click "Expose Port" to make a service accessible.</p>
+          <p className="text-xs text-zinc-400 py-2">No services exposed yet. Click &ldquo;Expose Port&rdquo; to make a service accessible.</p>
         )}
       </div>
     </div>

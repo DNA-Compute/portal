@@ -10,6 +10,7 @@ import { generateCustomerToken } from "@/lib/customer-auth";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents } from "@/lib/pod-billing";
 import { getStoppedInstanceRatePercent } from "@/lib/pricing";
 
@@ -39,6 +40,16 @@ export async function GET(
     }
 
     const { id } = await params;
+    const ctx = await resolveOperatingContext({
+      email: payload.email,
+      jwtCustomerId: payload.customerId,
+      activeAccountId: payload.activeAccountId,
+    });
+    if (!ctx) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
 
     // Look up by instanceId (HAI 2.2) or subscriptionId (legacy)
     const metadata = isInstanceId(id)
@@ -96,6 +107,17 @@ export async function PATCH(
       );
     }
 
+    const ctx = await resolveOperatingContext({
+      email: payload.email,
+      jwtCustomerId: payload.customerId,
+      activeAccountId: payload.activeAccountId,
+    });
+    if (!ctx) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
+
     // HAI 2.2: look up by instanceId, then upsert
     if (isInstanceId(id)) {
       const existing = await prisma.podMetadata.findFirst({ where: { instanceId: id } });
@@ -119,14 +141,6 @@ export async function PATCH(
     // Legacy: upsert by subscriptionId. PA-175: scope create to operating
     // account so an invited Member writing metadata on a team pod doesn't
     // create a rogue row attributed to their own customer.
-    const ctx = await resolveOperatingContext({
-      email: payload.email,
-      jwtCustomerId: payload.customerId,
-      activeAccountId: payload.activeAccountId,
-    });
-    if (!ctx) {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 });
-    }
     const metadata = await prisma.podMetadata.upsert({
       where: { subscriptionId: id },
       update: {
@@ -212,6 +226,10 @@ export async function DELETE(
       extra: { id },
     });
     if (denial) return denial;
+
+    // The refund below credits the caller, so this must run before any billing or deletion.
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
 
     // === HAI 2.2: Unified instance deletion ===
     if (isInstanceId(id)) {

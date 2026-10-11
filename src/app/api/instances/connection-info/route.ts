@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import {
   getConnectionInfo,
   getInstanceCredentials,
-  getTeamInstances,
   SubscriptionConnectionInfo,
   PodConnectionInfo,
 } from "@/lib/hostedai";
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await getAuthenticatedCustomer(request);
     if (auth instanceof NextResponse) return auth;
-    const { payload, allTeamIds } = auth;
+    const { allTeamIds } = auth;
 
     // PA-202 gate: SSH credentials require gpu.access.
     // Read-only Member: allowed (gpu.access ✓). Finance Manager: denied (no gpu.access).
@@ -123,6 +123,13 @@ export async function GET(request: NextRequest) {
     const subscriptionId = searchParams.get("subscription_id");
     const instanceId = searchParams.get("instance_id");
     const forceRefresh = searchParams.get("refresh") === "true";
+
+    // hosted.ai hands out any instance's credentials under the platform key, so check the caller's teams first.
+    const requestedId = instanceId || subscriptionId;
+    if (requestedId) {
+      const notOwned = await rejectUnownedInstance(allTeamIds, requestedId);
+      if (notOwned) return notOwned;
+    }
 
     // === HAI 2.2: Single instance credentials ===
     if (instanceId) {

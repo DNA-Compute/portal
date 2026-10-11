@@ -38,6 +38,8 @@ vi.mock("@/lib/prisma", () => ({ prisma: { podMetadata: {
   findMany: mocks.findMany,
   update: mocks.updateMetadata,
 }, walletTransaction: { create: vi.fn().mockResolvedValue({}) }, customerCache: { findMany: vi.fn().mockResolvedValue([]) } } }));
+// Ownership has its own tests (instance-ownership-routes); these cover what happens once it passes.
+vi.mock("@/lib/auth/instance-ownership", () => ({ ownsInstance: async () => true, rejectUnownedInstance: async () => null, rejectUnownedService: async () => null }));
 vi.mock("@/lib/hostedai", () => ({
   getPoolSubscriptions: mocks.subscriptions,
   deleteInstance: mocks.deleteInstance,

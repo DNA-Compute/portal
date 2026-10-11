@@ -3,6 +3,7 @@ import { verifyCustomerToken } from "@/lib/customer-auth";
 import { stopInstance } from "@/lib/hostedai";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 
 // PUT - Stop instance
 export async function PUT(
@@ -44,6 +45,9 @@ export async function PUT(
       extra: { instanceId: id, action: "stop" },
     });
     if (denial) return denial;
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
 
     await stopInstance(id);
 

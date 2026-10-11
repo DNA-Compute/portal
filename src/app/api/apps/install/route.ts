@@ -6,11 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { GPU_APPS, getAppBySlug } from "@/lib/gpu-apps";
+import { getAppBySlug } from "@/lib/gpu-apps";
 import { prisma } from "@/lib/prisma";
 import { verifyCustomerToken } from "@/lib/auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getConnectionInfo } from "@/lib/hostedai";
 import { spawn } from "child_process";
 import { getOrCreateServerSSHKey, executeSSHWithKey } from "@/lib/ssh-keys";
@@ -209,6 +210,10 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  // hosted.ai's team filter on a single subscription has leaked other teams' rows, so check here first.
+  const notOwned = await rejectUnownedInstance(ctx.allTeamIds, subscriptionId);
+  if (notOwned) return notOwned;
 
   // Verify user owns this subscription via hosted.ai API
   const connectionInfo = await getConnectionInfo(teamId, subscriptionId);

@@ -3,6 +3,7 @@ import { verifyCustomerToken } from "@/lib/customer-auth";
 import { getInstance, deleteInstance } from "@/lib/hostedai";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 
 // GET - Get instance details
 export async function GET(
@@ -25,6 +26,17 @@ export async function GET(
     }
 
     const { id } = await params;
+    const ctx = await resolveOperatingContext({
+      email: payload.email,
+      jwtCustomerId: payload.customerId,
+      activeAccountId: payload.activeAccountId,
+    });
+    if (!ctx) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
+
     const instance = await getInstance(id);
 
     return NextResponse.json({ instance });
@@ -77,6 +89,9 @@ export async function DELETE(
       extra: { instanceId: id },
     });
     if (denial) return denial;
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, id);
+    if (notOwned) return notOwned;
 
     await deleteInstance(id);
 

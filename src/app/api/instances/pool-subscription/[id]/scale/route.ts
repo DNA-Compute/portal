@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { scalePoolSubscription, getPoolSubscriptions } from "@/lib/hostedai";
 import { logGPUScaled } from "@/lib/activity";
-import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 
 // Working values from the subscribe endpoint
@@ -61,6 +61,9 @@ export async function POST(
       extra: { subscriptionId, action: "scale" },
     });
     if (denial) return denial;
+
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, subscriptionId);
+    if (notOwned) return notOwned;
 
     const metadata = await prisma.podMetadata.findFirst({
       where: { OR: [{ instanceId: subscriptionId }, { subscriptionId }, { subscriptionId: `instance-${subscriptionId}` }] },

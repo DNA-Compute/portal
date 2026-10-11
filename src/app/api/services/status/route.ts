@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
+import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getExposeServiceStatus } from "@/lib/hostedai";
 
 // GET - Check service exposure status
@@ -28,6 +30,17 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const ctx = await resolveOperatingContext({
+      email: payload.email,
+      jwtCustomerId: payload.customerId,
+      activeAccountId: payload.activeAccountId,
+    });
+    if (!ctx) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, poolSubscriptionId);
+    if (notOwned) return notOwned;
 
     const status = await getExposeServiceStatus(
       serviceName,

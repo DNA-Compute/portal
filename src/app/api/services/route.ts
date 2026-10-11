@@ -12,6 +12,7 @@ import {
 import { clearCache } from "@/lib/hostedai/client";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
+import { rejectUnownedInstance, rejectUnownedService } from "@/lib/auth/instance-ownership";
 
 // GET - View all exposed services for an instance
 export async function GET(request: NextRequest) {
@@ -45,6 +46,9 @@ export async function GET(request: NextRequest) {
     // PA-227: `?? []` mirrors the legacy branch below; defends against any
     // future null from getExposedServices (HAI has historically null'd the
     // body when an instance has no exposed services).
+    const notOwned = await rejectUnownedInstance(allTeamIds, instanceId);
+    if (notOwned) return notOwned;
+
     if (instanceId.startsWith("i-")) {
       const services = (await getExposedServices(instanceId)) ?? [];
       const formattedServices = services.map((s) => ({
@@ -184,6 +188,10 @@ export async function POST(request: NextRequest) {
       service_type: normalizedServiceType,
     });
 
+    // The exposure is made on pool_subscription_id's pod, so that is the id the caller must own.
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, pool_subscription_id ? String(pool_subscription_id) : null);
+    if (notOwned) return notOwned;
+
     // Titan unified instances: pool_subscription_id is the instance ID (i-xxx).
     // HAI expects pod_name to be the instance ID, not the user-given display name.
     // For legacy pool subscriptions, pool_subscription_id is numeric.
@@ -259,11 +267,14 @@ export async function PUT(request: NextRequest) {
     if (putDenial) return putDenial;
 
     const body = await request.json();
-    const { id, service_name, port, protocol, service_type } = body;
+    const { id, instanceId, service_name, port, protocol, service_type } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Service ID is required" }, { status: 400 });
     }
+    // Service ids are sequential numbers, so the service must be found on an instance the caller owns.
+    const notOwned = await rejectUnownedService(ctx.allTeamIds, instanceId, id);
+    if (notOwned) return notOwned;
 
     const service = await updateExposedService({
       id: Number(id),
@@ -322,6 +333,9 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "Service ID is required" }, { status: 400 });
     }
+    // Service ids are sequential numbers, so the service must be found on an instance the caller owns.
+    const notOwned = await rejectUnownedService(ctx.allTeamIds, searchParams.get("instanceId"), id);
+    if (notOwned) return notOwned;
 
     const service = await deleteExposedService(Number(id));
     return NextResponse.json({ service });
