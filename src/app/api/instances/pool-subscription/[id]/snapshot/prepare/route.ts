@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { getStripe } from "@/lib/stripe";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getPoolSubscriptions, getConnectionInfo, getAllPools, getStorageBlocks } from "@/lib/hostedai";
 import { getStoragePricePerGBHourCents } from "@/lib/pricing";
 import Stripe from "stripe";
@@ -106,6 +107,10 @@ export async function GET(
     if (!teamId) {
       return NextResponse.json({ error: "No team associated with this account" }, { status: 400 });
     }
+
+    // This reads the instance's disk over SSH, so check ownership first.
+    const notOwned = await rejectUnownedInstance([teamId], subscriptionId);
+    if (notOwned) return notOwned;
 
     // Get subscription details
     const subscriptions = await getPoolSubscriptions(teamId);

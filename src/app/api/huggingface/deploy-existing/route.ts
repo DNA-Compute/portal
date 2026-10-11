@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { requirePermission } from "@/lib/auth/audit";
 import { getUnifiedInstances } from "@/lib/hostedai";
 import {
@@ -90,7 +91,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // HAI 2.2: Verify instance belongs to this team
+    const notOwned = await rejectUnownedInstance([teamId], instanceId);
+    if (notOwned) return notOwned;
+
     const unifiedResult = await getUnifiedInstances(teamId);
     const instance = unifiedResult.items?.find(i => i.id === instanceId);
 

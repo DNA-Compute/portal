@@ -11,8 +11,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyCustomerToken } from "@/lib/auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
-import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
-import { getConnectionInfo } from "@/lib/hostedai";
+import { canonicalInstanceId, rejectUnownedInstance } from "@/lib/auth/instance-ownership";
+import { getInstanceCredentials, sshLoginFromCredentials } from "@/lib/hostedai";
 import { spawn } from "child_process";
 import { getOrCreateServerSSHKey, executeSSHWithKey } from "@/lib/ssh-keys";
 import { validateSSHParams } from "@/lib/ssh-validation";
@@ -136,21 +136,6 @@ async function injectSSHKey(
   return { success: true };
 }
 
-/**
- * Parse SSH connection info from command string
- */
-function parseSSHInfo(cmd: string): { host: string; port: number; username: string } {
-  const hostMatch = cmd.match(/@([^\s]+)/);
-  const portMatch = cmd.match(/-p\s+(\d+)/);
-  const userMatch = cmd.match(/ssh\s+([^@]+)@/);
-
-  return {
-    host: hostMatch ? hostMatch[1] : "localhost",
-    port: portMatch ? parseInt(portMatch[1], 10) : 22,
-    username: userMatch ? userMatch[1] : "ubuntu",
-  };
-}
-
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const token = authHeader?.replace("Bearer ", "");
@@ -215,25 +200,6 @@ export async function POST(request: NextRequest) {
   const notOwned = await rejectUnownedInstance(ctx.allTeamIds, subscriptionId);
   if (notOwned) return notOwned;
 
-  // Verify user owns this subscription via hosted.ai API
-  const connectionInfo = await getConnectionInfo(teamId, subscriptionId);
-  if (!connectionInfo || connectionInfo.length === 0) {
-    return NextResponse.json(
-      { error: "Subscription not found or not owned by you" },
-      { status: 404 }
-    );
-  }
-
-  const conn = connectionInfo[0];
-  const pod = conn?.pods?.[0];
-
-  if (!pod?.ssh_info?.cmd || !pod?.ssh_info?.pass) {
-    return NextResponse.json(
-      { error: "Could not get SSH connection info - pod may not be running" },
-      { status: 500 }
-    );
-  }
-
   // Check if app is already installed
   const existingInstall = await prisma.installedApp.findFirst({
     where: {
@@ -247,6 +213,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "App is already installed or installing", status: existingInstall.status },
       { status: 400 }
+    );
+  }
+
+  let login;
+  try {
+    login = sshLoginFromCredentials(await getInstanceCredentials(canonicalInstanceId(subscriptionId)));
+  } catch (error) {
+    console.error("[AppInstall] Could not fetch the instance's SSH login:", error);
+    return NextResponse.json(
+      { error: "Could not reach the GPU provider to connect to this GPU. Try again in a minute." },
+      { status: 502 }
+    );
+  }
+  if (!login) {
+    return NextResponse.json(
+      { error: "SSH is not ready on this GPU yet. Try again in a minute." },
+      { status: 409 }
     );
   }
 
@@ -288,9 +271,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  // Parse SSH connection info (we already have conn and pod from earlier validation)
-  const { host, port, username } = parseSSHInfo(pod.ssh_info.cmd);
-  const password = pod.ssh_info.pass;
+  const { host, port, username, password } = login;
 
   // Start installation in background
   (async () => {

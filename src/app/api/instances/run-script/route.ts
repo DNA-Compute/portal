@@ -2,30 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
-import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
-import { getConnectionInfo } from "@/lib/hostedai";
+import { canonicalInstanceId, rejectUnownedInstance } from "@/lib/auth/instance-ownership";
+import { getInstanceCredentials, sshLoginFromCredentials } from "@/lib/hostedai";
 import { spawn } from "child_process";
 import { validateSSHParams } from "@/lib/ssh-validation";
-
-// Parse SSH command to extract host and port
-function parseSSHCommand(cmd: string): { host: string; port: number; username: string } {
-  const parts = cmd.trim().split(/\s+/);
-
-  const userHostPart = parts.find(p => p.includes("@"));
-  if (!userHostPart) {
-    throw new Error("Invalid SSH command format - missing user@host");
-  }
-
-  const [username, host] = userHostPart.split("@");
-
-  let port = 22;
-  const portFlagIndex = parts.indexOf("-p");
-  if (portFlagIndex !== -1 && parts[portFlagIndex + 1]) {
-    port = parseInt(parts[portFlagIndex + 1], 10);
-  }
-
-  return { host, port, username };
-}
 
 // Execute a bash script on the remote VM via SSH
 async function executeScript(
@@ -122,7 +102,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { script, subscriptionId, podName, timeout } = await request.json();
+    const { script, subscriptionId, timeout } = await request.json();
 
     if (!script || typeof script !== "string") {
       return NextResponse.json(
@@ -178,56 +158,17 @@ export async function POST(request: NextRequest) {
     const notOwned = await rejectUnownedInstance(ctx.allTeamIds, subscriptionId);
     if (notOwned) return notOwned;
 
-    // Get connection info from hosted.ai
-    const connectionInfo = await getConnectionInfo(teamId, subscriptionId);
-
-    if (!connectionInfo || connectionInfo.length === 0) {
+    const instanceId = canonicalInstanceId(subscriptionId);
+    const login = sshLoginFromCredentials(await getInstanceCredentials(instanceId));
+    if (!login) {
       return NextResponse.json(
-        { error: "No connection info available for this subscription" },
-        { status: 400 }
+        { error: "SSH is not ready on this GPU yet. Try again in a minute." },
+        { status: 409 }
       );
     }
+    const { host, port, username, password: pass } = login;
 
-    // Find the subscription
-    const subscription = connectionInfo.find(
-      (s) => String(s.id) === String(subscriptionId)
-    );
-
-    if (!subscription || !subscription.pods || subscription.pods.length === 0) {
-      return NextResponse.json(
-        { error: "No pods available for this subscription" },
-        { status: 400 }
-      );
-    }
-
-    // Find the target pod
-    let targetPod = subscription.pods[0];
-    if (podName) {
-      const found = subscription.pods.find((p) => p.pod_name === podName);
-      if (found) {
-        targetPod = found;
-      }
-    }
-
-    if (!targetPod.ssh_info) {
-      return NextResponse.json(
-        { error: "SSH info not available for this pod" },
-        { status: 400 }
-      );
-    }
-
-    const { cmd, pass } = targetPod.ssh_info;
-    if (!cmd || !pass) {
-      return NextResponse.json(
-        { error: "SSH credentials not available" },
-        { status: 400 }
-      );
-    }
-
-    // Parse the SSH command
-    const { host, port, username } = parseSSHCommand(cmd);
-
-    console.log(`Running script on ${host}:${port} for pod ${targetPod.pod_name}`);
+    console.log(`Running script on ${host}:${port} for instance ${instanceId}`);
 
     // Execute the script with configurable timeout (default 60s, max 5min)
     const timeoutMs = Math.min(Math.max((timeout || 60) * 1000, 5000), 300000);
@@ -237,7 +178,7 @@ export async function POST(request: NextRequest) {
       success: result.success,
       output: result.output,
       exitCode: result.exitCode,
-      pod: targetPod.pod_name,
+      pod: instanceId,
     });
   } catch (error) {
     console.error("Run script error:", error);

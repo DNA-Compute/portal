@@ -354,6 +354,23 @@ export async function getInstanceCredentials(
   );
 }
 
+export interface InstanceSshLogin {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+}
+
+/**
+ * The SSH login in an instance's credentials (from getInstanceCredentials), or null while hosted.ai
+ * has not issued all of it yet. Use this rather than the older /gpuaas/connection-info, which lists
+ * nothing for HAI 2.2 instances and is not bound to the one instance asked about.
+ */
+export function sshLoginFromCredentials(creds: InstanceCredentials): InstanceSshLogin | null {
+  if (!creds.ip || !creds.port || !creds.username || !creds.password) return null;
+  return { host: creds.ip, port: Number(creds.port), username: creds.username, password: creds.password };
+}
+
 // Get GPUaaS compatible instances for a team (lists running instances)
 export async function getTeamInstances(teamId: string): Promise<Instance[]> {
   return hostedaiRequest<Instance[]>(

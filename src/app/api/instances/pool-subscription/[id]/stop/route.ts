@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
+import { canonicalInstanceId, rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { prisma } from "@/lib/prisma";
-import {
-  stopInstance,
-  getUnifiedInstances,
-} from "@/lib/hostedai";
+import { stopInstance } from "@/lib/hostedai";
 import { instanceProductName, logGPUStopped } from "@/lib/activity";
 
 // POST - Stop an instance
@@ -22,22 +20,15 @@ export async function POST(
       return NextResponse.json({ error: "No team associated with this account" }, { status: 400 });
     }
 
-    const { id } = await params;
+    const id = canonicalInstanceId((await params).id);
 
     // PA-175 gate: stopping a shared instance is an authoritative state change.
     const denial = requirePermission(auth, "gpu.terminate", request, { instanceId: id, action: "stop" });
     if (denial) return denial;
     console.log("[HAI 2.2] Stopping instance:", id);
 
-    // Verify ownership via unified instances
-    let found = false;
-    for (const tid of allTeamIds) {
-      const result = await getUnifiedInstances(tid);
-      if (result.items?.some(i => i.id === id)) { found = true; break; }
-    }
-    if (!found) {
-      return NextResponse.json({ error: "Instance not found" }, { status: 404 });
-    }
+    const notOwned = await rejectUnownedInstance(allTeamIds, id);
+    if (notOwned) return notOwned;
 
     await stopInstance(id);
 

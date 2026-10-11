@@ -68,6 +68,7 @@ export {
   restartInstance,
   deleteInstance,
   getInstanceCredentials,
+  sshLoginFromCredentials,
   getTeamInstances,
   startVNCSession,
   stopVNCSession,
@@ -101,7 +102,7 @@ export {
 
 export type { UnifiedInstance, UnifiedInstanceDetail, WaitResult, WaitForInstanceOptions } from "./instances";
 
-export type { AddDiskParams, AddDiskPricing } from "./instances";
+export type { AddDiskParams, AddDiskPricing, InstanceSshLogin } from "./instances";
 
 // Re-export pool functions
 export {

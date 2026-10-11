@@ -35,9 +35,28 @@ describe("instance ownership", () => {
     expect(await ownsInstance(["team-a"], theirs)).toBe(false);
   });
 
+  it("does not trust a row with no team, since it cannot be shown to be this team's", async () => {
+    mocks.list.mockResolvedValue({ items: [{ id: theirs }], total_items: 1 });
+    expect(await ownsInstance(["team-a"], theirs)).toBe(false);
+  });
+
+  it("keeps paging when hosted.ai leaves out the total", async () => {
+    const page = (n: number) => Array.from({ length: 100 }, (_, i) => ({ id: `i-page${n}-${i}`, team: { id: "team-a" } }));
+    mocks.list.mockImplementation(async (_team: string, n: number) => ({ items: n < 1 ? page(n) : [{ id: mine, team: { id: "team-a" } }] }));
+    expect(await ownsInstance(["team-a"], mine)).toBe(true);
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops when hosted.ai hands back the same page again", async () => {
+    const page = Array.from({ length: 100 }, (_, i) => ({ id: `i-same-${i}`, team: { id: "team-a" } }));
+    mocks.list.mockResolvedValue({ items: page });
+    expect(await ownsInstance(["team-a"], theirs)).toBe(false);
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+  });
+
   it("pages through a team with more than one page of instances", async () => {
-    const page = (n: number) => Array.from({ length: 100 }, (_, i) => ({ id: `i-page${n}-${i}` }));
-    mocks.list.mockImplementation(async (_team: string, n: number) => ({ items: n < 2 ? page(n) : [{ id: mine }], total_items: 201 }));
+    const page = (n: number) => Array.from({ length: 100 }, (_, i) => ({ id: `i-page${n}-${i}`, team: { id: "team-a" } }));
+    mocks.list.mockImplementation(async (_team: string, n: number) => ({ items: n < 2 ? page(n) : [{ id: mine, team: { id: "team-a" } }], total_items: 201 }));
     expect(await ownsInstance(["team-a"], mine)).toBe(true);
     expect(mocks.list).toHaveBeenCalledTimes(3);
   });

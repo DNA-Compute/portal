@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
+import { canonicalInstanceId, rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import {
   startInstance,
   getInstanceCredentials,
-  getUnifiedInstances,
 } from "@/lib/hostedai";
 import { instanceProductName, logGPUStarted } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
@@ -24,22 +24,15 @@ export async function POST(
       return NextResponse.json({ error: "No team associated with this account" }, { status: 400 });
     }
 
-    const { id } = await params;
+    const id = canonicalInstanceId((await params).id);
     console.log("[HAI 2.2] Starting instance:", id);
 
     // PA-175 gate: starting an instance launches usage → gpu.provision.
     const denial = requirePermission(auth, "gpu.provision", request, { instanceId: id, action: "start" });
     if (denial) return denial;
 
-    // Verify ownership via unified instances
-    let found = false;
-    for (const tid of allTeamIds) {
-      const result = await getUnifiedInstances(tid);
-      if (result.items?.some(i => i.id === id)) { found = true; break; }
-    }
-    if (!found) {
-      return NextResponse.json({ error: "Instance not found" }, { status: 404 });
-    }
+    const notOwned = await rejectUnownedInstance(allTeamIds, id);
+    if (notOwned) return notOwned;
 
     await startInstance(id);
 

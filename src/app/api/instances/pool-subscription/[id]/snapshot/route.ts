@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCustomerToken } from "@/lib/customer-auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
+import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import {
   getPoolSubscriptions,
   getConnectionInfo,
@@ -14,7 +15,6 @@ import {
   getPoolInstanceTypes,
 } from "@/lib/hostedai";
 import { prisma } from "@/lib/prisma";
-import Stripe from "stripe";
 import { z } from "zod";
 import { spawn } from "child_process";
 import { validateSSHParams } from "@/lib/ssh-validation";
@@ -201,6 +201,10 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    // The snapshot can terminate the instance and copies its disk, so check ownership first.
+    const notOwned = await rejectUnownedInstance([teamId], subscriptionId);
+    if (notOwned) return notOwned;
 
     // Get the current subscription details from hosted.ai
     const subscriptions = await getPoolSubscriptions(teamId);

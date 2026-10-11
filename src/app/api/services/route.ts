@@ -12,7 +12,7 @@ import {
 import { clearCache } from "@/lib/hostedai/client";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
-import { rejectUnownedInstance, rejectUnownedService } from "@/lib/auth/instance-ownership";
+import { canonicalInstanceId, rejectUnownedInstance, rejectUnownedService } from "@/lib/auth/instance-ownership";
 
 // GET - View all exposed services for an instance
 export async function GET(request: NextRequest) {
@@ -188,20 +188,15 @@ export async function POST(request: NextRequest) {
       service_type: normalizedServiceType,
     });
 
-    // The exposure is made on pool_subscription_id's pod, so that is the id the caller must own.
-    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, pool_subscription_id ? String(pool_subscription_id) : null);
+    // The caller must own pool_subscription_id, and that same id is the pod hosted.ai exposes:
+    // HAI 2.2 takes the instance id as pod_name. The body's pod_name (a display name) is never
+    // sent, so it cannot point the exposure at another customer's pod.
+    const instanceId = canonicalInstanceId(pool_subscription_id ? String(pool_subscription_id) : null);
+    const notOwned = await rejectUnownedInstance(ctx.allTeamIds, instanceId);
     if (notOwned) return notOwned;
 
-    // Titan unified instances: pool_subscription_id is the instance ID (i-xxx).
-    // HAI expects pod_name to be the instance ID, not the user-given display name.
-    // For legacy pool subscriptions, pool_subscription_id is numeric.
-    const isUnifiedInstance = typeof pool_subscription_id === "string" && pool_subscription_id.startsWith("i-");
-    const resolvedPodName = isUnifiedInstance ? pool_subscription_id : pod_name;
-    const numericSubId = pool_subscription_id ? Number(pool_subscription_id) : NaN;
-
     const service = await exposeService({
-      pod_name: resolvedPodName,
-      ...(Number.isFinite(numericSubId) ? { pool_subscription_id: numericSubId } : {}),
+      pod_name: instanceId,
       port: Number(port),
       service_name,
       protocol: normalizedProtocol,

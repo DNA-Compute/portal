@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUnifiedInstances, getInstanceCredentials } from "@/lib/hostedai";
+import { getInstanceCredentials } from "@/lib/hostedai";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
+import { requirePermission } from "@/lib/auth/audit";
+import { canonicalInstanceId, rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import jwt from "jsonwebtoken";
 
 // GET - Generate a terminal session URL with credentials
@@ -10,6 +12,10 @@ export async function GET(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
     const { payload, allTeamIds } = auth;
 
+    // The response carries the SSH password, so it needs the same gpu.access as connection-info.
+    const denial = requirePermission(auth, "gpu.access", request);
+    if (denial) return denial;
+
     if (!allTeamIds.length) {
       return NextResponse.json(
         { error: "No team associated with this account" },
@@ -18,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get instance ID from query params
-    const subscriptionId = request.nextUrl.searchParams.get("subscription_id");
+    const subscriptionId = canonicalInstanceId(request.nextUrl.searchParams.get("subscription_id"));
     if (!subscriptionId) {
       return NextResponse.json(
         { error: "subscription_id is required" },
@@ -26,22 +32,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // HAI 2.2: Verify instance belongs to one of the customer's teams
-    let found = false;
-    for (const tid of allTeamIds) {
-      const result = await getUnifiedInstances(tid);
-      if (result.items?.some(i => i.id === subscriptionId)) {
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      return NextResponse.json(
-        { error: "Instance not found or access denied" },
-        { status: 404 }
-      );
-    }
+    const notOwned = await rejectUnownedInstance(allTeamIds, subscriptionId);
+    if (notOwned) return notOwned;
 
     // Get SSH credentials via HAI 2.2 credentials API
     const creds = await getInstanceCredentials(subscriptionId);

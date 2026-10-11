@@ -11,7 +11,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyCustomerToken } from "@/lib/auth";
 import { gatePermission } from "@/lib/auth/gate";
 import { resolveOperatingContext } from "@/lib/auth/account-resolver";
-import { getConnectionInfo } from "@/lib/hostedai";
+import { getInstanceCredentials, sshLoginFromCredentials } from "@/lib/hostedai";
+import { canonicalInstanceId, ownsInstance } from "@/lib/auth/instance-ownership";
 import { getOrCreateServerSSHKey, executeSSHWithKey } from "@/lib/ssh-keys";
 
 // Check if a port is listening on the pod via SSH
@@ -36,19 +37,6 @@ async function verifyAppRunning(
   } catch {
     return false;
   }
-}
-
-// Parse SSH command to extract host and port
-function parseSSHInfo(cmd: string): { host: string; port: number; username: string } {
-  const hostMatch = cmd.match(/@([^\s]+)/);
-  const portMatch = cmd.match(/-p\s+(\d+)/);
-  const userMatch = cmd.match(/ssh\s+([^@]+)@/);
-
-  return {
-    host: hostMatch ? hostMatch[1] : "localhost",
-    port: portMatch ? parseInt(portMatch[1], 10) : 22,
-    username: userMatch ? userMatch[1] : "ubuntu",
-  };
 }
 
 export async function GET(request: NextRequest) {
@@ -125,19 +113,13 @@ export async function GET(request: NextRequest) {
 
   if (shouldVerify && installations.some(i => i.status === "running")) {
     try {
-      const teamId = ctx.customer.metadata?.hostedai_team_id;
-
-      if (teamId) {
-        // Get connection info
-        const connectionInfo = await getConnectionInfo(teamId, subscriptionId);
-        const conn = connectionInfo?.[0];
-        const pod = conn?.pods?.[0];
-
-        if (pod?.ssh_info?.cmd) {
-          const parsed = parseSSHInfo(pod.ssh_info.cmd);
-          const { privateKeyPath } = await getOrCreateServerSSHKey();
-          sshInfo = { ...parsed, privateKeyPath };
-        }
+      // Install rows from before installs checked ownership could name another customer's GPU.
+      const login = (await ownsInstance(ctx.allTeamIds, subscriptionId))
+        ? sshLoginFromCredentials(await getInstanceCredentials(canonicalInstanceId(subscriptionId)))
+        : null;
+      if (login) {
+        const { privateKeyPath } = await getOrCreateServerSSHKey();
+        sshInfo = { host: login.host, port: login.port, username: login.username, privateKeyPath };
       }
     } catch (err) {
       console.error("[AppStatus] Error getting SSH info for verification:", err);
