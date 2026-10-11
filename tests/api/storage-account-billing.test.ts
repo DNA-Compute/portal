@@ -85,6 +85,21 @@ describe("persistent shared storage account billing", () => {
     expect(customers.get("monthly")!.metadata.storage_window_started_at).toBeUndefined();
   });
 
+  it("does not charge for a volume hosted.ai reports in an error state", async () => {
+    customers.set("owner", { id: "owner", email: "owner@example.com", balance: 0,
+      metadata: { hostedai_team_id: "team", billing_type: "hourly" } });
+    mocks.volumes.mockResolvedValue([
+      { id: 7, team_id: "team", size_in_gb: 10, status: "ERROR" },
+      { id: 8, team_id: "team", size_in_gb: 20, status: "failed" },
+      { id: 9, team_id: "team", size_in_gb: 30, status: "attached" },
+    ]);
+    expect((await sync()).status).toBe(200);
+    expect(mocks.charge).toHaveBeenCalledTimes(1);
+    expect(mocks.charge).toHaveBeenCalledWith("owner", expect.objectContaining({
+      amount: 15, metadata: expect.objectContaining({ storage_gb: "30" }),
+    }));
+  });
+
   it("includes standalone monthly accounts without hourly pods", async () => {
     customers.set("monthly", { id: "monthly", email: "monthly@example.com", balance: 0,
       metadata: { hostedai_team_id: "team", billing_type: "monthly" } });

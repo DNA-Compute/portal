@@ -621,6 +621,8 @@ export async function POST(request: NextRequest) {
             }
           }
           for (const vol of volumeMap.values()) {
+            // A volume hosted.ai failed to create holds no data the customer can use.
+            if (/^(error|failed)$/i.test(vol.status ?? "")) continue;
             totalStorageGb += vol.size_in_gb || 0;
           }
 

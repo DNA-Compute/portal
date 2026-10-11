@@ -88,7 +88,9 @@ export async function GET(request: NextRequest) {
           id: pid,
           name: pool.name,
           regionId: pool.region_id || 0,
-          gpuModel: pool.gpu_model,
+          // /gpuaas/all-pools carries no GPU model; getAllPools fills gpu_model with the
+          // pool label, which is not a model. The GPUaaS admin merge below fills the real one.
+          gpuModel: undefined,
           totalGpus: undefined,
           hasOverride: overrides.some((o) => o.gpuaasPoolId === pid),
         });
@@ -107,11 +109,13 @@ export async function GET(request: NextRequest) {
         try {
           const clusterPools = await gpuaasAdmin.listPools(cluster.id);
           for (const pool of clusterPools) {
-            if (!seenPoolIds.has(pool.id)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const gpuModel: string | undefined = (pool as any).gpu_model_type || undefined;
+            if (seenPoolIds.has(pool.id)) {
+              const known = availablePools.find((p) => p.id === pool.id);
+              if (known && gpuModel) known.gpuModel = gpuModel;
+            } else {
               seenPoolIds.add(pool.id);
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const raw = pool as any;
-              const gpuModel = raw.gpu_model_type || pool.name || null;
               availablePools.push({
                 id: pool.id,
                 name: pool.name || `pool-${pool.id}`,

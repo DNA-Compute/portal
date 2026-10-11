@@ -615,13 +615,13 @@ export function ProductsTab() {
         ? prev.poolIds.filter((id) => id !== poolId)
         : [...prev.poolIds, poolId];
 
-      // Auto-derive gpuFamily from the first selected pool's gpuModel (sourced from
+      // Fill an empty gpuFamily from the first selected pool's gpuModel (sourced from
       // hostedai-user gpu_model_type) so the identifier stays consistent with the
-      // user panel service record. Only update if not manually overridden.
+      // user panel service record. A family the admin already set is kept.
       const firstPool = pools.find((p) => newPoolIds.includes(p.id));
-      const derivedFamily = firstPool?.gpuModel ?? prev.gpuFamily;
+      const gpuFamily = prev.gpuFamily || firstPool?.gpuModel || "";
 
-      return { ...prev, poolIds: newPoolIds, gpuFamily: derivedFamily ?? "" };
+      return { ...prev, poolIds: newPoolIds, gpuFamily };
     });
   };
 
@@ -1472,12 +1472,13 @@ export function ProductsTab() {
                 </div>
               </div>
 
-              {/* GPU Family — auto-derived from pool gpu_model_type, overridable */}
+              {/* GPU Family - filled from pool gpu_model_type when empty, overridable */}
               <div>
-                <label className="block text-sm font-medium text-[var(--fg)] mb-1">
+                <label htmlFor="product-gpu-family" className="block text-sm font-medium text-[var(--fg)] mb-1">
                   GPU Family
                 </label>
                 <input
+                  id="product-gpu-family"
                   type="text"
                   value={formData.gpuFamily}
                   onChange={(e) =>
@@ -1487,7 +1488,7 @@ export function ProductsTab() {
                   className="w-full px-3 py-2 border border-[var(--line)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--acid)]"
                 />
                 <p className="text-xs text-[var(--fg-muted)] mt-1">
-                  Groups products in the launch modal filter. Auto-derived from the first assigned pool&apos;s GPU model — override only if needed.
+                  Groups products in the launch modal filter. Filled from the first assigned pool&apos;s GPU model when empty - override only if needed.
                 </p>
               </div>
 
