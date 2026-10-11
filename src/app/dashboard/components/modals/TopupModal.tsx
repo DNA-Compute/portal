@@ -12,8 +12,6 @@
 import React from "react";
 import { CUSTOM_TOP_UP, isValidTopUpAmount } from "@/lib/wallet-topup";
 
-/** Rough GPU time a top-up buys, at the ~$2/hour the tiles have always quoted. */
-const gpuHours = (cents: number) => Math.floor(cents / 200);
 const presets = [10000, 25000, 100000];
 
 interface ValidatedVoucher {
@@ -255,7 +253,7 @@ export function TopupModal({
                           className="flex flex-col items-center justify-center gap-1 p-4 border border-[var(--line)] bg-[var(--ink-sink)] hover:border-[var(--acid)] hover:bg-[var(--ink-raise)] transition-colors disabled:opacity-50"
                         >
                           <span className="text-xl font-bold text-zinc-900">${(value / 100).toLocaleString("en-US")}</span>
-                          <GpuTime cents={value} bonusCents={validatedVoucher?.creditCents} />
+                          <CreditNote bonusCents={validatedVoucher?.creditCents} />
                         </button>
                       );
                     })}
@@ -282,7 +280,7 @@ export function TopupModal({
                           ${customMinCents / 100} to ${(CUSTOM_TOP_UP.maxCents / 100).toLocaleString("en-US")}, whole dollars
                         </span>
                       ) : customValid ? (
-                        <GpuTime cents={customCents} bonusCents={validatedVoucher?.creditCents} />
+                        <CreditNote bonusCents={validatedVoucher?.creditCents} />
                       ) : (
                         <span className="text-xs text-center text-[var(--muted)]">Type any amount</span>
                       )}
@@ -311,10 +309,9 @@ export function TopupModal({
   );
 }
 
-function GpuTime({ cents, bonusCents }: { cents: number; bonusCents?: number }) {
-  if (!cents) return <span className="text-xs text-center text-[var(--muted)]">Any amount you choose</span>;
-  const bonusHours = bonusCents ? gpuHours(bonusCents) : 0;
-  return bonusHours
-    ? <span className="text-xs text-center text-green-600 font-medium">~{gpuHours(cents) + bonusHours}h GPU time (+{bonusHours}h bonus)</span>
-    : <span className="text-xs text-center text-[var(--muted)]">~{gpuHours(cents)}h GPU time</span>;
+/** What a tile adds. GPU prices vary by product and configuration, so a top-up names credit, not GPU hours. */
+function CreditNote({ bonusCents }: { bonusCents?: number }) {
+  return bonusCents
+    ? <span className="text-xs text-center text-green-600 font-medium">+${(bonusCents / 100).toLocaleString("en-US")} bonus credit</span>
+    : <span className="text-xs text-center text-[var(--muted)]">Added to your wallet</span>;
 }

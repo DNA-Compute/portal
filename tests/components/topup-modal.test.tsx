@@ -19,7 +19,9 @@ describe("top-up modal custom amount", () => {
     expect(screen.getByText(/\$25 to \$10,000, whole dollars/)).toBeInTheDocument();
 
     fireEvent.change(input, { target: { value: "375" } });
-    expect(screen.getByText("~187h GPU time")).toBeInTheDocument();
+    // GPU prices vary by product and configuration, so a top-up names credit, not GPU hours.
+    expect(screen.queryAllByText(/GPU time|\d+h\b/)).toHaveLength(0);
+    expect(screen.getAllByText("Added to your wallet")).toHaveLength(4);
     fireEvent.click(screen.getByRole("button", { name: "Pay $375" }));
     expect(onTopup).toHaveBeenCalledWith(37500, undefined);
 

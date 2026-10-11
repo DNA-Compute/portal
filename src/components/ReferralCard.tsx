@@ -22,7 +22,6 @@ interface ReferralData {
   } | null;
   referrals: Referral[];
   rewardAmount: number;
-  rewardHours: number;
   minTopupRequired: number;
   maxReferrals: number; // 0 = unlimited
   usedReferralCode: string | null;
@@ -130,7 +129,6 @@ export default function ReferralCard({ token }: ReferralCardProps) {
   }
 
   const hasUsedCode = !!data.usedReferralCode;
-  const hasReferrals = (data.stats?.totalReferrals || 0) > 0;
 
   return (
     <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-6 border border-teal-100">
@@ -141,7 +139,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
             Refer a Friend
           </h3>
           <p className="text-sm text-[var(--muted)] mt-1">
-            Share your code and you both get {data.rewardHours} hours free!
+            Share your code and you both get ${data.rewardAmount} credit.
           </p>
         </div>
       </div>
@@ -203,9 +201,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
             <div className="text-xl font-bold text-teal-600">
               ${((data.stats?.totalEarned || 0) / 100).toFixed(0)}
             </div>
-            <div className="text-xs text-[var(--muted)]">
-              ~{Math.floor((data.stats?.totalEarned || 0) / 200)}h
-            </div>
+            <div className="text-xs text-[var(--muted)]">Earned</div>
           </div>
         </div>
         {data.stats && data.stats.pendingReferrals > 0 && (
@@ -327,7 +323,7 @@ export default function ReferralCard({ token }: ReferralCardProps) {
 
       {/* How it works */}
       <div className="text-xs text-[var(--muted)] mt-4 pt-4 border-t border-teal-100">
-        <strong>How it works:</strong> Share your code. When your friend signs up and tops up $100+, you both get ${data.rewardAmount} credit (~{data.rewardHours}h of GPU time).
+        <strong>How it works:</strong> Share your code. When your friend signs up and tops up ${data.minTopupRequired} or more, you both get ${data.rewardAmount} credit.
       </div>
     </div>
   );

@@ -12,15 +12,6 @@ interface ValidatedVoucher {
   minTopupCents: number | null;
 }
 
-interface MonthlyProduct {
-  id: string;
-  name: string;
-  billingType: string;
-  pricePerMonthCents: number | null;
-  pricePerHourCents: number;
-  stripePriceId: string | null;
-}
-
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,7 +19,6 @@ interface WelcomeModalProps {
   topupLoading: boolean;
   onTopup: (amount: number, voucherCode?: string) => void;
   onVoucherRedeemed?: () => void;
-  customerEmail?: string;
 }
 
 export function WelcomeModal({
@@ -38,7 +28,6 @@ export function WelcomeModal({
   topupLoading,
   onTopup,
   onVoucherRedeemed,
-  customerEmail,
 }: WelcomeModalProps) {
   const [voucherCode, setVoucherCode] = React.useState("");
   const [voucherValidating, setVoucherValidating] = React.useState(false);
@@ -47,11 +36,6 @@ export function WelcomeModal({
   const [mounted, setMounted] = React.useState(false);
   const [redeeming, setRedeeming] = React.useState(false);
   const [redeemSuccess, setRedeemSuccess] = React.useState<number | null>(null);
-
-  // Monthly product state
-  const [monthlyProduct, setMonthlyProduct] = React.useState<MonthlyProduct | null>(null);
-  const [subscribing, setSubscribing] = React.useState(false);
-  const [subscribeError, setSubscribeError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -63,79 +47,8 @@ export function WelcomeModal({
       setVoucherError(null);
       setRedeeming(false);
       setRedeemSuccess(null);
-      setSubscribing(false);
-      setSubscribeError(null);
     }
   }, [isOpen]);
-
-  // Fetch monthly product when modal opens
-  React.useEffect(() => {
-    if (!isOpen) return;
-    let cancelled = false;
-
-    async function fetchProduct() {
-      try {
-        const res = await fetch("/api/products");
-        if (!res.ok) return;
-        const json = await res.json();
-        if (cancelled) return;
-        const products = json.data || json;
-        const found = (Array.isArray(products) ? products : []).find(
-          (p: MonthlyProduct) =>
-            p.billingType === "monthly" &&
-            p.stripePriceId
-        );
-        setMonthlyProduct(found || null);
-      } catch {
-        // Silently fail
-      }
-    }
-
-    fetchProduct();
-    return () => { cancelled = true; };
-  }, [isOpen]);
-
-  const handleMonthlyCheckout = async () => {
-    if (!monthlyProduct || !customerEmail) return;
-
-    setSubscribing(true);
-    setSubscribeError(null);
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: monthlyProduct.id,
-          email: customerEmail,
-          termsAccepted: true,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setSubscribeError(data.error || "Failed to start checkout");
-        return;
-      }
-
-      if (data.isPortal) {
-        setSubscribeError(data.message || "You already have this subscription. Redirecting...");
-        setTimeout(() => {
-          if (data.url) window.location.href = data.url;
-        }, 1500);
-        return;
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      setSubscribeError("Something went wrong. Please try again.");
-    } finally {
-      setSubscribing(false);
-    }
-  };
 
   const validateVoucherCode = React.useCallback(async (code: string) => {
     if (!code.trim() || !token) {
@@ -205,14 +118,6 @@ export function WelcomeModal({
   }, [onTopup, validatedVoucher]);
 
   const isFreeVoucher = validatedVoucher && !validatedVoucher.minTopupCents;
-
-  const monthlyPrice = monthlyProduct?.pricePerMonthCents
-    ? (monthlyProduct.pricePerMonthCents / 100).toFixed(0)
-    : "199";
-
-  const hourlyEquivalent = monthlyProduct?.pricePerMonthCents
-    ? (monthlyProduct.pricePerMonthCents / 100 / 730).toFixed(2)
-    : "0.27";
 
   if (!isOpen) return null;
 
@@ -291,19 +196,15 @@ export function WelcomeModal({
                 {!isFreeVoucher && (
                   <div className="px-8 pt-5 pb-4">
                     <p className="text-sm font-semibold text-[var(--fg)] mb-1">PAYG, on-demand GPU wallet</p>
-                    <p className="text-xs text-[var(--muted)] mb-5">Choose an amount. RTX Pro 6000 from $0.66/hr</p>
+                    <p className="text-xs text-[var(--muted)] mb-5">Choose an amount. You see each GPU&apos;s price before you launch.</p>
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { value: 2500, label: "$25", hours: "~12h", tag: null },
-                        { value: 5000, label: "$50", hours: "~25h", tag: "Popular" },
-                        { value: 10000, label: "$100", hours: "~50h", tag: null },
-                        { value: 25000, label: "$250", hours: "~125h", tag: "Best value" },
+                        { value: 2500, label: "$25", tag: null },
+                        { value: 5000, label: "$50", tag: "Popular" },
+                        { value: 10000, label: "$100", tag: null },
+                        { value: 25000, label: "$250", tag: "Best value" },
                       ].map((option) => {
-                        const bonusHours = validatedVoucher
-                          ? Math.round((validatedVoucher.creditCents / 100) / 2)
-                          : 0;
-                        const totalHours = parseInt(option.hours.replace("~", "").replace("h", "")) + bonusHours;
                         const belowMinimum = validatedVoucher?.minTopupCents && option.value < validatedVoucher.minTopupCents;
                         return (
                           <button
@@ -320,10 +221,10 @@ export function WelcomeModal({
                             <span className="text-2xl font-bold text-[var(--fg)] group-hover:text-teal-600 transition-colors">{option.label}</span>
                             {validatedVoucher ? (
                               <span className="text-xs text-green-600 font-medium mt-1">
-                                ~{totalHours}h GPU time (+{bonusHours}h bonus)
+                                +${(validatedVoucher.creditCents / 100).toLocaleString("en-US")} bonus credit
                               </span>
                             ) : (
-                              <span className="text-xs text-[var(--muted)] mt-1">{option.hours} GPU time</span>
+                              <span className="text-xs text-[var(--muted)] mt-1">Added to your wallet</span>
                             )}
                           </button>
                         );

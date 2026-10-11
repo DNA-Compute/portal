@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
       stats,
       referrals, // List of people who used this code
       rewardAmount: settings.rewardAmountCents / 100, // Convert to dollars
-      rewardHours: Math.floor(settings.rewardAmountCents / 200), // $2/hour
       minTopupRequired: settings.minTopupCents / 100, // Min top-up to qualify
       maxReferrals: settings.maxReferralsPerCustomer, // 0 = unlimited
       usedReferralCode, // Code they used (if any)

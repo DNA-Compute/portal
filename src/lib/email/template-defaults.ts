@@ -434,8 +434,7 @@ This is a transactional email related to your {{tenantBrandName}} account.`,
               </div>
 
               <div style="margin-top: 24px; text-align: center;">
-                <p style="margin: 0 0 8px; color: #64ffda; font-size: 24px; font-weight: 700;">\${{creditDollars}} GPU Credits</p>
-                <p style="margin: 0; color: #888; font-size: 14px;">Approx. 1 hour of RTX PRO 6000 compute time</p>
+                <p style="margin: 0; color: #64ffda; font-size: 24px; font-weight: 700;">\${{creditDollars}} GPU Credits</p>
               </div>
             </td>
           </tr>
@@ -485,7 +484,7 @@ Congratulations on optimizing your GPUs!
 
 YOUR VOUCHER CODE: {{voucherCode}}
 
-Value: \${{creditDollars}} GPU Credits (Approx. 1 hour of RTX PRO 6000 compute time)
+Value: \${{creditDollars}} GPU Credits
 
 HOW TO USE:
 1. Sign up at {{dashboardUrl}}/checkout

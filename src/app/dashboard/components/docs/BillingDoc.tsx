@@ -47,7 +47,7 @@ export function BillingDoc() {
           <p className="text-xs font-semibold uppercase tracking-wider text-teal-600 mb-2">Option 2</p>
           <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-800 mb-2">Monthly Subscription</h3>
           <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 list-disc list-inside">
-            <li>$299/mo flat rate for one dedicated GPU</li>
+            <li>A flat monthly rate for one dedicated GPU</li>
             <li>Paid via credit card (Stripe subscription)</li>
             <li>Completely independent of your wallet balance</li>
             <li>Renews automatically each month</li>
@@ -73,10 +73,10 @@ export function BillingDoc() {
       <div className="not-prose bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 my-6">
         <h4 className="text-green-800 dark:text-green-200 font-semibold mb-2 text-base">Example</h4>
         <p className="text-green-700 dark:text-green-300 text-sm mb-0">
-          You launch an RTX PRO 6000 at $0.66/hr. After 45 minutes you terminate it.
-          You&apos;re charged for two 30-minute intervals ($0.33 each = $0.66 total), but
-          the 15 unused minutes from the second interval are credited back ($0.165).
-          Net cost: <strong>$0.495</strong> for 45 minutes of GPU time.
+          You launch an instance at $3.00/hr (an example rate). After 45 minutes you terminate it.
+          You&apos;re charged for two 30-minute intervals ($1.50 each = $3.00 total), but
+          the 15 unused minutes from the second interval are credited back ($0.75).
+          Net cost: <strong>$2.25</strong> for 45 minutes of GPU time.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export function BillingDoc() {
         for always-on workloads where you know you&apos;ll use the GPU continuously.
       </p>
       <ul>
-        <li><strong>$299/month</strong> for one NVIDIA RTX PRO 6000 Blackwell (96GB VRAM)</li>
+        <li>A fixed monthly price for one dedicated GPU, shown before you subscribe</li>
         <li>Paid via Stripe &mdash; billed to your credit card, not your wallet</li>
         <li>Your wallet balance is completely separate and unaffected</li>
         <li>Renews automatically on the same day each month</li>
@@ -98,46 +98,23 @@ export function BillingDoc() {
       <div className="not-prose bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 my-6">
         <h4 className="text-blue-800 dark:text-blue-200 font-semibold mb-2 text-base">Monthly vs. Hourly</h4>
         <p className="text-blue-700 dark:text-blue-300 text-sm mb-0">
-          The monthly subscription for the RTX PRO 6000 works out to ~$0.41/hr
-          (based on 730 hours/month) &mdash; a <strong>38% saving</strong> compared
-          to the hourly rate of $0.66/hr. If you plan to run a GPU for more than
-          ~19 days in a month, the subscription is cheaper.
+          To compare, divide the monthly price by 730 (the hours in a month) and set
+          it against the hourly price for the same GPU. If you plan to run the GPU
+          for most of the month, the subscription is usually cheaper.
         </p>
       </div>
 
       {/* ── GPU Pricing ────────────────────────────────────────── */}
 
       <h2 id="gpu-pricing">GPU Pricing</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>GPU</th>
-            <th>VRAM</th>
-            <th>Hourly</th>
-            <th>Monthly</th>
-            <th>Best For</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>RTX PRO 6000 Blackwell</strong></td>
-            <td>96 GB GDDR7</td>
-            <td>$0.66/hr</td>
-            <td>$299/mo</td>
-            <td>Inference, LoRA fine-tuning, Stable Diffusion, open-source models</td>
-          </tr>
-          <tr>
-            <td><strong>NVIDIA B200</strong></td>
-            <td>180 GB HBM3e</td>
-            <td>$3.75/hr</td>
-            <td>&mdash;</td>
-            <td>Large model training, 70B+ inference, production serving</td>
-          </tr>
-        </tbody>
-      </table>
       <p>
-        Every instance includes full root access, SSH, persistent storage options,
-        and no bandwidth charges. Prices are final &mdash; no hidden fees.
+        An hourly instance&apos;s price is the GPU&apos;s rate plus the CPU, memory and
+        disk you choose. A shared GPU is priced by the share you rent. The launcher
+        shows the full hourly price before you deploy, and that is what your wallet
+        is charged.
+      </p>
+      <p>
+        Every instance includes root access, SSH and no bandwidth charges.
       </p>
 
       {/* ── How the Wallet Works ───────────────────────────────── */}
@@ -161,43 +138,10 @@ export function BillingDoc() {
       </p>
 
       <h3>Adding Funds</h3>
-      <p>Top up from your dashboard. Available amounts:</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Amount</th>
-            <th>GPU Time (RTX PRO 6000)</th>
-            <th>GPU Time (B200)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>$25</strong></td>
-            <td>~37 hours</td>
-            <td>~11 hours</td>
-          </tr>
-          <tr>
-            <td><strong>$50</strong></td>
-            <td>~75 hours</td>
-            <td>~22 hours</td>
-          </tr>
-          <tr>
-            <td><strong>$100</strong></td>
-            <td>~151 hours</td>
-            <td>~44 hours</td>
-          </tr>
-          <tr>
-            <td><strong>$250</strong></td>
-            <td>~378 hours</td>
-            <td>~111 hours</td>
-          </tr>
-          <tr>
-            <td><strong>$500</strong></td>
-            <td>~757 hours</td>
-            <td>~222 hours</td>
-          </tr>
-        </tbody>
-      </table>
+      <p>
+        Top up from your dashboard with $100, $250 or $1,000, or any whole-dollar
+        amount from $25 to $10,000.
+      </p>
       <p>Funds are available immediately after payment.</p>
 
       <h3>Voucher Codes</h3>
@@ -227,14 +171,14 @@ export function BillingDoc() {
         </thead>
         <tbody>
           <tr>
-            <td><strong>Ephemeral (Local NVMe)</strong></td>
-            <td>Free</td>
-            <td>Included with every GPU, cleared on terminate</td>
+            <td><strong>Root disk</strong></td>
+            <td>Included in the instance price</td>
+            <td>Cleared on terminate</td>
           </tr>
           <tr>
-            <td><strong>Persistent (NFS)</strong></td>
-            <td>$0.10/GB/month</td>
-            <td>Survives restarts, billed from wallet</td>
+            <td><strong>Persistent volume</strong></td>
+            <td>Per GB, billed hourly</td>
+            <td>Survives restarts, billed from wallet. Not offered on every GPU</td>
           </tr>
         </tbody>
       </table>
@@ -283,8 +227,8 @@ export function BillingDoc() {
 
       <h3>3. Consider Monthly for Long-Running Workloads</h3>
       <p>
-        If you&apos;ll run an RTX PRO 6000 for more than ~19 days in a month, the
-        $299/mo subscription is cheaper than hourly.
+        If you&apos;ll run a GPU for most of the month, a monthly subscription is
+        usually cheaper than hourly.
       </p>
 
       <div className="not-prose bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 my-6">
@@ -302,7 +246,7 @@ export function BillingDoc() {
       <h3>What&apos;s the difference between hourly and monthly?</h3>
       <p>
         <strong>Hourly</strong> is pay-as-you-go from your wallet &mdash; you pay only for the time you use.
-        <strong>Monthly</strong> is a flat $299/mo subscription billed to your credit card,
+        <strong>Monthly</strong> is a flat-rate subscription billed to your credit card,
         giving you a dedicated GPU for the entire month. The two are completely independent.
       </p>
 
