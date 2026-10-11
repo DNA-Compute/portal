@@ -1,9 +1,12 @@
 "use client";
 
+import { LOGIN_AS_TOKEN_KEY } from "./hooks/useDashboardData";
+
 /**
  * Sticky bar shown only in an admin "Login as" (impersonation) session, so the
  * admin always knows whose account they're acting in. The real customer never
- * sees it — impersonation rides an ephemeral, tab-scoped token (no cookie), so
+ * sees it — impersonation rides an ephemeral, tab-scoped token (no cookie, kept in
+ * sessionStorage so a reload stays in the session), so
  * skipTwoFactor is only ever true in the admin's impersonation tab.
  */
 export function ImpersonationBanner({
@@ -28,6 +31,11 @@ export function ImpersonationBanner({
       <button
         type="button"
         onClick={() => {
+          try {
+            sessionStorage.removeItem(LOGIN_AS_TOKEN_KEY);
+          } catch {
+            /* storage disabled */
+          }
           try {
             window.close();
           } catch {

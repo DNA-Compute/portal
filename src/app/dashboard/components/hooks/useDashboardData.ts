@@ -76,6 +76,19 @@ export interface DashboardDataActions {
   setError: (error: string) => void;
 }
 
+/**
+ * Admin "Login as" rides a one-hour token and never a cookie, so it stays in the one tab. Keeping it
+ * in sessionStorage lets that tab survive a reload instead of silently switching to the session cookie,
+ * which belongs to whoever is signed in on this browser, usually the admin's own account.
+ */
+export const LOGIN_AS_TOKEN_KEY = "dna.login-as-token";
+function readLoginAsToken(): string | null {
+  try { return typeof window === "undefined" ? null : sessionStorage.getItem(LOGIN_AS_TOKEN_KEY); } catch { return null; }
+}
+function storeLoginAsToken(value: string | null) {
+  try { if (value) sessionStorage.setItem(LOGIN_AS_TOKEN_KEY, value); else sessionStorage.removeItem(LOGIN_AS_TOKEN_KEY); } catch { /* Storage may be disabled; the tab then lasts until reload. */ }
+}
+
 export function useDashboardData(): DashboardDataState & DashboardDataActions & { ticketId: string | null } {
   const searchParams = useSearchParams();
   const urlToken = searchParams.get("token");
@@ -86,7 +99,8 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
   // urlTokenDead lets a stale ?token= fall back to the cookie instead of erroring.
   const [cookieToken, setCookieToken] = useState<string | null>(null);
   const [urlTokenDead, setUrlTokenDead] = useState(false);
-  const token = (urlTokenDead ? null : urlToken) || cookieToken;
+  const [loginAsToken, setLoginAsToken] = useState<string | null>(readLoginAsToken);
+  const token = (urlTokenDead ? null : urlToken) || loginAsToken || cookieToken;
 
   // UI personalization state
   const [greeting, setGreeting] = useState("Welcome back");
@@ -275,6 +289,13 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
         if (cancelled) return;
 
         if (!response.ok) {
+          // An expired Login as must not fall through to the cookie, which would open another account.
+          if (response.status === 401 && token === loginAsToken && token !== urlToken) {
+            storeLoginAsToken(null);
+            setError("Your Login as session has ended. Start Login as again from the admin page.");
+            setLoading(false);
+            return;
+          }
           // A stale one-time URL token can still fall back to the cookie session.
           if (response.status === 401 && !urlTokenDead && urlToken && token === urlToken) {
             const res = await refreshFromCookie();
@@ -321,6 +342,11 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
         // persisted. Promote the live token into state FIRST so removing the param
         // (which useSearchParams reacts to) can't momentarily null out `token` and
         // fire a burst of spurious 401s. A token already marked dead isn't promoted.
+        if (token === urlToken) {
+          // A normal sign-in in this tab ends any Login as it held.
+          storeLoginAsToken(result.skipTwoFactor ? token : null);
+          if (!result.skipTwoFactor && loginAsToken) setLoginAsToken(null);
+        }
         if (typeof window !== "undefined" && urlToken) {
           if (!urlTokenDead && token) setCookieToken(token);
           const u = new URL(window.location.href);
@@ -353,7 +379,7 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
     return () => {
       cancelled = true;
     };
-  }, [token, urlToken, urlTokenDead, fetchInstances, fetchActivityEvents, fetchBillingStats, fetchSnapshots, twoFactorRequired, twoFactorVerified]);
+  }, [token, urlToken, urlTokenDead, loginAsToken, fetchInstances, fetchActivityEvents, fetchBillingStats, fetchSnapshots, twoFactorRequired, twoFactorVerified]);
 
   // Polling interval for live updates
   useEffect(() => {
