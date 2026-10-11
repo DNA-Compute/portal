@@ -10,6 +10,8 @@ export function StatusDot({ status }: { status: string }) {
   const isPending = normalizedStatus === "pending" || normalizedStatus === "starting" || normalizedStatus === "stopping" || normalizedStatus === "subscribing";
   const isSettingUp = normalizedStatus === "setting-up";
   const isSetupFailed = normalizedStatus === "setup-failed" || normalizedStatus === "failed";
+  // Running, but its SSH login never arrived: a steady warning, not the pulse of something in progress.
+  const isSshUnavailable = normalizedStatus === "ssh-unavailable";
 
   return (
     <span className="relative flex h-2 w-2">
@@ -28,10 +30,13 @@ export function StatusDot({ status }: { status: string }) {
       {isStopped && (
         <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-300"></span>
       )}
+      {isSshUnavailable && (
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+      )}
       {isPending && (
         <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400 animate-pulse"></span>
       )}
-      {!isRunning && !isStopped && !isPending && !isTerminating && !isSettingUp && !isSetupFailed && (
+      {!isRunning && !isStopped && !isPending && !isTerminating && !isSettingUp && !isSetupFailed && !isSshUnavailable && (
         <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-300"></span>
       )}
     </span>

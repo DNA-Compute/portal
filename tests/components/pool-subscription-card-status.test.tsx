@@ -106,6 +106,10 @@ describe("GPU card status", () => {
 
     expect(screen.queryByText("Connecting...")).toBeNull();
     expect(screen.getByText("SSH unavailable")).toBeInTheDocument();
+    // A running GPU with a problem: a steady amber dot, not the grey of an unknown or off state.
+    const dot = screen.getByText("SSH unavailable").previousElementSibling?.firstElementChild;
+    expect(dot?.className).toContain("bg-amber-500");
+    expect(dot?.className).not.toContain("animate-pulse");
   });
 
   it("shows Setting up, not Connecting, while the startup script runs", async () => {
