@@ -98,9 +98,12 @@ export default async function RootLayout({
   const proMode = isPro();
 
   // Tenant config — only available in Pro edition
+  // The open-source export stubs getTenantConfig to return nothing, so a build without
+  // EDITION=oss (no env file) must still render.
+  const noTenant = { isDefault: false, analyticsId: null as string | null };
   const tenant = proMode
-    ? await import("@/lib/tenant").then((m) => m.getTenantConfig())
-    : { isDefault: false, analyticsId: null as string | null };
+    ? (await import("@/lib/tenant").then((m) => m.getTenantConfig())) ?? noTenant
+    : noTenant;
 
   // Premium components — dynamically imported only in Pro edition
   const TenantStyles = proMode
