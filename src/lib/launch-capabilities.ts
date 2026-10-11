@@ -23,7 +23,8 @@ export class LaunchCapabilityError extends Error {
   }
 }
 function metadata(message: string): never {
-  throw new LaunchCapabilityError(`The GPU provider returned incomplete or ambiguous ${message}. Please contact support.`, 502, "PROVIDER_METADATA");
+  // 503, not 502: Cloudflare replaces an origin 502 with its own HTML page and the message is lost.
+  throw new LaunchCapabilityError(`The GPU provider returned incomplete or ambiguous ${message}. Please contact support.`, 503, "PROVIDER_METADATA");
 }
 function object(value: unknown, label: string): RecordValue {
   if (!value || typeof value !== "object" || Array.isArray(value)) metadata(label);
@@ -188,8 +189,12 @@ async function discover(
   const imageDetails = info.image_details == null ? null : object(info.image_details, "image defaults");
   const rootDetails = object(info.storage_block_details, "root storage defaults");
   const gpuDetails = object(serviceType === "pod_accelerator" ? info.gpu_pool_details : info.accelerator_info, "GPU defaults");
+  // hosted.ai can list the same pool more than once in a service's defaults; that is still one pool.
+  const defaultPools = serviceType === "pod_accelerator" && Array.isArray(gpuDetails.default)
+    ? [...new Map(gpuDetails.default.map(row => { const pool = object(row, "default pool"); return [String(pool.id), pool] as const; })).values()]
+    : [];
   const gpuDefault = serviceType === "pod_accelerator"
-    ? (Array.isArray(gpuDetails.default) && gpuDetails.default.length === 1 ? object(gpuDetails.default[0], "default pool") : null)
+    ? (defaultPools.length === 1 ? defaultPools[0] : null)
     : (gpuDetails.default ? object(gpuDetails.default, "default GPU") : null);
   if (serviceType === "cpu_gpu_card" && !gpuDefault) metadata("offering GPU model binding");
   capabilities.locks = {

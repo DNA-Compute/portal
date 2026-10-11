@@ -140,7 +140,7 @@ describe("launch capabilities trust boundary", () => {
   it("rejects explicit malformed image policy and locked images without a default", async () => {
     for (const imageDetails of [{ is_locked: "false" }, { is_locked: true }]) {
       mocks.info.mockResolvedValue({ ...info(), image_details: imageDetails });
-      await expect(resolveLaunchConfiguration(auth(), configuration)).rejects.toMatchObject({ status: 502, code: "PROVIDER_METADATA" });
+      await expect(resolveLaunchConfiguration(auth(), configuration)).rejects.toMatchObject({ status: 503, code: "PROVIDER_METADATA" });
     }
   });
 
@@ -268,6 +268,21 @@ describe("launch capabilities trust boundary", () => {
     expect(resolved.gpuVramGb).toBe(80);
     mocks.info.mockResolvedValue({ ...info(), gpu_pool_details: { ...info().gpu_pool_details, default: [{ id: 7 }, { id: 8 }] } });
     await expect(resolveLaunchConfiguration(auth(), configuration)).rejects.toMatchObject({ code: "PROVIDER_METADATA" });
+  });
+
+  it("treats a locked default pool that the provider lists twice as that one pool", async () => {
+    // hosted.ai repeats a pool in gpu_pool_details.default (seen on the LA-2 B200 service); that is not ambiguity.
+    mocks.info.mockResolvedValue({ ...info(), gpu_pool_details: { ...info().gpu_pool_details, is_locked: true,
+      default: [{ id: 7, pool_label: "GPU pool" }, { id: 7, pool_label: "GPU pool" }] } });
+    const capabilities = await getLaunchCapabilities(auth(), "offering", 2);
+    expect(capabilities.defaults.poolId).toBe(7);
+    expect(capabilities.pools.map(pool => pool.id)).toEqual([7]);
+    // The repeat may differ in id encoding or in other fields; only the id names the pool.
+    mocks.info.mockResolvedValue({ ...info(), gpu_pool_details: { ...info().gpu_pool_details, is_locked: true,
+      default: [{ id: 7, pool_label: "GPU pool" }, { id: "7", pool_label: "Renamed" }] } });
+    expect((await getLaunchCapabilities(auth(), "offering", 2)).defaults.poolId).toBe(7);
+    mocks.info.mockResolvedValue({ ...info(), gpu_pool_details: { ...info().gpu_pool_details, is_locked: true, default: [{ id: 7 }, { id: 8 }] } });
+    await expect(getLaunchCapabilities(auth(), "offering", 2)).rejects.toMatchObject({ code: "PROVIDER_METADATA" });
   });
 
   it("uses catalog memory only for bound hardware and respects a smaller provider limit", async () => {
