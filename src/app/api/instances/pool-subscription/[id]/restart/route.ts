@@ -6,7 +6,7 @@ import {
   restartInstance,
   getInstanceCredentials,
 } from "@/lib/hostedai";
-import { logGPURestarted } from "@/lib/activity";
+import { instanceProductName, logGPURestarted } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { injectServerKeyIntoPod } from "@/lib/ssh-keys";
 
@@ -45,14 +45,16 @@ export async function POST(
 
     // Log activity
     let displayNameForLog: string | undefined;
+    let productIdForLog: string | null | undefined;
     try {
       const meta = await prisma.podMetadata.findFirst({
         where: { OR: [{ instanceId: id }, { subscriptionId: id }] },
-        select: { displayName: true },
+        select: { displayName: true, productId: true },
       });
       displayNameForLog = meta?.displayName || undefined;
+      productIdForLog = meta?.productId;
     } catch { /* ignore */ }
-    await logGPURestarted(payload.customerId, "GPU Instance", displayNameForLog, id);
+    await logGPURestarted(payload.customerId, await instanceProductName(productIdForLog), displayNameForLog, id);
 
     // Schedule SSH key injection after boot
     setTimeout(async () => {
