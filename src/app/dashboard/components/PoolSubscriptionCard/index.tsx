@@ -17,6 +17,7 @@ import { GPUCardHfDeployment } from "./GPUCardHfDeployment";
 import { AddStorageModal } from "./AddStorageModal";
 import { SaveSnapshotModal } from "./SaveSnapshotModal";
 import { gpuAllocationLabel } from "@/lib/launch-config";
+import { useConfirmDialog } from "@/components/confirm-dialog";
 
 /**
  * Waits before each new SSH lookup while one fails or hosted.ai has not issued the login yet,
@@ -69,6 +70,9 @@ export function PoolSubscriptionCard({
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [connectionRound, setConnectionRound] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  // Pause, Start, Restart and Terminate ask and report in the card, not with blocking browser dialogs.
+  const { confirm: ask, dialog: confirmDialog } = useConfirmDialog();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Modal state
   const [showTerminal, setShowTerminal] = useState(false);
@@ -267,7 +271,8 @@ export function PoolSubscriptionCard({
 
   // Action handlers
   const handleUnsubscribe = async () => {
-    if (!confirm("Are you sure you want to terminate this GPU?")) return;
+    if (!(await ask({ title: "Terminate this GPU?", message: "This can't be undone.", confirmLabel: "Terminate", tone: "danger" }))) return;
+    setActionError(null);
     setLoading("unsubscribe");
     try {
       const response = await fetch(`/api/instances/pool-subscription/${subscription.id}`, {
@@ -293,13 +298,14 @@ export function PoolSubscriptionCard({
       onRefresh();
     } catch (error) {
       console.error("Failed to unsubscribe:", error);
-      alert(error instanceof Error ? error.message : "Failed to terminate GPU");
+      setActionError(error instanceof Error ? error.message : "Failed to terminate GPU");
       setLoading(null);
     }
   };
 
   const handleRestart = async () => {
-    if (!confirm("Restart this GPU? Unsaved data will be lost.")) return;
+    if (!(await ask({ title: "Restart this GPU?", message: "Unsaved data will be lost.", confirmLabel: "Restart", tone: "danger" }))) return;
+    setActionError(null);
     setLoading("restart");
     try {
       const response = await fetch(`/api/instances/pool-subscription/${subscription.id}/restart`, {
@@ -315,11 +321,12 @@ export function PoolSubscriptionCard({
         onRefresh();
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to restart");
+        setActionError(data.error || "Failed to restart");
         setLoading(null);
       }
     } catch (error) {
       console.error("Failed to restart:", error);
+      setActionError("Couldn't reach the server to restart this GPU. Try again.");
       setLoading(null);
     }
   };
@@ -330,9 +337,18 @@ export function PoolSubscriptionCard({
       : reservationRate !== undefined
         ? `While stopped, this instance costs $${reservationRate.toFixed(2)}/hr to reserve${reservationPercent !== null ? ` (${reservationPercent}% of its running rate)` : ""}.`
         : "The reservation price is currently unavailable.";
-    const confirmMessage = `Stop this GPU?\n\n${reservationMessage}\n\nYou can start it again anytime. Shared storage continues to be billed separately.`;
-
-    if (!confirm(confirmMessage)) return;
+    const confirmed = await ask({
+      title: "Stop this GPU?",
+      message: (
+        <>
+          <p>{reservationMessage}</p>
+          <p>You can start it again anytime. Shared storage continues to be billed separately.</p>
+        </>
+      ),
+      confirmLabel: "Stop GPU",
+    });
+    if (!confirmed) return;
+    setActionError(null);
     setLoading("stop");
     try {
       const response = await fetch(`/api/instances/pool-subscription/${subscription.id}/stop`, {
@@ -348,16 +364,18 @@ export function PoolSubscriptionCard({
         onRefresh();
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to stop");
+        setActionError(data.error || "Failed to stop");
         setLoading(null);
       }
     } catch (error) {
       console.error("Failed to stop:", error);
+      setActionError("Couldn't reach the server to stop this GPU. Try again.");
       setLoading(null);
     }
   };
 
   const handleStart = async () => {
+    setActionError(null);
     setLoading("start");
     try {
       const response = await fetch(`/api/instances/pool-subscription/${subscription.id}/start`, {
@@ -373,11 +391,12 @@ export function PoolSubscriptionCard({
         onRefresh();
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to start");
+        setActionError(data.error || "Failed to start");
         setLoading(null);
       }
     } catch (error) {
       console.error("Failed to start:", error);
+      setActionError("Couldn't reach the server to start this GPU. Try again.");
       setLoading(null);
     }
   };
@@ -643,7 +662,7 @@ export function PoolSubscriptionCard({
             <button
               onClick={() => setShowTerminal(true)}
               disabled={!!loading || !connectionInfo?.pods?.some((p) => p.ssh_info)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -685,6 +704,15 @@ export function PoolSubscriptionCard({
             <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
+          </button>
+        </div>
+      )}
+
+      {actionError && (
+        <div role="alert" className="px-4 py-2 border-t border-[var(--line)] flex items-center justify-between gap-3 text-xs text-rose-600" onClick={(e) => e.stopPropagation()}>
+          <span>{actionError}</span>
+          <button type="button" onClick={() => setActionError(null)} className="shrink-0 text-zinc-500 hover:text-zinc-700 transition-colors">
+            Dismiss
           </button>
         </div>
       )}
@@ -979,6 +1007,8 @@ export function PoolSubscriptionCard({
         subscriptionId={String(subscription.id)}
         token={token}
       />
+
+      {confirmDialog}
 
       {/* Run Script Modal */}
       <RunScriptModal

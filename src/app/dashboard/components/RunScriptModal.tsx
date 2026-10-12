@@ -115,7 +115,7 @@ export function RunScriptModal({ isOpen, onClose, subscriptionId, token, podName
           <button
             onClick={handleRunScript}
             disabled={running || !script.trim()}
-            className="px-4 py-2.5 bg-zinc-50 hover:bg-zinc-100 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {running ? (
               <>
