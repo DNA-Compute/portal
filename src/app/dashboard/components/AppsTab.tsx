@@ -508,7 +508,7 @@ export function AppsTab({ token, subscriptions, onRefresh }: AppsTabProps) {
 
       {filteredApps.length === 0 && (
         <div className="text-center py-12 text-zinc-500">
-          No apps found in this category
+          {apps.length === 0 ? "No apps are available yet." : "No apps in this category."}
         </div>
       )}
 
