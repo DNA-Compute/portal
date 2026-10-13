@@ -52,7 +52,7 @@ export function getWalletReaction(balanceCents: number): string | null {
 export function getGpuStatusText(status: string, isActive: boolean): string {
   if (status === "Running" && isActive) return "Crunching numbers";
   if (status === "Running") return "Humming along";
-  if (status === "Pending" || status === "subscribing") return "Warming up...";
+  if (status === "Pending" || status === "pending" || status === "subscribing") return "Warming up...";
   if (status === "unsubscribing" || status === "un_subscribing") return "Cooling down...";
   return status;
 }

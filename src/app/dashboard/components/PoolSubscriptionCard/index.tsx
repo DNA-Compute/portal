@@ -458,7 +458,8 @@ export function PoolSubscriptionCard({
 
   // Computed values
   const isActive = subscription.status === "subscribed" || subscription.status === "active" || subscription.status === "running";
-  const isPending = subscription.status === "subscribing" || subscription.status === "un_subscribing";
+  // HAI 2.2 reports "Pending", which /api/instances lowercases.
+  const isPending = subscription.status === "subscribing" || subscription.status === "un_subscribing" || subscription.status === "pending";
   // Terminating state - either from local loading state OR from API status
   const isTerminating = loading === "unsubscribe" || subscription.status === "un_subscribing";
 
@@ -505,6 +506,27 @@ export function PoolSubscriptionCard({
   };
 
   const displayStatus = getDisplayStatus();
+  // Terminate sits on the action bar in every state, so stopping the charges never needs the card expanded.
+  const terminateAction = canTerminate && !isTerminating && (
+    <button
+      onClick={handleUnsubscribe}
+      disabled={!!loading}
+      className="px-2 py-1.5 text-xs font-medium text-rose-500 hover:text-rose-600 transition-colors disabled:opacity-50"
+    >
+      Terminate
+    </button>
+  );
+  const moreToggle = (
+    <button
+      onClick={() => setExpanded(!expanded)}
+      className="flex items-center gap-1 px-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition-colors"
+    >
+      {expanded ? "Less" : "More"}
+      <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
   // Don't show running quip when terminating - show termination status instead
   const runningQuip = isActive && !isTerminating ? getRunningTimeQuip(subscription.created_at) : null;
   const gpuCount = subscription.gpuCount ?? subscription.per_pod_info?.vgpu_count ?? subscription.pods?.[0]?.gpu_count ?? 1;
@@ -696,15 +718,8 @@ export function PoolSubscriptionCard({
             </button>
           )}
           <div className="flex-1" />
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 px-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition-colors"
-          >
-            {expanded ? "Less" : "More"}
-            <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {!isFailed && terminateAction}
+          {moreToggle}
         </div>
       )}
 
@@ -753,15 +768,8 @@ export function PoolSubscriptionCard({
             This instance has failed and needs a restart
           </span>
           <div className="flex-1" />
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 px-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition-colors"
-          >
-            {expanded ? "Less" : "More"}
-            <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {terminateAction}
+          {moreToggle}
         </div>
       )}
 
@@ -785,15 +793,17 @@ export function PoolSubscriptionCard({
             Paused • {isMonthly ? "Monthly subscription continues" : reservationRate !== undefined ? `$${reservationRate.toFixed(2)}/hr to reserve` : "Reservation price unavailable"}
           </span>
           <div className="flex-1" />
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 px-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition-colors"
-          >
-            {expanded ? "Less" : "More"}
-            <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {terminateAction}
+          {moreToggle}
+        </div>
+      )}
+
+      {/* Pending State - not usable yet, but it can still be terminated */}
+      {isPending && !isTerminating && (
+        <div className="px-4 py-2 border-t border-[var(--line)] bg-zinc-50/50 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex-1" />
+          {terminateAction}
+          {moreToggle}
         </div>
       )}
 
@@ -859,7 +869,7 @@ export function PoolSubscriptionCard({
             <div className="px-4 py-3 bg-amber-50 border-y border-amber-100">
               <div className="flex items-center gap-2 text-sm text-amber-700">
                 <span className="animate-spin">⟳</span>
-                {subscription.status === "subscribing" ? "Setting up your GPU..." : "Releasing resources..."}
+                {subscription.status === "un_subscribing" ? "Releasing resources..." : "Setting up your GPU..."}
               </div>
             </div>
           )}
