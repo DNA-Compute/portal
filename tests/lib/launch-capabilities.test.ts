@@ -396,6 +396,22 @@ describe("launch capabilities trust boundary", () => {
         expect(quote.rate.lines[0]).toMatchObject({ key: "gpu", label: "GPU (50% share)", quantity: 0.5, hourlyCents: 50 });
       });
 
+      it("offers and prices only the default CPU/RAM profile, since hosted.ai creates every slot with it", async () => {
+        // Prod, 13 Oct 2026: a 4c/8GB instance_type_id on the LA-2 B200 slot pool came back as 16c/32GB.
+        offerResourceAlternatives();
+        const capabilities = await getLaunchCapabilities(auth(), "offering", 2, 7, undefined, { gpuCount: 1 });
+        expect(capabilities.locks.profile).toBe(true);
+        expect(capabilities.profiles.map(item => item.id)).toEqual(["profile"]);
+        await expect(resolveLaunchConfiguration(auth(), { ...half, instanceTypeId: "other-profile" })).rejects.toThrow("CPU/RAM profile");
+        expect((await resolveLaunchConfiguration(auth(), half)).configuration.instanceTypeId).toBe("profile");
+
+        // Whole GPUs from an unshared pool still get the profile they ask for.
+        mocks.pools.mockResolvedValue([{ ...meshPool, sharing_ratio: 1 }]);
+        const whole = await getLaunchCapabilities(auth(), "offering", 2, 7, undefined, { gpuCount: 1 });
+        expect(whole.locks.profile).toBe(false);
+        expect(whole.profiles.map(item => item.id)).toEqual(["profile", "other-profile"]);
+      });
+
       it("never sells several slots as a whole GPU, nor a share that is not a whole percent", async () => {
         await expect(resolveLaunchConfiguration(auth(), { ...half, gpuSharePercent: 100 })).rejects.toMatchObject({ code: "GPU_UNAVAILABLE" });
         await expect(resolveLaunchConfiguration(auth(), { ...half, gpuCount: 2 })).rejects.toMatchObject({ code: "GPU_UNAVAILABLE" });

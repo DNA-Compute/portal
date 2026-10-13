@@ -301,6 +301,15 @@ async function discover(
       if (!share) throw new LaunchCapabilityError("The selected GPU share is not offered for this pool. Refresh the configuration.", 409, "GPU_UNAVAILABLE");
       capabilities.defaults.gpuSharePercent = percent;
       capabilities.maxGpuCount = share.maxGpuCount;
+      // TEMPORARY until hosted.ai fixes it (reported to Robert, 13 Oct 2026): hosted.ai creates an
+      // unscheduled slot with the service's default CPU/RAM whatever instance_type_id is sent (prod:
+      // 4c/8GB requested on the LA-2 B200 pool came back as 16c/32GB), so offer and price only that
+      // default. To undo, delete this line; the test "offers and prices only the default CPU/RAM
+      // profile" in tests/lib/launch-capabilities.test.ts then needs flipping too.
+      if (!share.guaranteed) {
+        capabilities.locks.profile = true;
+        requireDefault(true, capabilities.defaults.instanceTypeId, "slot CPU/RAM default");
+      }
     } else if (selection.gpuSharePercent !== undefined && selection.gpuSharePercent !== 100) {
       throw new LaunchCapabilityError("This GPU pool offers whole GPUs only.", 409, "GPU_UNAVAILABLE");
     }
