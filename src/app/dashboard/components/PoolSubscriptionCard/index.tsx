@@ -29,6 +29,8 @@ export interface PoolSubscriptionCardProps {
   subscription: PoolSubscription;
   token: string;
   onRefresh: () => void;
+  /** Called once after an action that moves wallet money (terminate credits unused time back). */
+  onBalanceChange?: () => void;
   onSnapshotCreated?: () => void;
   compact?: boolean;
   metadata?: { displayName: string | null; notes: string | null; startupScriptStatus?: string | null; deployStatus?: string | null; deployStatusReason?: string | null };
@@ -45,6 +47,7 @@ export function PoolSubscriptionCard({
   subscription,
   token,
   onRefresh,
+  onBalanceChange,
   onSnapshotCreated,
   compact = false,
   metadata,
@@ -288,6 +291,7 @@ export function PoolSubscriptionCard({
           throw new Error(`Server error (${response.status}): Please try again`);
         }
       }
+      onBalanceChange?.();
       // Poll more aggressively for status update
       const pollInterval = setInterval(onRefresh, 2000);
       setTimeout(() => {

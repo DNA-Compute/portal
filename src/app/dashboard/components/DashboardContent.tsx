@@ -157,6 +157,13 @@ export function DashboardContent() {
     }
   }, [token, setData]);
 
+  // Launching, restoring and terminating charge or credit the wallet before their request
+  // returns, so reload the balance with the GPU list or the page shows the old one.
+  const refreshAfterWalletChange = React.useCallback(() => {
+    fetchInstances();
+    void refreshAccountData();
+  }, [fetchInstances, refreshAccountData]);
+
   // Logout confirmation modal state
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
@@ -506,7 +513,7 @@ export function DashboardContent() {
       if (target.categorySlug) setLaunchCategorySlug(target.categorySlug);
       setShowLaunchModal(true);
     }
-  }, [data]);
+  }, [data, setShowLaunchModal]);
 
   // Show welcome modal for brand-new users (no balance, no infra, not returning from Stripe)
   React.useEffect(() => {
@@ -531,6 +538,8 @@ export function DashboardContent() {
     if (isNewUser) {
       setShowWelcomeModal(true);
     }
+  // The open-modal flags are read, not watched: closing the launch modal must not pop this one.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, loading, poolSubscriptions.length, instances.length, bareMetalNodes.length]);
 
   // On-demand requires a funded wallet, regardless of monthly subscriptions.
@@ -1278,6 +1287,7 @@ export function DashboardContent() {
                           subscription={subscription}
                           token={token!}
                           onRefresh={fetchInstances}
+                          onBalanceChange={refreshAccountData}
                           onSnapshotCreated={fetchSnapshots}
                           metadata={meta}
                           hfDeployment={hfDeployments[String(subscription.id)]}
@@ -1371,7 +1381,7 @@ export function DashboardContent() {
                           snapshot={snapshot}
                           token={token!}
                           onRestore={() => {
-                            fetchInstances();
+                            refreshAfterWalletChange();
                             fetchSnapshots();
                           }}
                           onDelete={fetchSnapshots}
@@ -1524,8 +1534,8 @@ export function DashboardContent() {
               onDeploymentStarted={() => {
                 // Switch to dashboard tab to show progress
                 setActiveTab("dashboard");
-                // Refresh instances to get the new deployment
-                fetchInstances();
+                // Refresh instances to get the new deployment, and the balance it was charged to
+                refreshAfterWalletChange();
               }}
             />
           )}
@@ -1552,7 +1562,7 @@ export function DashboardContent() {
             <AppsTab
               token={token}
               subscriptions={poolSubscriptions}
-              onRefresh={fetchInstances}
+              onRefresh={refreshAfterWalletChange}
             />
           )}
 
@@ -1640,7 +1650,7 @@ export function DashboardContent() {
           const pollInterval = setInterval(() => fetchInstances(), 3000);
           setTimeout(() => clearInterval(pollInterval), 60000);
           setTimeout(() => setProvisioningGpu(null), 120000);
-          fetchInstances();
+          refreshAfterWalletChange();
         }}
         onError={(message) => {
           setProvisioningGpu(null);
