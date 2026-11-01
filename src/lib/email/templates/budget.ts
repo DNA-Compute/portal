@@ -226,6 +226,9 @@ export async function sendNegativeBalanceShutdownEmail(params: {
 
   const safeCustomerName = escapeHtml(customerName);
   const balanceOwed = formatCurrency(balanceOwedCents);
+  const storageNote = volumesDeleted > 0
+    ? `Any data stored on deleted volumes has been permanently removed. To continue using ${getBrandName()}, please add funds to your wallet.`
+    : `Your storage volumes have been kept and are still billed. Add funds to your wallet to keep them and continue using ${getBrandName()}.`;
 
   const body = `
     ${emailDangerBox(`<p style="margin: 0; font-size: 15px; color: #991b1b;"><strong>Account Resources Terminated</strong></p>`)}
@@ -252,7 +255,7 @@ export async function sendNegativeBalanceShutdownEmail(params: {
       </table>
     </div>
     ${emailDangerBox(`<p style="margin: 0; color: #991b1b; font-size: 14px;">
-      <strong>Important:</strong> Any data stored on deleted volumes has been permanently removed. To continue using ${getBrandName()}, please add funds to your wallet.
+      <strong>Important:</strong> ${storageNote}
     </p>`)}
     ${emailButton("Add Funds to Wallet", dashboardUrl)}
     ${emailMuted(`If you believe this was an error, please contact support at ${getSupportEmail()}`)}
@@ -271,7 +274,7 @@ Balance Owed: ${balanceOwed}
 ${podsTerminated > 0 ? `GPU Pods Terminated: ${podsTerminated}` : ""}
 ${volumesDeleted > 0 ? `Storage Volumes Deleted: ${volumesDeleted}` : ""}
 
-Important: Any data stored on deleted volumes has been permanently removed. To continue using ${getBrandName()}, please add funds to your wallet.
+Important: ${storageNote}
 
 Add funds: ${dashboardUrl}
 

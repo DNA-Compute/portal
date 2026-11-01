@@ -17,7 +17,8 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
   walletTransaction: { create: vi.fn().mockResolvedValue({}) },
 } }));
 vi.mock("@/lib/stripe", () => ({ getStripe: async () => ({ customers: {
-  retrieve: mocks.retrieve, update: mocks.update, createBalanceTransaction: mocks.charge,
+  retrieve: mocks.retrieve, update: mocks.update,
+  createBalanceTransaction: (id: string, params: unknown) => mocks.charge(id, params),
   listBalanceTransactions: vi.fn().mockResolvedValue({ data: [] }),
 } }) }));
 vi.mock("@/lib/hostedai", () => ({

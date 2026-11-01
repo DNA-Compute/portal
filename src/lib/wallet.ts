@@ -5,6 +5,9 @@ import { addSpend } from "./lifecycle";
 import { cacheCustomer } from "./customer-cache";
 import { createInvoiceForPayment } from "./invoice";
 
+/** Largest single automatic card top-up. */
+const MAX_AUTO_REFILL_CENTS = 50_000;
+
 export interface WalletBalance {
   availableBalance: number; // in cents
   pendingBalance: number; // in cents
@@ -46,7 +49,7 @@ export async function fundWallet(
   customerId: string,
   amountCents: number,
   paymentMethodId?: string
-): Promise<{ success: boolean; paymentIntentId?: string; error?: string }> {
+): Promise<{ success: boolean; paymentIntentId?: string; error?: string; paymentFailed?: boolean }> {
   const stripe = await getStripe();
 
   try {
@@ -57,7 +60,7 @@ export async function fundWallet(
       paymentMethodId = customer.invoice_settings?.default_payment_method as string;
 
       if (!paymentMethodId) {
-        return { success: false, error: "No payment method on file" };
+        return { success: false, error: "No payment method on file", paymentFailed: true };
       }
     }
 
@@ -120,12 +123,16 @@ export async function fundWallet(
       return { success: true, paymentIntentId: paymentIntent.id };
     }
 
-    return { success: false, error: `Payment status: ${paymentIntent.status}` };
+    // Needing 3-D Secure or still processing is not a decline; only a refused or cancelled payment is.
+    const paymentFailed = paymentIntent.status === "requires_payment_method" || paymentIntent.status === "canceled";
+    return { success: false, error: `Payment status: ${paymentIntent.status}`, paymentFailed };
   } catch (error) {
     console.error("Wallet funding error:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fund wallet"
+      error: error instanceof Error ? error.message : "Failed to fund wallet",
+      // A declined card is a payment failure; a network or Stripe outage is not.
+      paymentFailed: (error as { type?: string }).type === "StripeCardError",
     };
   }
 }
@@ -238,10 +245,12 @@ export async function deductUsage(
 /**
  * Check if wallet needs refill and trigger if necessary
  * Uses customer metadata lock + balance transaction check to prevent double-charging
+ * `pending` means a refill ran in the last 10 minutes or is in progress, not that it failed.
+ * `paymentFailed` means the card was declined or there is none; other errors leave it unset.
  */
 export async function checkAndRefillWallet(
   customerId: string
-): Promise<{ refilled: boolean; amount?: number; error?: string }> {
+): Promise<{ refilled: boolean; amount?: number; error?: string; pending?: boolean; paymentFailed?: boolean }> {
   const stripe = await getStripe();
 
   try {
@@ -267,7 +276,7 @@ export async function checkAndRefillWallet(
 
       if (recentRefill) {
         console.log(`Skipping refill for ${customerId}: recent refill found at ${new Date(recentRefill.created * 1000).toISOString()}`);
-        return { refilled: false, error: "Recent refill already processed" };
+        return { refilled: false, error: "Recent refill already processed", pending: true };
       }
 
       // Check 2: Look for in-progress refill lock (prevents race condition)
@@ -278,7 +287,7 @@ export async function checkAndRefillWallet(
         // If lock is less than 2 minutes old, skip (payment still processing)
         if (now - lockTime < 120) {
           console.log(`Skipping refill for ${customerId}: refill in progress (locked at ${new Date(lockTime * 1000).toISOString()})`);
-          return { refilled: false, error: "Refill already in progress" };
+          return { refilled: false, error: "Refill already in progress", pending: true };
         }
       }
 
@@ -307,7 +316,7 @@ export async function checkAndRefillWallet(
           metadata: { ...customer.metadata, wallet_refill_lock: "" },
         });
         cacheCustomer(unlockedCustomer as Stripe.Customer).catch(() => {});
-        return { refilled: false, error: "Recent refill already processed (detected after lock)" };
+        return { refilled: false, error: "Recent refill already processed (detected after lock)", pending: true };
       }
 
       // Also check for recent successful payment intents with wallet_funding type
@@ -325,12 +334,15 @@ export async function checkAndRefillWallet(
           metadata: { ...customer.metadata, wallet_refill_lock: "" },
         });
         cacheCustomer(unlockedCustomer2 as Stripe.Customer).catch(() => {});
-        return { refilled: false, error: "Recent wallet payment already processed" };
+        return { refilled: false, error: "Recent wallet payment already processed", pending: true };
       }
 
-      console.log(`Wallet low for ${customerId}: ${effectiveBalance} cents. Triggering refill.`);
+      // Enough to bring the wallet back to the threshold, so a debt is paid in one charge rather
+      // than one fixed top-up every 10 minutes. Above the cap the rest waits for the next refill.
+      const refillAmountCents = Math.min(MAX_AUTO_REFILL_CENTS, Math.max(autoRefillAmountCents, autoRefillThresholdCents - effectiveBalance));
+      console.log(`Wallet low for ${customerId}: ${effectiveBalance} cents. Triggering refill of ${refillAmountCents} cents.`);
 
-      const result = await fundWallet(customerId, autoRefillAmountCents);
+      const result = await fundWallet(customerId, refillAmountCents);
 
       // Clear lock after payment completes (success or failure)
       const postRefillCustomer = await stripe.customers.update(customerId, {
@@ -342,9 +354,9 @@ export async function checkAndRefillWallet(
       cacheCustomer(postRefillCustomer as Stripe.Customer).catch(() => {});
 
       if (result.success) {
-        return { refilled: true, amount: autoRefillAmountCents };
+        return { refilled: true, amount: refillAmountCents };
       } else {
-        return { refilled: false, error: result.error };
+        return { refilled: false, error: result.error, paymentFailed: result.paymentFailed };
       }
     }
 

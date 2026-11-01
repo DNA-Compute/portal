@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordBillingRun } from "@/lib/billing-heartbeat";
 import { getStripe } from "@/lib/stripe";
-import { getSharedVolumes, getPoolSubscriptions, deleteSharedVolume, type SharedVolume } from "@/lib/hostedai";
+import { getSharedVolumes, getPoolSubscriptions, type SharedVolume } from "@/lib/hostedai";
 import { checkAndRefillWallet, WALLET_CONFIG } from "@/lib/wallet";
 import { getStoragePricePerGBHourCents, getStoppedInstanceRatePercent } from "@/lib/pricing";
 import { computeStorageCharge } from "@/lib/storage-billing";
@@ -11,17 +12,46 @@ import { prisma } from "@/lib/prisma";
 import { sendNegativeBalanceShutdownEmail } from "@/lib/email";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { readPoolOverviewCache } from "@/lib/pool-overview";
+import { verifyCronAuth } from "@/lib/cron-auth";
 import type Stripe from "stripe";
+import crypto from "crypto";
 
 // Secret key to protect the sync endpoint (set in env)
 const SYNC_SECRET = process.env.SYNC_SECRET;
+
+// The in-process scheduler calls this with CRON_SECRET, like every other scheduled job. SYNC_SECRET
+// still works for an external cron. Packet OSS ships neither the cron file nor SYNC_SECRET, so
+// without the scheduler GPUs were charged their first 30 minutes and never again.
+// Header only: a ?secret= query string ends up in proxy and access logs.
+function authorizeSync(request: NextRequest): NextResponse | null {
+  if (request.nextUrl.searchParams.has("secret")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (SYNC_SECRET && secretsMatch(request.headers.get("authorization"), `Bearer ${SYNC_SECRET}`)) return null;
+  return verifyCronAuth(request);
+}
+
+function secretsMatch(provided: string | null, expected: string): boolean {
+  if (!provided) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 // Track when reconciliation last ran (Step 0) — only needs to run once per hour
 let lastReconciliationRun = 0;
 const RECONCILIATION_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
+// A wallet this far below zero is left running: one late block or rounding must not end a GPU.
+const NEGATIVE_BALANCE_GRACE_CENTS = 100;
+
+// GPU time unbilled for longer than this (6 hours) is held for manual settlement, not charged.
+const MAX_AUTO_CATCHUP_BLOCKS = 12;
+
+// Longest gap storage and stopped GPUs are metered for in one go.
+const MAX_METERED_MINUTES = 24 * 60;
+
 // Billing interval in minutes (each pod is billed every 30 mins from its deploy time)
 const BILLING_INTERVAL_MINUTES = 30;
+const BILLING_INTERVAL_MS = BILLING_INTERVAL_MINUTES * 60 * 1000;
 
 interface PodBillingResult {
   subscriptionId: string;
@@ -34,16 +64,14 @@ interface PodBillingResult {
 }
 
 export async function POST(request: NextRequest) {
-  // Verify sync secret to prevent unauthorized calls
-  const authHeader = request.headers.get("authorization");
-  if (!SYNC_SECRET || authHeader !== `Bearer ${SYNC_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = authorizeSync(request);
+  if (authError) return authError;
 
   const stripe = await getStripe();
   const now = new Date();
   const podResults: PodBillingResult[] = [];
-  const customerRefills: Map<string, { refilled: boolean; amount?: number }> = new Map();
+  const heldBacklogs: Array<{ subscriptionId: string; customerId: string; from: Date; to: Date; minutes: number; estimatedCents: number }> = [];
+  const customerRefills: Map<string, Awaited<ReturnType<typeof checkAndRefillWallet>>> = new Map();
 
   // Get stopped instance rate configuration
   const stoppedInstanceRatePercent = getStoppedInstanceRatePercent();
@@ -83,7 +111,11 @@ export async function POST(request: NextRequest) {
       action: string;
     }> = [];
 
-    const shouldReconcile = Date.now() - lastReconciliationRun >= RECONCILIATION_INTERVAL_MS;
+    // DNA patch: off unless BILLING_RECONCILIATION_ENABLED=true. It switches a team owner to hourly
+    // billing before checking anything is billable, and reads a pool cache nothing on DNA refreshes.
+    // Every GPU launched through the portal already has the PodMetadata row STEP 1 bills from.
+    const reconciliationEnabled = process.env.BILLING_RECONCILIATION_ENABLED === "true";
+    const shouldReconcile = reconciliationEnabled && Date.now() - lastReconciliationRun >= RECONCILIATION_INTERVAL_MS;
 
     if (shouldReconcile) {
       lastReconciliationRun = Date.now();
@@ -270,7 +302,7 @@ export async function POST(request: NextRequest) {
       } catch (reconcileErr) {
         console.error("[Sync Reconcile] Error during reconciliation:", reconcileErr);
       }
-    } else {
+    } else if (reconciliationEnabled) {
       console.log(`[Sync] Skipping reconciliation (last ran ${Math.round((Date.now() - lastReconciliationRun) / 60000)}m ago, interval=${RECONCILIATION_INTERVAL_MS / 60000}m)`);
     }
 
@@ -359,15 +391,37 @@ export async function POST(request: NextRequest) {
         const hasRunningPod = podStatuses.some((s: string) => FULL_RATE_STATUSES.includes(s));
         const configured = pod.hourlyRateBasis === "per_instance";
         const isStopped = !hasRunningPod && podStatuses.some(status => ["stopped", "paused", "reserved"].includes(status));
+        // Every 30-minute block from the GPU's paid-up time to now is due. Normally that is one
+        // block; after downtime, or on DNA where nothing ran billing until 2026-10, it is the whole
+        // backlog, charged as one line rather than one block per run.
+        // A GPU with no paid-up time starts its first block now, saved once so the charge key is stable.
+        let cursor = pod.prepaidUntil;
+        if (!cursor) {
+          const started = await prisma.podMetadata.updateMany({
+            where: { subscriptionId: pod.subscriptionId, prepaidUntil: null },
+            data: { prepaidUntil: now },
+          });
+          if (started.count === 0) {
+            podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, status: "not_due" });
+            continue;
+          }
+          cursor = now;
+        }
+        let blocks = Math.floor((now.getTime() - cursor.getTime()) / BILLING_INTERVAL_MS) + 1;
+        let nextBillingAt = new Date(cursor.getTime() + blocks * BILLING_INTERVAL_MS);
+        let billingMinutes = blocks * BILLING_INTERVAL_MINUTES;
+
+        // Moves the paid-up time only if no other run (or a termination) moved it first.
+        const claim = (data: { prepaidAmountCents?: number }) => prisma.podMetadata.updateMany({
+          where: { subscriptionId: pod.subscriptionId, prepaidUntil: cursor },
+          data: { prepaidUntil: nextBillingAt, ...data },
+        });
+
         if (!hasRunningPod && podStatuses.length > 0 && !configured) {
           console.log(`[Sync] Skipping pod ${pod.subscriptionId}: no running pods (statuses: ${podStatuses.join(", ")}). Will be billed at stopped rate.`);
-          // Still advance prepaidUntil so we don't re-check every cycle
-          const currentPrepaidUntil = pod.prepaidUntil || now;
-          const nextBillingAt = new Date(currentPrepaidUntil.getTime() + BILLING_INTERVAL_MINUTES * 60 * 1000);
-          await prisma.podMetadata.update({
-            where: { subscriptionId: pod.subscriptionId },
-            data: { prepaidUntil: nextBillingAt },
-          });
+          // Still advance prepaidUntil so we don't re-check every cycle. Nothing was paid for these
+          // blocks, so early termination must not credit any back.
+          await claim({ prepaidAmountCents: 0 });
           podResults.push({
             subscriptionId: pod.subscriptionId,
             customerId: pod.stripeCustomerId,
@@ -390,58 +444,108 @@ export async function POST(request: NextRequest) {
           podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, status: "error", error: "Missing valid captured instance pricing" });
           continue;
         }
-        const amountCents = Math.round(hoursToCharge * instanceHourlyRateCents);
+        const blockCents = Math.round(hoursToCharge * instanceHourlyRateCents);
+        let amountCents = blocks * blockCents;
         if (amountCents === 0) {
-          const nextBillingAt = new Date((pod.prepaidUntil || now).getTime() + BILLING_INTERVAL_MINUTES * 60 * 1000);
-          await prisma.podMetadata.update({
-            where: { subscriptionId: pod.subscriptionId },
-            data: { prepaidUntil: nextBillingAt, prepaidAmountCents: 0 },
-          });
+          await claim({ prepaidAmountCents: 0 });
           podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, status: "billed", amountCents: 0, nextBillingAt });
           continue;
         }
 
-        // Generate unique charge ID to prevent duplicates
-        const chargeId = `pod_${pod.subscriptionId}_${Math.floor(now.getTime() / 1000)}`;
-
-        // Check for duplicate charges in last 5 minutes
-        const recentTxns = await stripe.customers.listBalanceTransactions(pod.stripeCustomerId, {
-          limit: 10,
-        });
-        const fiveMinutesAgo = Math.floor(Date.now() / 1000) - 300;
-        const duplicate = recentTxns.data.find(
-          txn => txn.metadata?.pod_billing_id === chargeId && txn.created > fiveMinutesAgo
-        );
-
-        if (duplicate) {
-          console.log(`[Sync] Skipping duplicate charge for pod ${pod.subscriptionId}`);
-          podResults.push({
-            subscriptionId: pod.subscriptionId,
-            customerId: pod.stripeCustomerId,
-            email: customerEmail,
-            status: "billed",
-            amountCents: 0,
-            error: "Already billed in this cycle",
+        // A long backlog is not charged automatically: it would be priced at the GPU's state today,
+        // whatever it was doing then. It is recorded for someone to settle by hand, and billing
+        // carries on from the current block.
+        if (blocks > MAX_AUTO_CATCHUP_BLOCKS) {
+          const heldFrom = cursor;
+          const heldUntil = new Date(cursor.getTime() + (blocks - 1) * BILLING_INTERVAL_MS);
+          const heldMinutes = (blocks - 1) * BILLING_INTERVAL_MINUTES;
+          const held = await prisma.podMetadata.updateMany({
+            where: { subscriptionId: pod.subscriptionId, prepaidUntil: heldFrom },
+            data: { prepaidUntil: heldUntil },
           });
+          if (held.count === 0) {
+            podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, status: "not_due" });
+            continue;
+          }
+          const estimatedCents = (blocks - 1) * blockCents;
+          console.error(`[Sync] HELD for manual settlement: pod ${pod.subscriptionId} was unbilled for ${heldMinutes} mins (${heldFrom.toISOString()} to ${heldUntil.toISOString()}), about $${(estimatedCents / 100).toFixed(2)} at today's rate`);
+          await prisma.walletTransaction.create({
+            data: {
+              stripeCustomerId: pod.stripeCustomerId,
+              teamId,
+              type: "held_backlog",
+              amountCents: 0,
+              description: `Unbilled GPU time held for manual settlement: ${heldMinutes} mins`,
+              subscriptionId: pod.subscriptionId,
+              gpuCount,
+              hourlyRateCents: pod.hourlyRateCents!,
+              billingMinutes: heldMinutes,
+              metadata: JSON.stringify({ from: heldFrom.toISOString(), to: heldUntil.toISOString(), estimatedCents, instanceHourlyRateCents, isStopped }),
+            },
+          }).catch((e) => console.error(`[Sync] Failed to record held backlog for pod ${pod.subscriptionId}:`, e));
+          heldBacklogs.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, from: heldFrom, to: heldUntil, minutes: heldMinutes, estimatedCents });
+          cursor = heldUntil;
+          blocks = 1;
+          nextBillingAt = new Date(cursor.getTime() + BILLING_INTERVAL_MS);
+          billingMinutes = BILLING_INTERVAL_MINUTES;
+          amountCents = blockCents;
+        }
+
+        // One key per GPU and paid-up time: a retry of the same blocks can never charge twice.
+        const chargeId = `pod_${pod.subscriptionId}_${Math.floor(cursor.getTime() / 1000)}`;
+
+        // Claim the blocks before charging, so overlapping runs and terminations cannot both charge
+        // them. If the process dies after the claim and before the charge, they go unbilled.
+        // prepaidAmountCents is what the current block cost, for the early-termination credit.
+        const claimed = await claim({ prepaidAmountCents: blockCents });
+        if (claimed.count === 0) {
+          console.log(`[Sync] Skipping pod ${pod.subscriptionId}: already billed by another run`);
+          podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, email: customerEmail, status: "not_due" });
           continue;
         }
 
-        // Create the charge
-        const chargeDescription = `${isStopped ? "Reserved GPU" : "GPU usage"}: ${gpuCount} GPU(s) x ${BILLING_INTERVAL_MINUTES} mins @ $${(instanceHourlyRateCents / 100).toFixed(2)}/instance/hr`;
-        await stripe.customers.createBalanceTransaction(pod.stripeCustomerId, {
-          amount: amountCents,
-          currency: "usd",
-          description: chargeDescription,
-          metadata: {
-            subscription_id: pod.subscriptionId,
-            gpu_count: gpuCount.toString(),
-            hourly_rate_cents: pod.hourlyRateCents!.toString(),
-            hourly_rate_basis: pod.hourlyRateBasis || "per_gpu",
-            billing_type: isStopped ? "configured_stopped_reservation" : "gpu_usage",
-            billing_minutes: BILLING_INTERVAL_MINUTES.toString(),
-            pod_billing_id: chargeId,
-          },
-        });
+        const chargeDescription = `${isStopped ? "Reserved GPU" : "GPU usage"}: ${gpuCount} GPU(s) x ${billingMinutes} mins @ $${(instanceHourlyRateCents / 100).toFixed(2)}/instance/hr`;
+        try {
+          // An earlier attempt whose reply was lost may already have charged from this paid-up time,
+          // possibly for fewer blocks. Stripe forgets idempotency keys after about a day, so look for
+          // the charge itself, and pay up exactly the minutes it covered.
+          const recentTxns = await stripe.customers.listBalanceTransactions(pod.stripeCustomerId, { limit: 100 });
+          const landed = recentTxns.data.find(txn => txn.metadata?.pod_billing_id === chargeId);
+          if (landed) {
+            const landedMinutes = parseInt(landed.metadata?.billing_minutes ?? "", 10) || BILLING_INTERVAL_MINUTES;
+            const paidUntil = new Date(cursor.getTime() + landedMinutes * 60_000);
+            await prisma.podMetadata.updateMany({
+              where: { subscriptionId: pod.subscriptionId, prepaidUntil: nextBillingAt },
+              data: { prepaidUntil: paidUntil },
+            });
+            console.log(`[Sync] Pod ${pod.subscriptionId} was already charged ${landedMinutes} mins from ${cursor.toISOString()}; prepaid until ${paidUntil.toISOString()}`);
+            podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, email: customerEmail, status: "billed", amountCents: 0, nextBillingAt: paidUntil });
+            continue;
+          }
+
+          await stripe.customers.createBalanceTransaction(pod.stripeCustomerId, {
+            amount: amountCents,
+            currency: "usd",
+            description: chargeDescription,
+            metadata: {
+              subscription_id: pod.subscriptionId,
+              gpu_count: gpuCount.toString(),
+              hourly_rate_cents: pod.hourlyRateCents!.toString(),
+              hourly_rate_basis: pod.hourlyRateBasis || "per_gpu",
+              billing_type: isStopped ? "configured_stopped_reservation" : "gpu_usage",
+              billing_minutes: billingMinutes.toString(),
+              pod_billing_id: chargeId,
+            },
+          }, { idempotencyKey: chargeId });
+        } catch (chargeErr) {
+          // Release the blocks, whether the lookup or the charge failed. If the charge did land,
+          // the next run finds it.
+          await prisma.podMetadata.updateMany({
+            where: { subscriptionId: pod.subscriptionId, prepaidUntil: nextBillingAt },
+            data: { prepaidUntil: cursor, prepaidAmountCents: pod.prepaidAmountCents },
+          });
+          throw chargeErr;
+        }
 
         // Resolve poolId: prefer pod.poolId, fall back to product's poolIds[0]
         let resolvedPoolId: number | null = pod.poolId ? parseInt(pod.poolId, 10) || null : null;
@@ -468,22 +572,12 @@ export async function POST(request: NextRequest) {
             poolId: resolvedPoolId,
             gpuCount,
             hourlyRateCents: pod.hourlyRateCents!,
-            billingMinutes: BILLING_INTERVAL_MINUTES,
+            billingMinutes,
             syncCycleId: chargeId,
           },
         }).catch((e) => console.error(`[Sync] Failed to log WalletTransaction for pod ${pod.subscriptionId}:`, e));
 
-        // Update prepaidUntil to next billing time
-        // IMPORTANT: Use pod's current prepaidUntil as the base (not now) to preserve individual billing schedules
-        // This ensures pods deployed at different times stay on their individual 30-min cycles
-        const currentPrepaidUntil = pod.prepaidUntil || now;
-        const nextBillingAt = new Date(currentPrepaidUntil.getTime() + BILLING_INTERVAL_MINUTES * 60 * 1000);
-        await prisma.podMetadata.update({
-          where: { subscriptionId: pod.subscriptionId },
-          data: { prepaidUntil: nextBillingAt, prepaidAmountCents: amountCents },
-        });
-
-        console.log(`[Sync] Billed pod ${pod.subscriptionId}: $${(amountCents / 100).toFixed(2)} for ${gpuCount} GPU(s). Was prepaid until ${currentPrepaidUntil.toISOString()}, now prepaid until ${nextBillingAt.toISOString()}`);
+        console.log(`[Sync] Billed pod ${pod.subscriptionId}: $${(amountCents / 100).toFixed(2)} for ${gpuCount} GPU(s) x ${billingMinutes} mins. Was prepaid until ${cursor.toISOString()}, now prepaid until ${nextBillingAt.toISOString()}`);
 
         podResults.push({
           subscriptionId: pod.subscriptionId,
@@ -591,24 +685,19 @@ export async function POST(request: NextRequest) {
         if (billingTeams.length === 0) continue;
         const teamId = billingTeams.find(id => id === customer.metadata?.hostedai_team_id) || billingTeams[0];
 
-        // Check last storage sync time (storage is still on fixed 30-min intervals)
-        const lastStorageSync = customer.metadata?.last_storage_sync_timestamp;
+        // Storage and stopped GPUs are metered about every 30 minutes, for the time that actually
+        // passed since the last metering. The first metering covers 30 minutes.
+        const lastStorageSync = parseInt(customer.metadata?.last_storage_sync_timestamp ?? "", 10);
         const nowSec = Math.floor(Date.now() / 1000);
-        if (lastStorageSync) {
-          const lastSyncTime = parseInt(lastStorageSync, 10);
-          if (nowSec - lastSyncTime < 25 * 60) { // 25 min buffer
-            continue; // Skip, synced recently
-          }
-        }
-
-        // Update storage sync timestamp
-        const updatedSyncCustomer = await stripe.customers.update(customerId, {
-          metadata: {
-            ...customer.metadata,
-            last_storage_sync_timestamp: nowSec.toString(),
-          },
-        });
-        cacheCustomer(updatedSyncCustomer as Stripe.Customer).catch(() => {});
+        const hasLastSync = Number.isFinite(lastStorageSync) && lastStorageSync > 0;
+        if (hasLastSync && nowSec - lastStorageSync < 25 * 60) continue; // Metered recently
+        // Capped at a day: only today's volume sizes are known, so a long gap is not billed at them.
+        const sinceLastSync = hasLastSync ? (nowSec - lastStorageSync) / 60 : BILLING_INTERVAL_MINUTES;
+        const meteredMinutes = Math.min(sinceLastSync, MAX_METERED_MINUTES);
+        if (sinceLastSync > MAX_METERED_MINUTES) console.warn(`[Sync] Storage for ${customerId} last metered ${Math.round(sinceLastSync / 60)}h ago; billing the last ${MAX_METERED_MINUTES / 60}h`);
+        // Stable per metering window, so overlapping runs cannot both charge it.
+        const meterKey = `${customerId}_${hasLastSync ? lastStorageSync : "first"}`;
+        const meteredMetadata: Record<string, string> = {};
 
         // === Storage billing ===
         let totalStorageGb = 0;
@@ -631,14 +720,14 @@ export async function POST(request: NextRequest) {
             // only post a Stripe charge when the running balance crosses 1¢. This
             // removes the $14.60/mo minimum-charge floor caused by Math.round on
             // each 30-min interval. See PA-159 and src/lib/storage-billing.ts.
-            const hoursInInterval = BILLING_INTERVAL_MINUTES / 60;
-            const meta = updatedSyncCustomer.metadata ?? {};
+            const hoursInInterval = meteredMinutes / 60;
+            const meta = customer.metadata ?? {};
             const prevPendingCents = parseFloat(meta.storage_pending_cents ?? "") || 0;
             const prevPendingGbHours = parseFloat(meta.storage_pending_gb_hours ?? "") || 0;
             const prevWindowStart = parseInt(meta.storage_window_started_at ?? "", 10);
             const windowStartedAt = Number.isFinite(prevWindowStart) && prevWindowStart > 0
               ? prevWindowStart
-              : nowSec - BILLING_INTERVAL_MINUTES * 60;
+              : nowSec - Math.round(meteredMinutes * 60);
 
             const result = computeStorageCharge(
               { pendingCents: prevPendingCents, pendingGbHours: prevPendingGbHours, windowStartedAt },
@@ -648,16 +737,12 @@ export async function POST(request: NextRequest) {
               nowSec,
             );
 
-            // Persist accumulator state (always, charge or not).
-            const persisted = await stripe.customers.update(customerId, {
-              metadata: {
-                ...meta,
-                storage_pending_cents: result.newState.pendingCents.toFixed(8),
-                storage_pending_gb_hours: result.newState.pendingGbHours.toFixed(4),
-                storage_window_started_at: result.newState.windowStartedAt.toString(),
-              },
+            // Saved with the metering time below, after the charge.
+            Object.assign(meteredMetadata, {
+              storage_pending_cents: result.newState.pendingCents.toFixed(8),
+              storage_pending_gb_hours: result.newState.pendingGbHours.toFixed(4),
+              storage_window_started_at: result.newState.windowStartedAt.toString(),
             });
-            cacheCustomer(persisted as Stripe.Customer).catch(() => {});
 
             if (result.charge) {
               await stripe.customers.createBalanceTransaction(customerId, {
@@ -671,7 +756,7 @@ export async function POST(request: NextRequest) {
                   window_ended_at: result.charge.windowEndedAt.toString(),
                   avg_gb: result.charge.avgGb.toString(),
                 },
-              });
+              }, { idempotencyKey: `storage_${meterKey}` });
 
               const windowMinutes = Math.max(1, Math.round((result.charge.windowEndedAt - result.charge.windowStartedAt) / 60));
               await prisma.walletTransaction.create({
@@ -752,7 +837,7 @@ export async function POST(request: NextRequest) {
           const charge = computeStoppedCharge(
             stoppedPods,
             stoppedInstanceRatePercent,
-            BILLING_INTERVAL_MINUTES,
+            meteredMinutes,
           );
           stoppedGpuCount = charge.stoppedGpuCount;
           const stoppedCostCents = charge.stoppedCostCents;
@@ -776,7 +861,7 @@ export async function POST(request: NextRequest) {
                   stopped_gpu_count: stoppedGpuCount.toString(),
                   billing_type: "stopped_reservation",
                 },
-              });
+              }, { idempotencyKey: `stopped_${meterKey}` });
 
               // Log stopped reservation charge locally
               await prisma.walletTransaction.create({
@@ -787,7 +872,7 @@ export async function POST(request: NextRequest) {
                   amountCents: stoppedCostCents,
                   description: stoppedDesc,
                   gpuCount: stoppedGpuCount,
-                  billingMinutes: BILLING_INTERVAL_MINUTES,
+                  billingMinutes: Math.round(meteredMinutes),
                 },
               }).catch((e) => console.error(`[Sync] Failed to log stopped WalletTransaction for ${customerId}:`, e));
 
@@ -799,12 +884,12 @@ export async function POST(request: NextRequest) {
         }
         }
 
-        // === Wallet refill check ===
-        // Auto-refill charges the saved card, so it stays hourly-only even though storage reaches monthly accounts.
-        if (customer.metadata?.billing_type === "hourly" && !customerRefills.has(customerId)) {
-          const refillResult = await checkAndRefillWallet(customerId);
-          customerRefills.set(customerId, refillResult);
-        }
+        // Recorded after billing. A failed charge loses that window rather than risking a repeat;
+        // a crash before this line re-meters it under the same key, which Stripe will not charge twice.
+        const metered = await stripe.customers.update(customerId, {
+          metadata: { ...meteredMetadata, last_storage_sync_timestamp: nowSec.toString() },
+        });
+        cacheCustomer(metered as Stripe.Customer).catch(() => {});
       } catch (customerErr) {
         console.error(`Error processing customer ${customerId}:`, customerErr);
       }
@@ -817,7 +902,6 @@ export async function POST(request: NextRequest) {
       email: string;
       balanceCents: number;
       podsTerminated: string[];
-      volumesDeleted: number[];
     }> = [];
 
     // Get all unique customers we've processed or have active pods
@@ -827,104 +911,98 @@ export async function POST(request: NextRequest) {
 
     for (const customerId of allCustomersToCheck) {
       try {
-        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+        let customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
         if ("deleted" in customer && customer.deleted) continue;
         cacheCustomer(customer).catch(() => {});
         if (customer.metadata?.billing_type !== "hourly") continue;
 
+        const hourlyPods = await prisma.podMetadata.findMany({
+          where: { stripeCustomerId: customerId, hourlyRateCents: { gt: 0 }, OR: [{ billingType: null }, { billingType: { not: "monthly" } }] },
+          select: { subscriptionId: true, instanceId: true },
+        });
+        if (hourlyPods.length === 0 && (customer.balance || 0) <= 0) continue; // Idle and not in debt
+
+        // Top up from the saved card first, every run, so a card-on-file customer is never shut
+        // down for a debt the refill would have covered. Auto-refill charges the saved card, so it
+        // stays hourly-only even though storage reaches monthly accounts.
+        const refill = await checkAndRefillWallet(customerId);
+        customerRefills.set(customerId, refill);
+        if (refill.refilled) customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+
         // Check balance: positive = owes money (negative wallet), negative = has credit
-        // If balance > 0, customer owes us money (negative wallet balance)
         const balanceCents = customer.balance || 0;
+        if (balanceCents <= NEGATIVE_BALANCE_GRACE_CENTS || hourlyPods.length === 0) continue;
 
-        if (balanceCents > 0) {
-          // Customer has negative wallet balance - they owe us money
-          // But only enforce if they actually have hourly-billed pods (hourly_rate_cents > 0)
-          // Monthly-only customers may have stale billing_type metadata in Stripe
-          const hourlyPods = await prisma.podMetadata.count({
-            where: { stripeCustomerId: customerId, hourlyRateCents: { gt: 0 } },
-          });
-          if (hourlyPods === 0) {
-            // No hourly pods — skip enforcement (likely monthly customer with stale Stripe metadata)
-            continue;
+        // Shut down only when payment definitely failed: no card, or the card was declined. A
+        // refill that just ran (and may not have covered everything), is in progress, or hit a
+        // Stripe outage is retried on later runs instead.
+        if (!refill.paymentFailed) {
+          console.log(`[Sync] Customer ${customerId} owes $${(balanceCents / 100).toFixed(2)}; not shutting down (refill ${refill.refilled ? "ran" : refill.pending ? "in progress" : `not completed: ${refill.error ?? "unknown"}`})`);
+          continue;
+        }
+
+        // Only the hourly GPUs this customer pays for are stopped. Monthly GPUs are paid for
+        // separately, and storage is kept: it keeps billing, and can be deleted by hand.
+        const ownedIds = new Set<string>();
+        for (const m of hourlyPods) {
+          ownedIds.add(m.subscriptionId);
+          ownedIds.add(m.subscriptionId.replace(/^instance-/, ""));
+          if (m.instanceId) ownedIds.add(m.instanceId);
+        }
+
+        console.log(`[Sync] Customer ${customerId} has negative balance: owes $${(balanceCents / 100).toFixed(2)} (${hourlyPods.length} hourly pod(s))`);
+
+        const teamId = customer.metadata?.hostedai_team_id;
+        if (!teamId) continue;
+
+        const terminatedPods: string[] = [];
+
+        try {
+          const subscriptions = await getCachedSubs(teamId);
+
+          // HAI 2.2: use deleteInstance instead of dead unsubscribeFromPool
+          for (const sub of subscriptions) {
+            if (!ownedIds.has(String(sub.id))) continue;
+            if (sub.status === "subscribed" || sub.status === "active" || sub.status === "subscribing") {
+              try {
+                console.log(`[Sync] Terminating instance ${sub.id} for negative balance customer ${customerId}`);
+                const { deleteInstance } = await import("@/lib/hostedai");
+                await deleteInstance(String(sub.id));
+                terminatedPods.push(String(sub.id));
+
+                // SAFETY: Never delete pod_metadata — mark it as terminated instead
+              } catch (termErr) {
+                console.error(`[Sync] Failed to terminate instance ${sub.id}:`, termErr);
+              }
+            }
           }
+        } catch (subErr) {
+          console.error(`[Sync] Failed to get subscriptions for ${customerId}:`, subErr);
+        }
 
-          console.log(`[Sync] Customer ${customerId} has negative balance: owes $${(balanceCents / 100).toFixed(2)} (${hourlyPods} hourly pod(s))`);
-
-          const teamId = customer.metadata?.hostedai_team_id;
-          if (!teamId) continue;
-
-          const terminatedPods: string[] = [];
-          const deletedVolumes: number[] = [];
-
+        // Send notification email
+        if (terminatedPods.length > 0 && customer.email) {
           try {
-            const subscriptions = await getCachedSubs(teamId);
-
-            // Terminate all active pods
-
-            // HAI 2.2: use deleteInstance instead of dead unsubscribeFromPool
-            for (const sub of subscriptions) {
-              if (sub.status === "subscribed" || sub.status === "active" || sub.status === "subscribing") {
-                try {
-                  console.log(`[Sync] Terminating instance ${sub.id} for negative balance customer ${customerId}`);
-                  const { deleteInstance } = await import("@/lib/hostedai");
-                  await deleteInstance(String(sub.id));
-                  terminatedPods.push(String(sub.id));
-
-                  // SAFETY: Never delete pod_metadata — mark it as terminated instead
-                } catch (termErr) {
-                  console.error(`[Sync] Failed to terminate instance ${sub.id}:`, termErr);
-                }
-              }
-            }
-          } catch (subErr) {
-            console.error(`[Sync] Failed to get subscriptions for ${customerId}:`, subErr);
-          }
-
-          // Only delete volumes if we actually terminated pods
-          // If HAI was unreachable (no terminations), don't delete storage
-          if (terminatedPods.length > 0) {
-            try {
-              const volumes = await getCachedVolumes(teamId);
-              const teamVolumes = volumes.filter(v => v.team_id === teamId);
-              for (const vol of teamVolumes) {
-                try {
-                  console.log(`[Sync] Deleting storage volume ${vol.id} (${vol.name}) for negative balance customer ${customerId}`);
-                  await deleteSharedVolume(vol.id);
-                  deletedVolumes.push(vol.id);
-                } catch (volErr) {
-                  console.error(`[Sync] Failed to delete volume ${vol.id}:`, volErr);
-                }
-              }
-            } catch (volErr) {
-              console.error(`[Sync] Failed to get volumes for ${customerId}:`, volErr);
-            }
-          }
-
-          // Send notification email
-          if ((terminatedPods.length > 0 || deletedVolumes.length > 0) && customer.email) {
-            try {
-              await sendNegativeBalanceShutdownEmail({
-                to: customer.email,
-                customerName: customer.name || customer.email.split("@")[0],
-                balanceOwedCents: balanceCents,
-                podsTerminated: terminatedPods.length,
-                volumesDeleted: deletedVolumes.length,
-                dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-              });
-            } catch (emailErr) {
-              console.error(`[Sync] Failed to send negative balance email to ${customer.email}:`, emailErr);
-            }
-          }
-
-          if (terminatedPods.length > 0 || deletedVolumes.length > 0) {
-            negativeBalanceResults.push({
-              customerId,
-              email: customer.email || "unknown",
-              balanceCents,
-              podsTerminated: terminatedPods,
-              volumesDeleted: deletedVolumes,
+            await sendNegativeBalanceShutdownEmail({
+              to: customer.email,
+              customerName: customer.name || customer.email.split("@")[0],
+              balanceOwedCents: balanceCents,
+              podsTerminated: terminatedPods.length,
+              volumesDeleted: 0,
+              dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
             });
+          } catch (emailErr) {
+            console.error(`[Sync] Failed to send negative balance email to ${customer.email}:`, emailErr);
           }
+        }
+
+        if (terminatedPods.length > 0) {
+          negativeBalanceResults.push({
+            customerId,
+            email: customer.email || "unknown",
+            balanceCents,
+            podsTerminated: terminatedPods,
+          });
         }
       } catch (err) {
         console.error(`[Sync] Error checking negative balance for ${customerId}:`, err);
@@ -947,16 +1025,25 @@ export async function POST(request: NextRequest) {
       stoppedCharges: stoppedResults.length,
       totalStoppedCents: stoppedResults.reduce((sum, r) => sum + r.stoppedCostCents, 0),
       refillsTriggered: Array.from(customerRefills.values()).filter(r => r.refilled).length,
+      refillsFailed: Array.from(customerRefills.values()).filter(r => !r.refilled && !r.pending && r.error).length,
+      paymentsDeclined: Array.from(customerRefills.values()).filter(r => r.paymentFailed).length,
       negativeBalanceShutdowns: negativeBalanceResults.length,
+      backlogsHeld: heldBacklogs.length,
     };
 
     console.log("[Sync] Completed:", summary);
+    try {
+      await recordBillingRun(summary.podsErrors);
+    } catch (heartbeatError) {
+      console.error("[Sync] Failed to record the billing run for /api/status/billing:", heartbeatError);
+    }
 
     return NextResponse.json({
       success: true,
       summary,
       reconciliationResults,
       podResults,
+      heldBacklogs,
       storageResults,
       stoppedResults,
     });
@@ -982,10 +1069,8 @@ async function getTeamIdForCustomer(stripe: Stripe, customerId: string): Promise
 
 // GET endpoint to check sync status (protected)
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!SYNC_SECRET || authHeader !== `Bearer ${SYNC_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = authorizeSync(request);
+  if (authError) return authError;
 
   // Count pods due for billing (including null prepaidUntil)
   const now = new Date();

@@ -6,11 +6,13 @@ const mocks = vi.hoisted(() => ({
   metadata: vi.fn(),
   subscriptions: vi.fn(),
   charge: vi.fn().mockResolvedValue({}),
+  chargeOptions: vi.fn(),
   deleteInstance: vi.fn().mockResolvedValue(undefined),
   unsubscribe: vi.fn().mockResolvedValue(undefined),
   deleteMetadata: vi.fn().mockResolvedValue({}),
   findMany: vi.fn().mockResolvedValue([]),
   updateMetadata: vi.fn().mockResolvedValue({}),
+  claim: vi.fn().mockResolvedValue({ count: 1 }),
   logTerminated: vi.fn().mockResolvedValue(undefined),
   productName: vi.fn().mockResolvedValue("GPU Instance"),
 }));
@@ -24,7 +26,10 @@ vi.mock("@/lib/auth/account-resolver", () => ({ resolveOperatingContext: async (
 }) }));
 vi.mock("@/lib/auth/gate", () => ({ gatePermission: async () => null }));
 vi.mock("@/lib/stripe", () => ({ getStripe: async () => ({ customers: {
-  createBalanceTransaction: mocks.charge,
+  createBalanceTransaction: (id: string, params: unknown, options?: unknown) => {
+    mocks.chargeOptions(options);
+    return mocks.charge(id, params);
+  },
   listBalanceTransactions: vi.fn().mockResolvedValue({ data: [] }),
   retrieve: async () => ({
     id: "cus_owner", balance: 0, email: "owner@example.com",
@@ -37,6 +42,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: { podMetadata: {
   delete: mocks.deleteMetadata,
   findMany: mocks.findMany,
   update: mocks.updateMetadata,
+  updateMany: async (args: unknown) => { await mocks.updateMetadata(args); return mocks.claim(args); },
 }, walletTransaction: { create: vi.fn().mockResolvedValue({}) }, customerCache: { findMany: vi.fn().mockResolvedValue([]) } } }));
 // Ownership has its own tests (instance-ownership-routes); these cover what happens once it passes.
 vi.mock("@/lib/auth/instance-ownership", () => ({ ownsInstance: async () => true, rejectUnownedInstance: async () => null, rejectUnownedService: async () => null }));
@@ -123,6 +129,18 @@ describe("termination settlement uses the purchased rate basis", () => {
     expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: 300 }));
   });
 
+  it.each([instanceId, "12"])("credits back instead of charging again when a billing run paid the overdue time first (%s)", async id => {
+    // The billing run charged 00:00-00:30 and moved the paid-up time to 00:30 while this
+    // termination still held the old 00:00 value.
+    const overdue = savedRate("per_instance", new Date("2030-01-01T00:00:00Z"));
+    mocks.metadata.mockImplementation(async (args: { select?: object }) =>
+      args?.select ? { prepaidUntil: new Date("2030-01-01T00:30:00Z"), prepaidAmountCents: 600 } : { ...overdue });
+    mocks.claim.mockResolvedValueOnce({ count: 0 });
+    expect((await terminate(id)).status).toBe(200);
+    expect(mocks.charge).toHaveBeenCalledTimes(1);
+    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -300 }));
+  });
+
   it.each([instanceId, "12"])("refunds the running-rate prepayment even after the instance stops (%s)", async id => {
     mocks.metadata.mockResolvedValue({ ...savedRate("per_instance"), prepaidAmountCents: 600 });
     mocks.subscriptions.mockResolvedValue([{ id, per_pod_info: { vgpu_count: 2 }, pods: [{ pod_status: "stopped" }] }]);
@@ -135,6 +153,14 @@ describe("termination settlement uses the purchased rate basis", () => {
     mocks.subscriptions.mockResolvedValue([{ id: instanceId, per_pod_info: { vgpu_count: 2 }, pods: [{ pod_status: "stopped" }] }]);
     expect((await terminate(instanceId)).status).toBe(200);
     expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: 75 }));
+  });
+
+  it("settles each GPU under one key, so a second terminate at once can't credit the unused time again", async () => {
+    mocks.metadata.mockResolvedValue(savedRate("per_instance"));
+    await Promise.all([terminate(instanceId), terminate(instanceId)]);
+    expect(mocks.chargeOptions).toHaveBeenCalledTimes(2);
+    expect(mocks.chargeOptions).toHaveBeenNthCalledWith(1, { idempotencyKey: "settle_metadata" });
+    expect(mocks.chargeOptions).toHaveBeenNthCalledWith(2, { idempotencyKey: "settle_metadata" });
   });
 
   it("refunds the remaining fraction of the actual saved payment rather than recomputing the charge", async () => {

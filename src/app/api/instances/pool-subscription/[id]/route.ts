@@ -15,6 +15,35 @@ import { getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents } f
 import { getStoppedInstanceRatePercent } from "@/lib/pricing";
 
 // Check if the ID looks like an HAI 2.2 instance (i-{uuid}) vs numeric (legacy pool subscription)
+/**
+ * Takes over the GPU's billing before the final charge or credit. A billing run (/api/sync) that
+ * is charging the same overdue time at this moment would otherwise be charged on top of it. If a
+ * run got there first, the GPU is now paid ahead, and the paid time it saved is used instead,
+ * so the unused part is credited back. Updates podMetadata in place.
+ *
+ * Each GPU settles once: the final credit or charge carries the key `settle_<pod id>`, so a second
+ * terminate request at the same moment can't credit the unused time again.
+ */
+async function claimFinalSettlement(
+  podMetadata: { id: string; prepaidUntil: Date | null; prepaidAmountCents: number | null },
+  now: Date,
+): Promise<Date> {
+  const prepaidUntil = new Date(podMetadata.prepaidUntil!);
+  if (now < prepaidUntil) return prepaidUntil;
+  const claimed = await prisma.podMetadata.updateMany({
+    where: { id: podMetadata.id, prepaidUntil: podMetadata.prepaidUntil },
+    data: { prepaidUntil: now },
+  });
+  if (claimed.count > 0) return prepaidUntil;
+  const current = await prisma.podMetadata.findUnique({
+    where: { id: podMetadata.id },
+    select: { prepaidUntil: true, prepaidAmountCents: true },
+  });
+  if (!current?.prepaidUntil) throw new Error("Billing changed during termination; try again");
+  Object.assign(podMetadata, current);
+  return current.prepaidUntil;
+}
+
 function isInstanceId(id: string): boolean {
   return /^i-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
@@ -250,7 +279,7 @@ export async function DELETE(
       if (podMetadata?.prepaidUntil && podMetadata?.hourlyRateCents && podMetadata.billingType !== "monthly") {
         try {
           const now = new Date();
-          const prepaidUntil = new Date(podMetadata.prepaidUntil);
+          const prepaidUntil = await claimFinalSettlement(podMetadata, now);
           let subscription: PoolSubscription | undefined;
           // Refunds use the saved payment, and must not depend on provider availability.
           if (now >= prepaidUntil || !configured) {
@@ -289,7 +318,7 @@ export async function DELETE(
                 currency: "usd",
                 description: `GPU early termination credit: ${unusedMins} mins unused`,
                 metadata: { instance_id: id },
-              });
+              }, { idempotencyKey: `settle_${podMetadata.id}` });
               console.log(`[Billing] Credited back $${(creditBackCents / 100).toFixed(2)} for early termination`);
             }
           } else {
@@ -304,7 +333,7 @@ export async function DELETE(
                   currency: "usd",
                   description: `GPU final usage: ${unbilledMins} mins after prepaid period`,
                   metadata: { instance_id: id },
-                });
+                }, { idempotencyKey: `settle_${podMetadata.id}` });
                 console.log(`[Billing] Charged $${(finalChargeCents / 100).toFixed(2)} for final unbilled usage`);
               }
             }
@@ -412,7 +441,7 @@ export async function DELETE(
 
       if (podMetadata?.prepaidUntil && podMetadata?.hourlyRateCents && podMetadata.billingType !== "monthly") {
         const now = new Date();
-        const prepaidUntil = new Date(podMetadata.prepaidUntil);
+        const prepaidUntil = await claimFinalSettlement(podMetadata, now);
         if (configuredSettlement && now >= prepaidUntil && !subscriptionKnown) throw new Error("Instance status unavailable for final settlement");
         subscriptionGpuCount = getPodGpuCount(podMetadata, subscriptionGpuCount);
         // The prepaid interval was purchased at the running rate, even if now stopped.
@@ -444,7 +473,7 @@ export async function DELETE(
                 unused_minutes: unusedMins.toString(),
                 credit_back_cents: creditBackCents.toString(),
               },
-            });
+            }, { idempotencyKey: `settle_${podMetadata.id}` });
             console.log(`[Billing] Credited back $${(creditBackCents / 100).toFixed(2)} to ${customer.email} for early termination (${unusedMins} mins unused)`);
           }
         } else {
@@ -467,7 +496,7 @@ export async function DELETE(
                   subscription_id: subscriptionId,
                   unbilled_minutes: unbilledMins.toString(),
                 },
-              });
+              }, { idempotencyKey: `settle_${podMetadata.id}` });
               console.log(`[Billing] Charged $${(finalChargeCents / 100).toFixed(2)} to ${customer.email} for final unbilled usage (${unbilledMins} mins)`);
             }
           }

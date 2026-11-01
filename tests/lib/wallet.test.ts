@@ -233,6 +233,25 @@ describe('Wallet Module', () => {
       expect(mockStripe.customers.createBalanceTransaction).not.toHaveBeenCalled();
     });
 
+    // Billing shuts GPUs down only on paymentFailed, so it must mean the payment was refused.
+    it.each([
+      ['requires_action', false],
+      ['processing', false],
+      ['requires_payment_method', true],
+      ['canceled', true],
+    ])('reports a %s payment as failed: %s', async (status, failed) => {
+      vi.mocked(mockStripe.paymentIntents.create).mockResolvedValue({ id: 'pi_test123', status } as Stripe.PaymentIntent);
+      const result = await fundWallet('cus_test123', 5000, 'pm_test456');
+      expect(result.paymentFailed).toBe(failed);
+    });
+
+    it('reports a declined card as failed, and a Stripe outage as not', async () => {
+      vi.mocked(mockStripe.paymentIntents.create).mockRejectedValueOnce(Object.assign(new Error('Your card was declined.'), { type: 'StripeCardError' }));
+      expect((await fundWallet('cus_test123', 5000, 'pm_test456')).paymentFailed).toBe(true);
+      vi.mocked(mockStripe.paymentIntents.create).mockRejectedValueOnce(Object.assign(new Error('Connection failed'), { type: 'StripeConnectionError' }));
+      expect((await fundWallet('cus_test123', 5000, 'pm_test456')).paymentFailed).toBe(false);
+    });
+
     it('should prevent duplicate credits (idempotency)', async () => {
       const mockPaymentIntent = {
         id: 'pi_test123',
@@ -530,6 +549,25 @@ describe('Wallet Module', () => {
       expect(mockStripe.customers.update).toHaveBeenCalledTimes(2); // Set lock, clear lock
     });
 
+    it.each([
+      [30000, 32000], // owes $300: enough to clear it and reach the $20 threshold, in one charge
+      [100000, 50000], // owes $1,000: one charge is capped at $500
+    ])('sizes the refill to the debt (owes %i cents)', async (balance, expected) => {
+      const mockCustomer = {
+        id: 'cus_test123', balance, invoice_settings: { default_payment_method: 'pm_default' }, metadata: {},
+      } as unknown as Stripe.Customer;
+      vi.mocked(mockStripe.customers.retrieve).mockResolvedValue(mockCustomer);
+      vi.mocked(mockStripe.customers.listBalanceTransactions).mockResolvedValue({ data: [] } as unknown as Stripe.ApiList<Stripe.CustomerBalanceTransaction>);
+      vi.mocked(mockStripe.customers.update).mockResolvedValue(mockCustomer);
+      vi.mocked(mockStripe.paymentIntents.create).mockResolvedValue({ id: 'pi_refill', status: 'succeeded' } as Stripe.PaymentIntent);
+      vi.mocked(mockStripe.paymentIntents.list).mockResolvedValue({ data: [] } as unknown as Stripe.ApiList<Stripe.PaymentIntent>);
+
+      const result = await checkAndRefillWallet('cus_test123');
+
+      expect(result).toMatchObject({ refilled: true, amount: expected });
+      expect(mockStripe.paymentIntents.create).toHaveBeenCalledWith(expect.objectContaining({ amount: expected }));
+    });
+
     it('should not refill if balance is above threshold', async () => {
       const mockCustomer = {
         id: 'cus_test123',
@@ -678,7 +716,6 @@ describe('Wallet Module', () => {
     });
 
     it('should check for recent wallet payment intents', async () => {
-      const now = Math.floor(Date.now() / 1000);
       const mockCustomer = {
         id: 'cus_test123',
         balance: 1500,

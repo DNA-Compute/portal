@@ -4,6 +4,9 @@ import { NextRequest } from 'next/server';
 // Set BEFORE the sync route module is imported (vi.hoisted runs before ES-hoisted imports).
 vi.hoisted(() => {
   process.env.SYNC_SECRET = 'test-sync-secret';
+  process.env.CRON_SECRET = 'test-cron-secret';
+  // Off by default on DNA; these tests cover the step itself.
+  process.env.BILLING_RECONCILIATION_ENABLED = 'true';
 });
 
 // HAI sub for the team owner's team
@@ -37,6 +40,7 @@ vi.mock('@/lib/prisma', () => ({
       findMany: (...args: unknown[]) => mockFindManyPodMetadata(...args),
       create: (...args: unknown[]) => mockCreatePodMetadata(...args),
       update: (...args: unknown[]) => mockUpdatePodMetadata(...args),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       findUnique: (...args: unknown[]) => mockFindUniquePodMetadata(...args),
     },
     gpuProduct: {
@@ -64,7 +68,7 @@ vi.mock('@/lib/stripe', () => ({
     customers: {
       update: (...args: unknown[]) => mockStripeUpdate(...args),
       retrieve: (...args: unknown[]) => mockStripeRetrieve(...args),
-      createBalanceTransaction: (...args: unknown[]) => mockStripeCharge(...args),
+      createBalanceTransaction: (id: string, params: unknown) => mockStripeCharge(id, params),
       listBalanceTransactions: vi.fn().mockResolvedValue({ data: [] }),
     },
   }),
@@ -103,6 +107,35 @@ function makeSyncRequest(): NextRequest {
     headers: { authorization: 'Bearer test-sync-secret' },
   });
 }
+
+describe('/api/sync auth', () => {
+  // The in-process scheduler calls every job with CRON_SECRET. Before it could, nothing called
+  // this route on prod and running GPUs were charged their first 30 minutes only.
+  const call = (authorization: string) => POST(new NextRequest('http://localhost:3000/api/sync', { method: 'POST', headers: { authorization } }));
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindManyPodMetadata.mockResolvedValue([]);
+    mockFindManyProduct.mockResolvedValue([]);
+  });
+
+  it('accepts the scheduler secret', async () => {
+    expect((await call('Bearer test-cron-secret')).status).toBe(200);
+  });
+
+  it('still accepts the sync secret', async () => {
+    expect((await call('Bearer test-sync-secret')).status).toBe(200);
+  });
+
+  it('rejects any other secret', async () => {
+    expect((await call('Bearer wrong')).status).toBe(401);
+  });
+
+  it('rejects a secret in the URL, which ends up in access logs', async () => {
+    const res = await POST(new NextRequest('http://localhost:3000/api/sync?secret=test-cron-secret', { method: 'POST' }));
+    expect(res.status).toBe(401);
+  });
+});
 
 describe('/api/sync — reconciliation', () => {
   // The route uses a module-level `lastReconciliationRun` that only allows

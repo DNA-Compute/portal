@@ -19,6 +19,7 @@ const CRON_SECRET = process.env.CRON_SECRET;
 const PORT = process.env.PORT || "3001";
 const BASE_URL = `http://localhost:${PORT}`;
 const STATE_FILE = join(process.cwd(), "data", ".cron-state.json");
+const JOB_TIMEOUT_MS = 15 * 60_000;
 
 interface CronJob {
   name: string;
@@ -72,7 +73,23 @@ const jobs: CronJob[] = [
     method: "POST",
     enabled: true,
   },
+  {
+    // DNA patch: /api/sync charges each running GPU per 30 minutes after its launch prepayment,
+    // bills storage and stopped GPUs, tops up wallets and shuts down accounts that go negative.
+    // Packet OSS expects an external cron file it does not ship, so on prod nothing called it and
+    // every GPU was charged its first 30 minutes only. Each run charges every block that has
+    // started, so running every 5 minutes keeps charges at most 5 minutes late.
+    name: "billing-sync",
+    path: "/api/sync",
+    schedule: { type: "interval", ms: 300_000 }, // 5 min
+    method: "POST",
+    enabled: true,
+  },
 ];
+
+// A job still running when its next tick comes must not start again: two billing runs at once
+// can each charge the same 30-minute block before either moves the GPU's paid-up time forward.
+const runningJobs = new Set<string>();
 
 let started = false;
 let tickInterval: ReturnType<typeof setInterval> | null = null;
@@ -145,6 +162,19 @@ function needsCatchUp(job: CronJob, now: Date): boolean {
 }
 
 async function executeJob(job: CronJob): Promise<void> {
+  if (runningJobs.has(job.name)) {
+    console.log(`[Cron Scheduler] Skipping ${job.name}: the previous run has not finished`);
+    return;
+  }
+  runningJobs.add(job.name);
+  try {
+    await runJob(job);
+  } finally {
+    runningJobs.delete(job.name);
+  }
+}
+
+async function runJob(job: CronJob): Promise<void> {
   const url = `${BASE_URL}${job.path}`;
   const method = job.method || "POST";
 
@@ -158,7 +188,9 @@ async function executeJob(job: CronJob): Promise<void> {
       headers["Authorization"] = `Bearer ${CRON_SECRET}`;
     }
 
-    const response = await fetch(url, { method, headers });
+    // A hung request must not block the job forever. Billing stays safe if the route is still
+    // running when the next call starts: each GPU charge claims its block before charging.
+    const response = await fetch(url, { method, headers, signal: AbortSignal.timeout(JOB_TIMEOUT_MS) });
 
     if (!response.ok) {
       const body = await response.text();
@@ -198,7 +230,7 @@ export function startCronScheduler(): void {
   }
 
   if (!CRON_SECRET) {
-    console.warn("[Cron Scheduler] CRON_SECRET not set — scheduler disabled");
+    console.error("[Cron Scheduler] CRON_SECRET not set - scheduler disabled, so running GPUs are not billed after their first 30 minutes");
     return;
   }
 
