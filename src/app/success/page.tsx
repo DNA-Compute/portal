@@ -7,18 +7,23 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { getBrandName, getLogoUrl, getSupportEmail } from "@/lib/branding-client";
 import { useBranding } from "@/hooks/useBranding";
 
+// Analytics globals the LinkedIn and Growify snippets add to the page.
+type TrackingWindow = {
+  lintrk?: (...args: unknown[]) => void;
+  grp?: (...args: unknown[]) => void;
+  grpQueue?: unknown[];
+};
+
 function SuccessContent() {
   const searchParams = useSearchParams();
   const branding = useBranding();
   const LOGO_URL = branding?.logoUrl || getLogoUrl();
   const [mounted, setMounted] = useState(false);
   const [accountReady, setAccountReady] = useState(false);
-  const [dashboardUrl, setDashboardUrl] = useState<string | null>(null);
   const [pollFailed, setPollFailed] = useState(false);
   const type = searchParams.get("type");
   const email = searchParams.get("email");
   const sessionId = searchParams.get("session_id");
-  const directToken = searchParams.get("token");
   const isFreeTrial = type === "free-trial" || type === "free";
   const isVoucher = type === "voucher";
   const isExistingUser = type === "existing";
@@ -27,19 +32,12 @@ function SuccessContent() {
     setMounted(true);
   }, []);
 
-  // For voucher signups: token is in the URL, redirect immediately
+  // A voucher signup is set up before this page loads; its login link is in the welcome email.
   useEffect(() => {
-    if (!directToken || !isVoucher) return;
+    if (isVoucher) setAccountReady(true);
+  }, [isVoucher]);
 
-    setAccountReady(true);
-    const url = `/dashboard?token=${directToken}`;
-    setDashboardUrl(url);
-    setTimeout(() => {
-      window.location.href = url;
-    }, 2000);
-  }, [directToken, isVoucher]);
-
-  // Poll for account readiness — auto-redirect when ready
+  // Poll until the account is ready, then tell the customer to use the emailed link.
   // Uses session_id (from Stripe checkout redirect) for secure verification
   useEffect(() => {
     if (!sessionId || isFreeTrial) return;
@@ -47,35 +45,32 @@ function SuccessContent() {
     let attempts = 0;
     const maxAttempts = 15; // 30 seconds at 2s intervals
     let stopped = false;
-    let intervalId: ReturnType<typeof setInterval>;
-
     const poll = async () => {
       if (stopped) return;
       try {
         const res = await fetch(`/api/account/check-ready?session_id=${encodeURIComponent(sessionId)}`);
         const data = await res.json();
 
-        if (data.ready && data.dashboardUrl) {
+        if (data.ready) {
           stopped = true;
           clearInterval(intervalId);
           setAccountReady(true);
-          setDashboardUrl(data.dashboardUrl);
-          if (typeof (window as any).lintrk === "function") {
-            (window as any).lintrk("track", { conversion_id: 24436340 });
+          const tracking = window as unknown as TrackingWindow;
+          if (typeof tracking.lintrk === "function") {
+            tracking.lintrk("track", { conversion_id: 24436340 });
           }
           // Growify v2 conversion — new signup with first payment
           try {
             const amountDollars = (data.amountCents || 0) / 100;
             const price = amountDollars > 0 ? amountDollars : 50;
-            const nameParts = (data.name || "").split(" ");
-            const w = window as any;
-            w.grpQueue = w.grpQueue || [];
-            if (!w.grp) { w.grp = function() { w.grpQueue.push(arguments); }; }
+            const w = tracking;
+            const queue = (w.grpQueue = w.grpQueue || []);
+            if (!w.grp) { w.grp = (...args: unknown[]) => { queue.push(args); }; }
             w.grp('conversion', {
               userEmail: data.email || email || '',
-              userFirstName: nameParts[0] || '',
-              userLastName: nameParts.slice(1).join(" ") || '',
-              userId: data.customerId || '',
+              userFirstName: '',
+              userLastName: '',
+              userId: '',
               orderId: sessionId || '',
               tax: 0,
               shipping: 0,
@@ -89,9 +84,6 @@ function SuccessContent() {
               }],
             });
           } catch { /* Growify not loaded */ }
-          setTimeout(() => {
-            window.location.href = data.dashboardUrl;
-          }, 2000);
           return;
         }
       } catch {
@@ -106,8 +98,9 @@ function SuccessContent() {
       }
     };
 
+    // Start the timer before the first poll, so a poll that finishes can always clear it.
+    const intervalId = setInterval(poll, 2000);
     poll();
-    intervalId = setInterval(poll, 2000);
 
     return () => {
       stopped = true;
@@ -187,6 +180,8 @@ function SuccessContent() {
               ? "We sent you a login link. Click it to access your dashboard."
               : isFreeTrial
               ? "Check your email for your API key and dashboard link."
+              : isVoucher
+              ? "Your voucher has been applied."
               : "Your payment was successful. Your GPU dashboard is being set up now."}
           </p>
 
@@ -203,16 +198,8 @@ function SuccessContent() {
                   <p className="font-semibold text-[var(--ok)]">Your account is ready!</p>
                 </div>
                 <p className="text-sm text-[var(--fg-muted)] ml-11">
-                  Redirecting you to your dashboard...
+                  We&apos;ve emailed your login link{email ? ` to ${email}` : ""}. Click it to open your dashboard.
                 </p>
-                {dashboardUrl && (
-                  <a
-                    href={dashboardUrl}
-                    className="inline-block mt-3 ml-11 text-sm font-medium text-emerald-700 underline hover:text-emerald-800"
-                  >
-                    Click here if not redirected
-                  </a>
-                )}
               </div>
             </div>
           ) : (
@@ -249,10 +236,10 @@ function SuccessContent() {
                   </div>
                   <div className="pt-1">
                     <p className="font-medium text-zinc-900">
-                      {isFreeTrial || isExistingUser || pollFailed || !sessionId ? "Click the link" : "Auto-login to dashboard"}
+                      Click the link
                     </p>
                     <p className="text-sm text-zinc-500">
-                      {isFreeTrial || isExistingUser || pollFailed || !sessionId ? "No password needed" : "We'll redirect you automatically"}
+                      No password needed
                     </p>
                   </div>
                 </div>

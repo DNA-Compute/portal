@@ -27,6 +27,8 @@ interface MonthlyPlansModalProps {
   isOpen: boolean;
   onClose: () => void;
   customerEmail?: string;
+  /** The logged-in customer's token: checkout for an existing account needs it. */
+  token?: string | null;
   /** Pre-select a GPU category by slug (deep-link ?gpu=<slug>&plan=monthly). */
   initialCategorySlug?: string;
 }
@@ -37,6 +39,7 @@ export function MonthlyPlansModal({
   isOpen,
   onClose,
   customerEmail,
+  token,
   initialCategorySlug,
 }: MonthlyPlansModalProps) {
   const [products, setProducts] = React.useState<MonthlyProduct[]>([]);
@@ -119,7 +122,10 @@ export function MonthlyPlansModal({
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           productId: product.id,
           email: customerEmail,
@@ -132,6 +138,12 @@ export function MonthlyPlansModal({
 
       if (!res.ok) {
         setError(data.error || "Failed to start checkout");
+        setSubscribingId(null);
+        return;
+      }
+
+      if (data.existingAccount) {
+        setError(data.message || "Please log in again to continue.");
         setSubscribingId(null);
         return;
       }

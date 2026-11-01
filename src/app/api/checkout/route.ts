@@ -11,12 +11,14 @@ import {
   getDefaultPolicies,
   ensureRoles,
 } from "@/lib/hostedai";
-import { generateCustomerToken } from "@/lib/customer-auth";
+import { generateCustomerToken, verifyCustomerToken } from "@/lib/customer-auth";
 import { isPro } from "@/lib/edition";
 import { checkAndProcessReferralQualification } from "@/lib/referral";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { getBrandName } from "@/lib/branding";
 import { embargoCheck } from "@/lib/embargo";
+import { sendLoginEmailForCustomer } from "@/lib/customer-login-email";
+import { gatePermission } from "@/lib/auth/gate";
 import crypto from "crypto";
 
 // Generate a secure password for hosted.ai account
@@ -49,7 +51,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { productId, email, checkOnly, voucherCode, termsAccepted, source } = await request.json();
+    const { productId, email: rawEmail, checkOnly, voucherCode, termsAccepted, source } = await request.json();
+    // Stripe matches emails exactly, so a differently-cased address must not look like a new account.
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
     // Dashboard-initiated checkouts come from an already-logged-in customer, so
     // we skip the new-user welcome/success page and bounce them straight back
     // to their dashboard. The webhook runs async — the dashboard will show the
@@ -89,17 +93,59 @@ export async function POST(request: NextRequest) {
 
     const stripe = await getStripe();
 
-    // Check if customer already exists (search ALL customers with this email)
-    const existingCustomers = await stripe.customers.list({
-      email: email,
-      limit: 10,
-    });
+    // Check if customer already exists (search ALL customers with this email). Stripe matches the
+    // email exactly, so also look up the spelling as typed: older accounts kept their capitals.
+    const typedEmail = typeof rawEmail === "string" ? rawEmail.trim() : "";
+    const lookups = await Promise.all(
+      [...new Set([email, typedEmail])].map((e) => stripe.customers.list({ email: e, limit: 10 })),
+    );
+    const existingCustomers = {
+      data: lookups.flatMap((l) => l.data).filter((c, i, all) => all.findIndex((o) => o.id === c.id) === i),
+    };
 
     if (existingCustomers.data.length > 0) {
-      // Find the primary (hourly/wallet) customer if one exists
+      // Anyone can type an email, so going on for an existing account (its billing portal, a
+      // subscription linked to it, a voucher account under its email) needs its owner logged in.
+      // Anyone else gets a login link sent to the owner instead.
+      const bearer = request.headers.get("authorization")?.replace("Bearer ", "");
+      const loggedIn = bearer ? verifyCustomerToken(bearer) : null;
+      // A team admin buys for the account they're working in, whose email isn't their own.
+      const actingFor = [loggedIn?.activeAccountId, loggedIn?.customerId];
+      const account = loggedIn && (
+        existingCustomers.data.find((c) => actingFor.includes(c.id)) ??
+        (loggedIn.email?.toLowerCase() === email ? existingCustomers.data[0] : undefined)
+      );
+      // The wallet account an hourly purchase opens the portal for, which may not be `account`.
       const primaryCustomer = existingCustomers.data.find(
         (c) => c.metadata?.billing_type === "hourly"
       ) || existingCustomers.data[0];
+      if (loggedIn && account) {
+        // Same rule as /api/account/billing-portal: a read-only or revoked member can't buy or
+        // open the portal, so it's checked on every account this purchase can touch.
+        for (const target of new Set([account, primaryCustomer])) {
+          const denial = await gatePermission({
+            payload: loggedIn,
+            accountId: target.id,
+            customerEmail: target.email ?? null,
+            permission: "billing.manage",
+            request,
+          });
+          if (denial) return denial;
+        }
+      } else {
+        // One link per email every few minutes, so this can't be used to flood an inbox.
+        if (!checkOnly && rateLimit(`checkout-login-email:${email}`, { maxRequests: 1, windowMs: 5 * 60_000 }).success) {
+          try {
+            await sendLoginEmailForCustomer(email);
+          } catch (loginEmailError) {
+            console.error(`[Checkout] Failed to send login email for existing customer:`, loginEmailError);
+          }
+        }
+        return NextResponse.json({
+          existingAccount: true,
+          message: "This email already has an account. Log in to continue.",
+        });
+      }
 
       if (product.billingType !== "monthly") {
         // Hourly product: check if customer already has wallet set up
@@ -312,9 +358,10 @@ export async function POST(request: NextRequest) {
 
       console.log(`=== VOUCHER SIGNUP COMPLETE: ${customerEmail} -> Team ${team.id} ===`);
 
-      // Redirect to success page — include token so user can auto-login
+      // No login in the response: anyone can type an email and a voucher code. The welcome
+      // email carries the login link, so only the inbox owner gets in.
       return NextResponse.json({
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/success?type=voucher&email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/success?type=voucher&email=${encodeURIComponent(email)}`,
         voucherApplied: true,
       });
     }

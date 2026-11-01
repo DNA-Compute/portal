@@ -1706,6 +1706,7 @@ export function DashboardContent() {
         isOpen={showBlackwellModal}
         onClose={() => setShowBlackwellModal(false)}
         customerEmail={data?.customer?.email}
+        token={token}
       />
 
       {/* Monthly plans picker — lists all active monthly products */}
@@ -1716,6 +1717,7 @@ export function DashboardContent() {
           setMonthlyCategorySlug(undefined);
         }}
         customerEmail={data?.customer?.email}
+        token={token}
         initialCategorySlug={monthlyCategorySlug}
       />
 

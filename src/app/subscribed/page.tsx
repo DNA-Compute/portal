@@ -24,24 +24,18 @@ function SubscribedContent() {
     let stopped = false;
     let attempts = 0;
     const maxAttempts = 15; // 30s @ 2s
-    let intervalId: ReturnType<typeof setInterval>;
-
     const poll = async () => {
       if (stopped) return;
       try {
         const res = await fetch(`/api/account/check-ready?session_id=${encodeURIComponent(sessionId)}`);
         const data = await res.json();
 
-        if (data.ready && data.dashboardUrl) {
+        if (data.ready) {
           stopped = true;
           clearInterval(intervalId);
           setRedirecting(true);
-          // check-ready already returns /dashboard?token=XXX — append the
-          // subscribed flag for any future UX that wants to react to it.
-          const url = data.dashboardUrl.includes("?")
-            ? `${data.dashboardUrl}&subscribed=1`
-            : `${data.dashboardUrl}?subscribed=1`;
-          window.location.href = url;
+          // Only dashboard purchases land here, so the browser's session cookie logs them back in.
+          window.location.href = "/dashboard?subscribed=1";
           return;
         }
       } catch {
@@ -56,8 +50,9 @@ function SubscribedContent() {
       }
     };
 
+    // Start the timer before the first poll, so a poll that finishes can always clear it.
+    const intervalId = setInterval(poll, 2000);
     poll();
-    intervalId = setInterval(poll, 2000);
 
     return () => {
       stopped = true;

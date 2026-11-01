@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { generateCustomerToken } from "@/lib/customer-auth";
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("session_id");
@@ -32,8 +31,6 @@ export async function GET(request: NextRequest) {
 
     // Standard path: this Stripe customer owns a hosted.ai team (new-user signup,
     // hourly or first-time monthly).
-    let resolvedCustomerId = customerId;
-    let resolvedCustomer = customer;
     let teamId = customer.metadata?.hostedai_team_id;
 
     // Existing-user monthly path: the monthly subscription creates a separate
@@ -47,8 +44,6 @@ export async function GET(request: NextRequest) {
         const primaryTeamId = primary.metadata?.hostedai_team_id;
         if (primaryTeamId) {
           teamId = primaryTeamId;
-          resolvedCustomerId = primary.id;
-          resolvedCustomer = primary;
         }
       }
     }
@@ -57,21 +52,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ready: false });
     }
 
-    // Account is ready - generate auto-login token for the primary customer
-    // (so the dashboard shows the combined hourly + monthly view).
-    const token = generateCustomerToken(
-      session.customer_email.toLowerCase(),
-      resolvedCustomerId
-    );
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}`;
-
+    // Account is ready. No login here: whoever holds this session id only proved they paid, not
+    // that they own the email, and the account may be an existing one linked by email. The
+    // welcome email carries the login link, so only the inbox owner gets in.
     return NextResponse.json({
       ready: true,
-      dashboardUrl,
       email: session.customer_email,
-      name: resolvedCustomer.name || null,
       amountCents: session.amount_total || 0,
-      customerId: resolvedCustomerId,
     });
   } catch (error) {
     console.error("Check-ready error:", error);

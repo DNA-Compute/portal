@@ -35,6 +35,7 @@ function CheckoutContent() {
   const [email, setEmail] = useState(initialEmail);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [notice, setNotice] = useState("");
 
   // Products from database
   const [products, setProducts] = useState<GpuProduct[]>([]);
@@ -142,6 +143,7 @@ function CheckoutContent() {
 
     setStatus("loading");
     setErrorMessage("");
+    setNotice("");
 
     try {
       const response = await fetch("/api/checkout", {
@@ -159,6 +161,12 @@ function CheckoutContent() {
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to create checkout");
+      }
+
+      if (data.existingAccount) {
+        setNotice(data.message);
+        setStatus("idle");
+        return;
       }
 
       if (data.url) {
@@ -418,6 +426,11 @@ function CheckoutContent() {
           </button>
           {status === "error" && errorMessage && (
             <p className="text-red-500 text-sm">{errorMessage}</p>
+          )}
+          {notice && (
+            <p role="status" className="text-sm text-[var(--fg)]">
+              {notice} <Link href="/account" className="underline">Log in</Link>
+            </p>
           )}
         </form>
 

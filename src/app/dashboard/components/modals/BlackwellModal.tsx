@@ -15,12 +15,15 @@ interface BlackwellModalProps {
   isOpen: boolean;
   onClose: () => void;
   customerEmail?: string;
+  /** The logged-in customer's token: checkout for an existing account needs it. */
+  token?: string | null;
 }
 
 export function BlackwellModal({
   isOpen,
   onClose,
   customerEmail,
+  token,
 }: BlackwellModalProps) {
   const [subscribing, setSubscribing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -67,7 +70,10 @@ export function BlackwellModal({
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           productId: blackwellProduct.id,
           email: customerEmail,
@@ -79,6 +85,11 @@ export function BlackwellModal({
 
       if (!res.ok) {
         setError(data.error || "Failed to start checkout");
+        return;
+      }
+
+      if (data.existingAccount) {
+        setError(data.message || "Please log in again to continue.");
         return;
       }
 
