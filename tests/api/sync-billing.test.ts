@@ -317,6 +317,25 @@ describe("/api/sync negative balance", () => {
     expect(mocks.deleteInstance).not.toHaveBeenCalled();
   });
 
+  it.each(["free", "free_trial"])("stops the GPU of a %s account that spent its credit and has no card", async billingType => {
+    // Before, only "hourly" accounts were checked: a free account's GPU ran on growing debt forever.
+    addCustomer("cus", 0, { billing_type: billingType });
+    addGpu("gpu", new Date(NOW - 1000));
+    mocks.refill.mockResolvedValue({ refilled: false, error: "No payment method on file", paymentFailed: true });
+    await sync();
+    expect(state.customers.get("cus")!.balance).toBe(300);
+    expect(mocks.deleteInstance.mock.calls).toEqual([["gpu"]]);
+  });
+
+  it("does not shut down a monthly account's GPUs for its wallet balance", async () => {
+    addCustomer("cus", 5000, { billing_type: "monthly" });
+    addGpu("gpu", new Date(NOW + 10 * BLOCK_MS));
+    mocks.refill.mockResolvedValue({ refilled: false, error: "No payment method on file", paymentFailed: true });
+    await sync();
+    expect(mocks.refill).not.toHaveBeenCalled();
+    expect(mocks.deleteInstance).not.toHaveBeenCalled();
+  });
+
   it("stops only the hourly GPUs the customer pays for, and keeps the team's storage", async () => {
     addCustomer("cus", 0);
     addGpu("hourly", new Date(NOW - 1000));

@@ -38,6 +38,7 @@ const mockStripe = {
   },
   paymentIntents: {
     create: vi.fn(),
+    cancel: vi.fn().mockResolvedValue({}),
     list: vi.fn(),
   },
   invoices: {
@@ -151,6 +152,7 @@ describe('Wallet Module', () => {
         customer: 'cus_test123',
         payment_method: 'pm_test456',
         confirm: true,
+        off_session: true,
         automatic_payment_methods: {
           enabled: true,
           allow_redirects: 'never',
@@ -233,9 +235,10 @@ describe('Wallet Module', () => {
       expect(mockStripe.customers.createBalanceTransaction).not.toHaveBeenCalled();
     });
 
-    // Billing shuts GPUs down only on paymentFailed, so it must mean the payment was refused.
+    // Billing shuts GPUs down only on paymentFailed, so it must mean the payment can't complete:
+    // refused, cancelled, or waiting for a 3-D Secure approval nobody is there to give.
     it.each([
-      ['requires_action', false],
+      ['requires_action', true],
       ['processing', false],
       ['requires_payment_method', true],
       ['canceled', true],
@@ -243,6 +246,13 @@ describe('Wallet Module', () => {
       vi.mocked(mockStripe.paymentIntents.create).mockResolvedValue({ id: 'pi_test123', status } as Stripe.PaymentIntent);
       const result = await fundWallet('cus_test123', 5000, 'pm_test456');
       expect(result.paymentFailed).toBe(failed);
+    });
+
+    it('cancels a payment left waiting for 3-D Secure, so a late approval cannot take uncredited money', async () => {
+      vi.mocked(mockStripe.paymentIntents.create).mockResolvedValue({ id: 'pi_3ds', status: 'requires_action' } as Stripe.PaymentIntent);
+      await fundWallet('cus_test123', 5000, 'pm_test456');
+      expect(mockStripe.paymentIntents.cancel).toHaveBeenCalledWith('pi_3ds');
+      expect(mockStripe.customers.createBalanceTransaction).not.toHaveBeenCalled();
     });
 
     it('reports a declined card as failed, and a Stripe outage as not', async () => {

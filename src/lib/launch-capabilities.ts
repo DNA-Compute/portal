@@ -13,6 +13,7 @@ import {
   type LaunchCapabilities, type LaunchConfiguration, type LaunchImage, type LaunchPool, type LaunchProfile,
   type LaunchStorageBlock, type ResolvedLaunchConfiguration, type ConfigurationPricing,
 } from "@/lib/launch-config";
+import { usesWallet } from "@/lib/pod-billing";
 
 type RecordValue = Record<string, unknown>;
 interface ProductContext { product: GpuProduct; pricing: ConfigurationPricing | null; poolIds: number[] }
@@ -113,7 +114,7 @@ async function permittedProduct(auth: AuthenticatedCustomer, productId: string):
   const pricing = product.configurationPricing == null ? null : configurationPricingSchema.safeParse(product.configurationPricing);
   if (pricing && !pricing.success) metadata("configuration pricing");
   if (product.billingType === "hourly") {
-    if (!["hourly", "free_trial", "free"].includes(auth.customer.metadata?.billing_type || "")) {
+    if (!usesWallet(auth.customer.metadata?.billing_type)) {
       throw new LaunchCapabilityError("This offering requires an hourly wallet on the active account.", 403, "NOT_ENTITLED");
     }
   } else {

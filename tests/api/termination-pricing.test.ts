@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   charge: vi.fn().mockResolvedValue({}),
   chargeOptions: vi.fn(),
   deleteInstance: vi.fn().mockResolvedValue(undefined),
+  detail: vi.fn(),
   unsubscribe: vi.fn().mockResolvedValue(undefined),
   deleteMetadata: vi.fn().mockResolvedValue({}),
   findMany: vi.fn().mockResolvedValue([]),
@@ -50,7 +51,7 @@ vi.mock("@/lib/hostedai", () => ({
   getPoolSubscriptions: mocks.subscriptions,
   deleteInstance: mocks.deleteInstance,
   unsubscribeFromPool: mocks.unsubscribe,
-  getUnifiedInstanceDetail: vi.fn(),
+  getUnifiedInstanceDetail: mocks.detail,
   getSharedVolumes: vi.fn().mockResolvedValue([]),
   deleteSharedVolume: vi.fn(),
 }));
@@ -215,5 +216,53 @@ describe("termination settlement uses the purchased rate basis", () => {
       expect(mocks.charge).toHaveBeenNthCalledWith(1, "cus_owner", expect.objectContaining({ amount: 150 }));
       expect(mocks.charge).toHaveBeenNthCalledWith(2, "cus_owner", expect.objectContaining({ amount: -75 }));
     }
+  });
+});
+
+describe("termination stops the GPU before it settles or forgets anything", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    mocks.subscriptions.mockResolvedValue([{ id: instanceId, per_pod_info: { vgpu_count: 2 }, pods: [{ pod_status: "running" }] }]);
+    mocks.metadata.mockResolvedValue(savedRate("per_instance"));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("credits nothing and keeps the record when hosted.ai refuses to delete a running GPU", async () => {
+    mocks.deleteInstance.mockRejectedValueOnce(new Error("hosted.ai API error (500): busy"));
+    mocks.detail.mockResolvedValue({ status: "running" });
+    expect((await terminate(instanceId)).status).toBe(500);
+    expect(mocks.charge).not.toHaveBeenCalled();
+    expect(mocks.claim).not.toHaveBeenCalled();
+    expect(mocks.deleteMetadata).not.toHaveBeenCalled();
+    expect(mocks.logTerminated).not.toHaveBeenCalled();
+  });
+
+  it("settles and forgets a GPU hosted.ai has already deleted (403)", async () => {
+    mocks.deleteInstance.mockRejectedValueOnce(new Error("hosted.ai API error (403): you are not authorized"));
+    mocks.detail.mockRejectedValue(new Error("hosted.ai API error (403): you are not authorized"));
+    expect((await terminate(instanceId)).status).toBe(200);
+    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -300 }));
+    expect(mocks.deleteMetadata).toHaveBeenCalledWith({ where: { id: "metadata" } });
+  });
+
+  it("deletes the GPU first, and keeps the record for review when the final credit fails", async () => {
+    const order: string[] = [];
+    mocks.deleteInstance.mockImplementationOnce(async () => { order.push("delete GPU"); });
+    mocks.charge.mockImplementationOnce(async () => { order.push("credit"); throw new Error("Stripe down"); });
+    expect((await terminate(instanceId)).status).toBe(200);
+    expect(order).toEqual(["delete GPU", "credit"]);
+    expect(mocks.deleteMetadata).not.toHaveBeenCalled();
+  });
+
+  it("refuses a GPU with no hosted.ai instance id instead of calling the retired pool API", async () => {
+    mocks.metadata.mockResolvedValue({ ...savedRate("per_gpu"), instanceId: null });
+    const res = await terminate("12");
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe("LEGACY_POOL_GPU");
+    expect(mocks.deleteInstance).not.toHaveBeenCalled();
+    expect(mocks.unsubscribe).not.toHaveBeenCalled();
+    expect(mocks.charge).not.toHaveBeenCalled();
   });
 });

@@ -53,6 +53,7 @@ const {
     },
     podMetadata: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       delete: vi.fn(),
     },
     gpuProduct: { findUnique: vi.fn() },
@@ -67,7 +68,9 @@ const {
     unsuspendTeam: vi.fn(),
     changeTeamPackage: vi.fn(),
     syncTeamsToDefaultPolicy: vi.fn(),
-    unsubscribeFromPool: vi.fn(),
+    deleteInstance: vi.fn(),
+    getUnifiedInstanceDetail: vi.fn(),
+    getPoolSubscriptions: vi.fn(),
     getDefaultPolicies: vi.fn(),
     ensureRoles: vi.fn(),
   },
@@ -354,24 +357,47 @@ describe("handleSubscriptionCanceled", () => {
     expect(prismaMock.podMetadata.findMany).not.toHaveBeenCalled();
   });
 
-  it("terminates the subscription's monthly pods and deletes their metadata", async () => {
+  it("deletes the subscription's monthly GPUs in hosted.ai, then forgets them", async () => {
     stripeMock.customers.retrieve.mockResolvedValue(
       makeCustomer({ metadata: { hostedai_team_id: TEAM_ID } })
     );
-    prismaMock.podMetadata.findMany.mockResolvedValue([
-      { id: 7, subscriptionId: "pod-sub-1", poolId: "pool-1" },
-      { id: 8, subscriptionId: "pod-sub-2", poolId: "pool-2" },
-    ]);
+    const pods = [
+      { id: "7", subscriptionId: "instance-i-00000000-0000-0000-0000-000000000007", instanceId: "i-00000000-0000-0000-0000-000000000007", billingType: "monthly" },
+      { id: "8", subscriptionId: "instance-i-00000000-0000-0000-0000-000000000008", instanceId: "i-00000000-0000-0000-0000-000000000008", billingType: "monthly" },
+    ];
+    prismaMock.podMetadata.findMany.mockResolvedValue(pods);
+    prismaMock.podMetadata.findFirst.mockImplementation(async ({ where }: { where: { OR: Array<{ instanceId?: string }> } }) =>
+      pods.find(p => p.instanceId === where.OR[0].instanceId) ?? null);
+    prismaMock.podMetadata.delete.mockResolvedValue({});
 
     await deliver(canceledEvent());
 
     expect(prismaMock.podMetadata.findMany).toHaveBeenCalledWith({
       where: { stripeSubscriptionId: "sub_1", billingType: "monthly" },
     });
-    expect(hostedaiMock.unsubscribeFromPool).toHaveBeenCalledWith("pod-sub-1", TEAM_ID, "pool-1");
-    expect(hostedaiMock.unsubscribeFromPool).toHaveBeenCalledWith("pod-sub-2", TEAM_ID, "pool-2");
-    expect(prismaMock.podMetadata.delete).toHaveBeenCalledTimes(2);
+    expect(hostedaiMock.deleteInstance).toHaveBeenCalledWith(pods[0].instanceId);
+    expect(hostedaiMock.deleteInstance).toHaveBeenCalledWith(pods[1].instanceId);
+    expect(prismaMock.podMetadata.delete).toHaveBeenCalledWith({ where: { id: "7" } });
+    expect(prismaMock.podMetadata.delete).toHaveBeenCalledWith({ where: { id: "8" } });
     expect(lifecycleMock.recordChurn).toHaveBeenCalledWith(CUSTOMER_ID);
+  });
+
+  it("keeps the record and fails the event when hosted.ai won't stop the GPU, so Stripe sends it again", async () => {
+    stripeMock.customers.retrieve.mockResolvedValue(
+      makeCustomer({ metadata: { hostedai_team_id: TEAM_ID } })
+    );
+    const pod = { id: "7", subscriptionId: "instance-i-00000000-0000-0000-0000-000000000007", instanceId: "i-00000000-0000-0000-0000-000000000007", billingType: "monthly" };
+    prismaMock.podMetadata.findMany.mockResolvedValue([pod]);
+    prismaMock.podMetadata.findFirst.mockResolvedValue(pod);
+    hostedaiMock.deleteInstance.mockRejectedValueOnce(new Error("hosted.ai API error (500): busy"));
+    hostedaiMock.getUnifiedInstanceDetail.mockResolvedValue({ status: "running" });
+
+    const res = await deliver(canceledEvent());
+
+    expect(res.status).toBe(500);
+    expect(prismaMock.podMetadata.delete).not.toHaveBeenCalled();
+    expect(lifecycleMock.recordChurn).not.toHaveBeenCalled();
+    expect(hostedaiMock.suspendTeam).not.toHaveBeenCalled();
   });
 
   it("suspends the team when no active subscriptions remain", async () => {
@@ -460,13 +486,14 @@ describe("handlePaymentFailed", () => {
     expect(stripeMock.customers.retrieve).not.toHaveBeenCalled();
   });
 
-  it("terminates monthly pods for the failed subscription", async () => {
+  it("deletes monthly GPUs for the failed subscription in hosted.ai, then forgets them", async () => {
     stripeMock.customers.retrieve.mockResolvedValue(
       makeCustomer({ metadata: { hostedai_team_id: TEAM_ID } })
     );
-    prismaMock.podMetadata.findMany.mockResolvedValue([
-      { id: 9, subscriptionId: "pod-sub-9", poolId: "pool-9" },
-    ]);
+    const pod = { id: "9", subscriptionId: "instance-i-00000000-0000-0000-0000-000000000009", instanceId: "i-00000000-0000-0000-0000-000000000009", billingType: "monthly" };
+    prismaMock.podMetadata.findMany.mockResolvedValue([pod]);
+    prismaMock.podMetadata.findFirst.mockResolvedValue(pod);
+    prismaMock.podMetadata.delete.mockResolvedValue({});
 
     await deliver(
       failedEvent({
@@ -477,8 +504,8 @@ describe("handlePaymentFailed", () => {
     expect(prismaMock.podMetadata.findMany).toHaveBeenCalledWith({
       where: { stripeSubscriptionId: "sub_failed", billingType: "monthly" },
     });
-    expect(hostedaiMock.unsubscribeFromPool).toHaveBeenCalledWith("pod-sub-9", TEAM_ID, "pool-9");
-    expect(prismaMock.podMetadata.delete).toHaveBeenCalledWith({ where: { id: 9 } });
+    expect(hostedaiMock.deleteInstance).toHaveBeenCalledWith(pod.instanceId);
+    expect(prismaMock.podMetadata.delete).toHaveBeenCalledWith({ where: { id: "9" } });
   });
 
   it("NEVER suspends the team on payment failure (PA-76)", async () => {

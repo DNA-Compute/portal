@@ -8,11 +8,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/admin";
 import { logAdminActivity } from "@/lib/admin-activity";
 import {
-  unsubscribeFromPool,
   podAction,
   getPoolSubscriptions,
 } from "@/lib/hostedai";
 import { prisma } from "@/lib/prisma";
+import { terminateGpu, TerminationError } from "@/lib/gpu-termination";
 
 // GET - Get detailed pod info
 export async function GET(
@@ -156,14 +156,14 @@ export async function POST(
 
       result = await podAction(podName, subscriptionId, action);
     } else if (action === "terminate") {
-      result = await unsubscribeFromPool(subscriptionId, teamId, subscription.pool_id);
-      // Clean up our metadata
+      // Same stop, settle and forget as the customer's Terminate, settled to the paying account.
       try {
-        await prisma.podMetadata.delete({
-          where: { subscriptionId },
-        });
-      } catch (e) {
-        console.warn("Could not delete pod metadata:", e);
+        result = await terminateGpu(subscriptionId, teamId);
+      } catch (error) {
+        if (error instanceof TerminationError) {
+          return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
+        }
+        throw error;
       }
     } else {
       return NextResponse.json({ error: "Unknown action" }, { status: 400 });

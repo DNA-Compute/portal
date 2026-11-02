@@ -64,13 +64,15 @@ export async function fundWallet(
       }
     }
 
-    // Create a payment intent to charge the card
+    // Charge the saved card. off_session tells the bank the customer isn't here to approve it, so a
+    // card that needs 3-D Secure is declined (authentication_required) instead of waiting forever.
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: "usd",
       customer: customerId,
       payment_method: paymentMethodId,
       confirm: true,
+      off_session: true,
       automatic_payment_methods: {
         enabled: true,
         allow_redirects: "never",
@@ -123,8 +125,13 @@ export async function fundWallet(
       return { success: true, paymentIntentId: paymentIntent.id };
     }
 
-    // Needing 3-D Secure or still processing is not a decline; only a refused or cancelled payment is.
-    const paymentFailed = paymentIntent.status === "requires_payment_method" || paymentIntent.status === "canceled";
+    // Nobody is there to approve a payment that asks for 3-D Secure, so it fails like a decline.
+    // Cancel it, so a late approval can't take money this top-up never credits. Still processing
+    // (some bank debits) is not a failure; a later run finds it.
+    if (paymentIntent.status === "requires_action") {
+      await stripe.paymentIntents.cancel(paymentIntent.id).catch((e) => console.error(`[Wallet] Could not cancel ${paymentIntent.id}:`, e));
+    }
+    const paymentFailed = ["requires_payment_method", "requires_action", "canceled"].includes(paymentIntent.status);
     return { success: false, error: `Payment status: ${paymentIntent.status}`, paymentFailed };
   } catch (error) {
     console.error("Wallet funding error:", error);

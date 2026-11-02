@@ -15,6 +15,8 @@ import {
   getPoolInstanceTypes,
 } from "@/lib/hostedai";
 import { prisma } from "@/lib/prisma";
+import { isInstanceId, terminateGpu, TerminationError } from "@/lib/gpu-termination";
+import { instanceProductName, logGPUTerminated } from "@/lib/activity";
 import { z } from "zod";
 import { spawn } from "child_process";
 import { validateSSHParams } from "@/lib/ssh-validation";
@@ -287,6 +289,14 @@ export async function POST(
     // If saveData is true AND user doesn't already have storage, create new storage
     // If user already has storage, their data is already preserved - no need to resubscribe
     if (saveData && !hasStorage) {
+      // This branch swaps a hosted.ai pool subscription for a new one. A current GPU (i-...) can't be
+      // unsubscribed that way, so it would keep running next to a second, new GPU.
+      if (isInstanceId(subscriptionId)) {
+        return NextResponse.json({
+          error: "Saving this GPU's data to new storage isn't available. Attach shared storage first, or save the configuration only.",
+          code: "SAVE_DATA_UNAVAILABLE",
+        }, { status: 409 });
+      }
       // This legacy branch replaces CPU/root/GPU allocation while attaching storage.
       // It cannot retain a configured instance's purchased quote.
       const metadata = await prisma.podMetadata.findFirst({
@@ -538,22 +548,17 @@ du -sh "$SNAPSHOT_DIR"
       },
     });
 
-    // Optionally terminate the pod after saving
+    // Optionally end this GPU after saving: the same stop, settle and forget as Terminate.
+    let terminated = false;
+    let terminateError: string | undefined;
     if (terminateAfterSave) {
-      console.log("Terminating pod after snapshot save...");
       try {
-        // Get current subscription ID (might have changed after resubscribe)
-        const currentSubs = await getPoolSubscriptions(teamId);
-        const currentSub = currentSubs.find(s =>
-          String(s.pool_id) === poolId &&
-          (s.status === "subscribed" || s.status === "active" || s.status === "running")
-        );
-        if (currentSub) {
-          await unsubscribeFromPool(String(currentSub.id), teamId, poolId);
-        }
+        const ended = await terminateGpu(subscriptionId, teamId);
+        await logGPUTerminated(ctx.accountId, await instanceProductName(ended.productId), ended.displayName, ended.instanceId);
+        terminated = true;
       } catch (err) {
         console.error("Failed to terminate after save:", err);
-        // Don't fail the whole operation
+        terminateError = err instanceof TerminationError ? err.message : "The GPU could not be stopped. Terminate it from its card.";
       }
     }
 
@@ -573,7 +578,8 @@ du -sh "$SNAPSHOT_DIR"
         createdAt: snapshot.createdAt,
       },
       dataCopied: saveData && autoCreatedVolume,
-      terminated: terminateAfterSave,
+      terminated,
+      terminateError,
     });
   } catch (error) {
     console.error("Create snapshot error:", error);

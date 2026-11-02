@@ -7,7 +7,6 @@ import {
   unsuspendTeam,
   changeTeamPackage,
   syncTeamsToDefaultPolicy,
-  unsubscribeFromPool,
   getDefaultPolicies,
   ensureRoles,
 } from "@/lib/hostedai";
@@ -15,10 +14,11 @@ import { sendWelcomeEmail } from "@/lib/email";
 import { generateCustomerToken } from "@/lib/customer-auth";
 import { isPro } from "@/lib/edition";
 import { checkAndProcessReferralQualification } from "@/lib/referral";
-import { recordFirstDeposit, recordSubscription, recordChurn, recordReactivation, addSpend } from "@/lib/lifecycle";
+import { recordFirstDeposit, recordSubscription, recordChurn, recordReactivation } from "@/lib/lifecycle";
 import { processVoucherRedemption } from "@/lib/voucher";
 import { sendOnboardingEvent } from "@/lib/email/onboarding-events";
 import { prisma } from "@/lib/prisma";
+import { terminateGpu } from "@/lib/gpu-termination";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { getBrandName } from "@/lib/branding";
 import { createInvoiceForPayment } from "@/lib/invoice";
@@ -72,19 +72,6 @@ async function releaseEventClaim(eventId: string): Promise<void> {
     await prisma.processedStripeEvent.deleteMany({ where: { stripeEventId: eventId } });
   } catch (error) {
     console.error(`[Webhook] Failed to release claim for ${eventId}; Stripe retries will be skipped:`, error);
-  }
-}
-
-// Keep legacy function signatures as aliases for backward compatibility within the file
-async function isEventProcessed(eventId: string): Promise<boolean> {
-  try {
-    const existing = await prisma.processedStripeEvent.findUnique({
-      where: { stripeEventId: eventId },
-    });
-    return !!existing;
-  } catch (error) {
-    console.error("[Webhook] Error checking processed event:", error);
-    return false;
   }
 }
 
@@ -437,7 +424,7 @@ async function handleCheckoutCompleted(
         productName = dbProduct.name;
         console.log(`✅ Product found in database: ${productName}`);
       }
-    } catch (err) {
+    } catch {
       console.log(`Product lookup failed, using metadata name: ${productName}`);
     }
   }
@@ -891,34 +878,10 @@ async function handleSubscriptionCanceled(
     }
   }
 
-  // Terminate any monthly GPU pods linked to this Stripe subscription
-  try {
-    const monthlyPods = await prisma.podMetadata.findMany({
-      where: {
-        stripeSubscriptionId: subscription.id,
-        billingType: "monthly",
-      },
-    });
-
-    for (const pod of monthlyPods) {
-      try {
-        if (pod.poolId && teamId) {
-          await unsubscribeFromPool(pod.subscriptionId, teamId, pod.poolId);
-          console.log(`Terminated monthly GPU pod ${pod.subscriptionId} (pool ${pod.poolId}) for canceled subscription ${subscription.id}`);
-        }
-        await prisma.podMetadata.delete({ where: { id: pod.id } });
-        console.log(`Deleted PodMetadata ${pod.id} for canceled subscription ${subscription.id}`);
-      } catch (podError) {
-        console.error(`Failed to terminate monthly pod ${pod.subscriptionId}:`, podError);
-      }
-    }
-
-    if (monthlyPods.length > 0) {
-      console.log(`Terminated ${monthlyPods.length} monthly pod(s) for subscription ${subscription.id}`);
-    }
-  } catch (error) {
-    console.error(`Failed to query/terminate monthly pods for subscription ${subscription.id}:`, error);
-  }
+  // End every monthly GPU on this subscription. One that won't stop keeps its record, and the
+  // event fails here so Stripe sends it again; GPUs already ended are skipped then.
+  const unstopped = await endMonthlyGpus(subscription.id, teamId, "canceled subscription");
+  if (unstopped > 0) throw new Error(`${unstopped} monthly GPU(s) on ${subscription.id} could not be stopped`);
 
   // Track lifecycle milestone (churn)
   recordChurn(subscription.customer as string).catch(() => {});
@@ -952,6 +915,28 @@ async function handleSubscriptionCanceled(
       console.error(`Failed to check/suspend team ${teamId}:`, error);
     }
   }
+}
+
+/**
+ * Ends the monthly GPUs on one Stripe subscription through terminateGpu, which deletes the GPU in
+ * hosted.ai before forgetting our record. Returns how many could not be stopped.
+ */
+async function endMonthlyGpus(stripeSubscriptionId: string, teamId: string | undefined, reason: string): Promise<number> {
+  const monthlyPods = await prisma.podMetadata.findMany({
+    where: { stripeSubscriptionId, billingType: "monthly" },
+  });
+  let unstopped = 0;
+  for (const pod of monthlyPods) {
+    try {
+      if (!teamId) throw new Error("No hosted.ai team for this customer");
+      await terminateGpu(pod.instanceId || pod.subscriptionId, teamId);
+      console.log(`Ended monthly GPU ${pod.instanceId || pod.subscriptionId} (${reason}, ${stripeSubscriptionId})`);
+    } catch (error) {
+      unstopped++;
+      console.error(`Failed to end monthly GPU ${pod.instanceId || pod.subscriptionId} (${reason}):`, error);
+    }
+  }
+  return unstopped;
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice, stripe: Stripe) {
@@ -988,33 +973,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, stripe: Stripe) {
     : parentSub?.id;
 
   if (stripeSubscriptionId) {
-    try {
-      const monthlyPods = await prisma.podMetadata.findMany({
-        where: {
-          stripeSubscriptionId,
-          billingType: "monthly",
-        },
-      });
-
-      for (const pod of monthlyPods) {
-        try {
-          if (pod.poolId && teamId) {
-            await unsubscribeFromPool(pod.subscriptionId, teamId, pod.poolId);
-            console.log(`Terminated monthly GPU pod ${pod.subscriptionId} (pool ${pod.poolId}) due to payment failure`);
-          }
-          await prisma.podMetadata.delete({ where: { id: pod.id } });
-          console.log(`Deleted PodMetadata ${pod.id} due to payment failure`);
-        } catch (podError) {
-          console.error(`Failed to terminate monthly pod ${pod.subscriptionId} on payment failure:`, podError);
-        }
-      }
-
-      if (monthlyPods.length > 0) {
-        console.log(`Terminated ${monthlyPods.length} monthly pod(s) due to failed payment on subscription ${stripeSubscriptionId}`);
-      }
-    } catch (error) {
-      console.error(`Failed to query/terminate monthly pods for failed payment:`, error);
-    }
+    const unstopped = await endMonthlyGpus(stripeSubscriptionId, teamId, "failed payment");
+    if (unstopped > 0) throw new Error(`${unstopped} monthly GPU(s) on ${stripeSubscriptionId} could not be stopped`);
   }
 
   // Do NOT suspend the team on payment failure — Stripe will retry and
@@ -1124,7 +1084,7 @@ async function handleSubscriptionUpdated(
     if (dbProduct) {
       productName = dbProduct.name;
     }
-  } catch (err) {
+  } catch {
     console.log(`Product lookup failed for ${productId}`);
   }
 

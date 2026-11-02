@@ -149,10 +149,16 @@ export function SaveSnapshotModal({
         throw new Error(result.error || "Failed to save snapshot");
       }
 
-      onClose();
       if (onSnapshotCreated) {
         onSnapshotCreated();
       }
+      if (terminateAfterSave && !result.terminated) {
+        // The snapshot is saved; only the stop failed, and the GPU is still running and billed.
+        setSnapshotError(`Snapshot saved, but the GPU is still running: ${result.terminateError || "it could not be stopped."}`);
+        setSnapshotStep("options");
+        return;
+      }
+      onClose();
       if (terminateAfterSave && onRefresh) {
         onRefresh();
       }

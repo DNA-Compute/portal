@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordBillingRun } from "@/lib/billing-heartbeat";
 import { getStripe } from "@/lib/stripe";
-import { getSharedVolumes, getPoolSubscriptions, getUnifiedInstanceDetail, type SharedVolume } from "@/lib/hostedai";
+import { getSharedVolumes, getPoolSubscriptions, type SharedVolume } from "@/lib/hostedai";
+import { isInstanceGone } from "@/lib/gpu-termination";
 import { checkAndRefillWallet, WALLET_CONFIG } from "@/lib/wallet";
 import { getStoragePricePerGBHourCents, getStoppedInstanceRatePercent } from "@/lib/pricing";
 import { computeStorageCharge } from "@/lib/storage-billing";
 import { computeStoppedCharge, wasStoppedBilledRecently, type StoppedPodInput } from "@/lib/stopped-billing";
 import { getProductByPoolId } from "@/lib/products";
-import { canBackfillPodRate, getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents } from "@/lib/pod-billing";
+import { canBackfillPodRate, getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents, usesWallet } from "@/lib/pod-billing";
 import { prisma } from "@/lib/prisma";
 import { sendNegativeBalanceShutdownEmail } from "@/lib/email";
 import { cacheCustomer } from "@/lib/customer-cache";
@@ -789,7 +790,7 @@ export async function POST(request: NextRequest) {
         // === Stopped instance billing ===
         // Each allocation uses its own saved basis and stopped price, never a fleet average.
         let stoppedGpuCount = 0;
-        if (customer.metadata?.billing_type === "hourly") {
+        if (usesWallet(customer.metadata?.billing_type)) {
         try {
           // Match every provider/local ID shape without discarding the captured rate basis.
           const podMetaRows = await prisma.podMetadata.findMany({
@@ -923,7 +924,9 @@ export async function POST(request: NextRequest) {
         let customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
         if ("deleted" in customer && customer.deleted) continue;
         cacheCustomer(customer).catch(() => {});
-        if (customer.metadata?.billing_type !== "hourly") continue;
+        // Free and free-trial accounts run hourly GPUs on wallet credit too; with no card, owing
+        // more than the grace amount stops their GPUs like any hourly account.
+        if (!usesWallet(customer.metadata?.billing_type)) continue;
 
         const hourlyPods = await prisma.podMetadata.findMany({
           where: { stripeCustomerId: customerId, hourlyRateCents: { gt: 0 }, OR: [{ billingType: null }, { billingType: { not: "monthly" } }] },
@@ -1112,19 +1115,4 @@ export async function GET(request: NextRequest) {
       autoRefillAmountCents: WALLET_CONFIG.autoRefillAmountCents,
     },
   });
-}
-
-/**
- * True only when hosted.ai refuses the instance itself. For a deleted instance it answers 403 ("you
- * are not authorized"), seen on staging, rather than 404. It is only asked right after listing the
- * team's instances worked with the same key, so a 403 here is about this instance, not a revoked
- * key. Any other answer or error is not proof.
- */
-async function isInstanceGone(instanceId: string): Promise<boolean> {
-  try {
-    await getUnifiedInstanceDetail(instanceId);
-    return false;
-  } catch (error) {
-    return error instanceof Error && /\((403|404)\)/.test(error.message);
-  }
 }

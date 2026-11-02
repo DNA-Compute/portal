@@ -6,6 +6,17 @@ export interface PodRateInput {
   launchConfiguration?: unknown;
 }
 
+/**
+ * Accounts that run hourly GPUs from a prepaid wallet: paid hourly, and free or free-trial accounts
+ * spending drip or voucher credit. Billing charges, bills stopped GPUs for and shuts down all of them
+ * alike; monthly accounts pay through their Stripe subscription instead.
+ */
+export const WALLET_BILLING_TYPES: readonly string[] = ["hourly", "free_trial", "free"];
+
+export function usesWallet(billingType: string | null | undefined): boolean {
+  return WALLET_BILLING_TYPES.includes(billingType || "");
+}
+
 function snapshotRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
