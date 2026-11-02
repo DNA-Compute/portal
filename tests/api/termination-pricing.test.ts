@@ -160,8 +160,9 @@ describe("termination settlement uses the purchased rate basis", () => {
     mocks.metadata.mockResolvedValue(savedRate("per_instance"));
     await Promise.all([terminate(instanceId), terminate(instanceId)]);
     expect(mocks.chargeOptions).toHaveBeenCalledTimes(2);
-    expect(mocks.chargeOptions).toHaveBeenNthCalledWith(1, { idempotencyKey: "settle_metadata" });
-    expect(mocks.chargeOptions).toHaveBeenNthCalledWith(2, { idempotencyKey: "settle_metadata" });
+    const key = `settle_credit_metadata_${new Date("2030-01-01T00:30:00Z").getTime()}`;
+    expect(mocks.chargeOptions).toHaveBeenNthCalledWith(1, { idempotencyKey: key });
+    expect(mocks.chargeOptions).toHaveBeenNthCalledWith(2, { idempotencyKey: key });
   });
 
   it("refunds the remaining fraction of the actual saved payment rather than recomputing the charge", async () => {
@@ -184,11 +185,14 @@ describe("termination settlement uses the purchased rate basis", () => {
     expect(mocks.deleteInstance).not.toHaveBeenCalled();
   });
 
-  it.each([instanceId, "12"])("refunds the saved payment when provider status is unavailable (%s)", async id => {
+  it.each([instanceId, "12"])("changes nothing when hosted.ai can't list the team's GPUs (%s)", async id => {
+    // The GPU can't be deleted then either, and the listing is what proves a later 403 means "gone".
     mocks.metadata.mockResolvedValue(savedRate("per_instance"));
     mocks.subscriptions.mockRejectedValue(new Error("Provider unavailable"));
-    expect((await terminate(id)).status).toBe(200);
-    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -300 }));
+    expect((await terminate(id)).status).toBe(500);
+    expect(mocks.deleteInstance).not.toHaveBeenCalled();
+    expect(mocks.charge).not.toHaveBeenCalled();
+    expect(mocks.deleteMetadata).not.toHaveBeenCalled();
   });
 
   it.each([0, 300])("refunds only the unused captured stopped prepayment after renewal (%sc/hr)", async stoppedHourlyCents => {
@@ -247,13 +251,55 @@ describe("termination stops the GPU before it settles or forgets anything", () =
     expect(mocks.deleteMetadata).toHaveBeenCalledWith({ where: { id: "metadata" } });
   });
 
-  it("deletes the GPU first, and keeps the record for review when the final credit fails", async () => {
+  it("credits unused time only after the GPU is deleted, and logs a failed credit for a manual one", async () => {
     const order: string[] = [];
     mocks.deleteInstance.mockImplementationOnce(async () => { order.push("delete GPU"); });
     mocks.charge.mockImplementationOnce(async () => { order.push("credit"); throw new Error("Stripe down"); });
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
     expect((await terminate(instanceId)).status).toBe(200);
     expect(order).toEqual(["delete GPU", "credit"]);
+    expect(logged).toHaveBeenCalledWith(expect.stringContaining("credit it by hand"), expect.any(Error));
+  });
+
+  it("charges overdue time before deleting the GPU, so a failed delete still leaves it paid up", async () => {
+    mocks.metadata.mockResolvedValue(savedRate("per_instance", new Date("2030-01-01T00:00:00Z")));
+    const order: string[] = [];
+    mocks.charge.mockImplementationOnce(async () => { order.push("charge"); });
+    mocks.deleteInstance.mockImplementationOnce(async () => { order.push("delete GPU"); throw new Error("hosted.ai API error (500): busy"); });
+    mocks.detail.mockResolvedValue({ status: "running" });
+    expect((await terminate(instanceId)).status).toBe(500);
+    expect(order).toEqual(["charge", "delete GPU"]);
+    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: 300 }));
+    // Paid up to now; the billing run bills it on from here while it keeps running.
+    expect(mocks.updateMetadata).toHaveBeenCalledWith(expect.objectContaining({ data: { prepaidUntil: now, prepaidAmountCents: 0 } }));
     expect(mocks.deleteMetadata).not.toHaveBeenCalled();
+  });
+
+  it("gives the overdue time back and keeps the GPU when the overdue charge fails", async () => {
+    mocks.metadata.mockResolvedValue(savedRate("per_instance", new Date("2030-01-01T00:00:00Z")));
+    mocks.charge.mockRejectedValueOnce(new Error("Stripe down"));
+    expect((await terminate(instanceId)).status).toBe(500);
+    expect(mocks.deleteInstance).not.toHaveBeenCalled();
+    expect(mocks.updateMetadata).toHaveBeenLastCalledWith({
+      where: { id: "metadata", prepaidUntil: now },
+      data: { prepaidUntil: new Date("2030-01-01T00:00:00Z"), prepaidAmountCents: 600 },
+    });
+  });
+
+  it("finishes a retry when Stripe says the same settlement was already made", async () => {
+    mocks.charge.mockRejectedValueOnce(Object.assign(new Error("Keys for idempotent requests can only be used with the same parameters"), { type: "StripeIdempotencyError" }));
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await terminate(instanceId)).status).toBe(200);
+    expect(logged).not.toHaveBeenCalledWith(expect.stringContaining("credit it by hand"), expect.anything());
+    expect(mocks.deleteMetadata).toHaveBeenCalledWith({ where: { id: "metadata" } });
+  });
+
+  it("lists the team's GPUs before deleting, so a later 403 can only mean this GPU is gone", async () => {
+    const order: string[] = [];
+    mocks.subscriptions.mockImplementationOnce(async () => { order.push("list"); return []; });
+    mocks.deleteInstance.mockImplementationOnce(async () => { order.push("delete GPU"); });
+    expect((await terminate(instanceId)).status).toBe(200);
+    expect(order).toEqual(["list", "delete GPU"]);
   });
 
   it("refuses a GPU with no hosted.ai instance id instead of calling the retired pool API", async () => {

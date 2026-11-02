@@ -182,6 +182,7 @@ beforeEach(() => {
   mockCreateInvoiceForPayment.mockResolvedValue(undefined);
   Object.values(lifecycleMock).forEach((fn) => fn.mockResolvedValue(undefined));
   Object.values(hostedaiMock).forEach((fn) => fn.mockResolvedValue(undefined));
+  hostedaiMock.getPoolSubscriptions.mockResolvedValue([]);
   hostedaiMock.getDefaultPolicies.mockResolvedValue({
     pricing: "pol-pricing",
     resource: "pol-resource",
@@ -379,6 +380,23 @@ describe("handleSubscriptionCanceled", () => {
     expect(hostedaiMock.deleteInstance).toHaveBeenCalledWith(pods[1].instanceId);
     expect(prismaMock.podMetadata.delete).toHaveBeenCalledWith({ where: { id: "7" } });
     expect(prismaMock.podMetadata.delete).toHaveBeenCalledWith({ where: { id: "8" } });
+    expect(lifecycleMock.recordChurn).toHaveBeenCalledWith(CUSTOMER_ID);
+  });
+
+  it("logs a GPU it can never stop for an admin, rather than failing the event forever", async () => {
+    stripeMock.customers.retrieve.mockResolvedValue(
+      makeCustomer({ metadata: { hostedai_team_id: TEAM_ID } })
+    );
+    const legacy = { id: "5", subscriptionId: "12", instanceId: null, billingType: "monthly" };
+    prismaMock.podMetadata.findMany.mockResolvedValue([legacy]);
+    prismaMock.podMetadata.findFirst.mockResolvedValue(legacy);
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await deliver(canceledEvent());
+
+    expect(res.status).toBe(200);
+    expect(logged).toHaveBeenCalledWith(expect.stringContaining("ADMIN: stop monthly GPU 12 by hand"));
+    expect(prismaMock.podMetadata.delete).not.toHaveBeenCalled();
     expect(lifecycleMock.recordChurn).toHaveBeenCalledWith(CUSTOMER_ID);
   });
 

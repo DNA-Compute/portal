@@ -1,7 +1,6 @@
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { deleteInstance, getPoolSubscriptions, getUnifiedInstanceDetail } from "@/lib/hostedai";
-import type { PoolSubscription } from "@/lib/hostedai";
 import { getPodGpuCount, getPodHourlyRateCents, getPodStoppedHourlyRateCents } from "@/lib/pod-billing";
 import { getStoppedInstanceRatePercent } from "@/lib/pricing";
 
@@ -55,47 +54,25 @@ export async function deleteGpu(instanceId: string): Promise<void> {
   }
 }
 
-/**
- * Takes over the GPU's billing before the final charge or credit. A billing run (/api/sync) that
- * is charging the same overdue time at this moment would otherwise be charged on top of it. If a
- * run got there first, the GPU is now paid ahead, and the paid time it saved is used instead,
- * so the unused part is credited back. Updates podMetadata in place.
- */
-async function claimFinalSettlement(
-  podMetadata: { id: string; prepaidUntil: Date | null; prepaidAmountCents: number | null },
-  now: Date,
-): Promise<Date> {
-  const prepaidUntil = new Date(podMetadata.prepaidUntil!);
-  if (now < prepaidUntil) return prepaidUntil;
-  const claimed = await prisma.podMetadata.updateMany({
-    where: { id: podMetadata.id, prepaidUntil: podMetadata.prepaidUntil },
-    data: { prepaidUntil: now },
-  });
-  if (claimed.count > 0) return prepaidUntil;
-  const current = await prisma.podMetadata.findUnique({
-    where: { id: podMetadata.id },
-    select: { prepaidUntil: true, prepaidAmountCents: true },
-  });
-  if (!current?.prepaidUntil) throw new Error("Billing changed during termination; try again");
-  Object.assign(podMetadata, current);
-  return current.prepaidUntil;
-}
-
 export interface TerminatedGpu {
   instanceId: string;
   displayName?: string;
   productId?: string | null;
-  /** False when the GPU was deleted but its final credit or charge failed; the record is kept for review. */
+  /** False when the GPU was deleted but crediting its unused time failed; logged for a manual credit. */
   settled: boolean;
 }
 
 /**
  * The one way to end a GPU: customer Terminate, snapshot-and-terminate, admin Terminate and
  * monthly cancellation all come here. Order matters:
- *   1. read everything settlement needs (refuse here, and nothing has changed);
- *   2. delete the GPU in hosted.ai (if that fails, nothing has changed either);
- *   3. settle the hourly bill once, under the key settle_<record id>;
- *   4. forget our record.
+ *   1. check everything settlement needs, and list the team's GPUs once (refuse here, and nothing
+ *      has changed). The listing also proves the hosted.ai key works, so a 403 for this GPU later
+ *      means the GPU is gone, not that the key is bad;
+ *   2. charge overdue time. It was used whatever happens next, so it goes first, and a failed
+ *      charge stops the termination with nothing changed;
+ *   3. delete the GPU in hosted.ai;
+ *   4. credit the unused part of the paid half hour, only now that the GPU is gone;
+ *   5. forget our record.
  * Hourly GPUs settle against the account that paid for them (the record's stripeCustomerId).
  */
 export async function terminateGpu(id: string, teamId: string): Promise<TerminatedGpu> {
@@ -108,24 +85,31 @@ export async function terminateGpu(id: string, teamId: string): Promise<Terminat
   }
 
   const configured = Boolean(podMetadata && (podMetadata.hourlyRateBasis === "per_instance" || podMetadata.launchConfiguration || podMetadata.rateSnapshot));
-  const hourly = Boolean(podMetadata?.prepaidUntil && podMetadata.hourlyRateCents && podMetadata.billingType !== "monthly");
-  if (configured && podMetadata?.billingType !== "monthly" && (!podMetadata?.prepaidUntil || getPodHourlyRateCents(podMetadata, 1) === null)) {
+  const hourly = podMetadata?.prepaidUntil && podMetadata.hourlyRateCents && podMetadata.billingType !== "monthly" ? podMetadata : null;
+  const savedPayment = podMetadata?.prepaidAmountCents;
+  if ((configured && podMetadata?.billingType !== "monthly" && (!podMetadata?.prepaidUntil || getPodHourlyRateCents(podMetadata, 1) === null))
+    || (hourly && savedPayment != null && !(Number.isFinite(savedPayment) && savedPayment >= 0))) {
     throw new TerminationError("Captured billing data must be repaired before termination.", 409, "SETTLEMENT_REQUIRED");
   }
 
-  // Overdue time is priced by what the GPU is doing now, so read that before it is deleted.
-  // Refunds use the saved payment and must not depend on hosted.ai answering.
+  const subscription = (await getPoolSubscriptions(teamId)).find(sub => String(sub.id) === instanceId);
   const now = new Date();
-  let subscription: PoolSubscription | undefined;
-  if (hourly && (now >= podMetadata!.prepaidUntil! || !configured)) {
-    try {
-      subscription = (await getPoolSubscriptions(teamId)).find(sub => String(sub.id) === instanceId);
-    } catch (error) {
-      if (configured && now >= podMetadata!.prepaidUntil!) throw error;
-      console.warn("[Billing] Provider status unavailable during prepaid refund:", error);
-    }
-    if (configured && now >= podMetadata!.prepaidUntil! && !subscription) {
-      throw new Error("Instance status unavailable for final settlement");
+  let runningRateCents = 0;
+  if (hourly) {
+    const gpuCount = getPodGpuCount(hourly, subscription?.per_pod_info?.vgpu_count);
+    const rate = getPodHourlyRateCents(hourly, gpuCount);
+    if (rate === null) throw new Error("Missing valid captured instance pricing");
+    runningRateCents = rate;
+    if (now >= hourly.prepaidUntil!) {
+      // Overdue time is priced by what the GPU is doing now.
+      if (configured && !subscription) throw new Error("Instance status unavailable for final settlement");
+      const isStopped = Boolean(subscription?.pods?.length && subscription.pods.every(pod =>
+        ["stopped", "paused", "reserved"].includes((pod.pod_status || "").toLowerCase())));
+      const overdueRateCents = isStopped && hourly.hourlyRateBasis === "per_instance"
+        ? getPodStoppedHourlyRateCents(hourly, gpuCount, getStoppedInstanceRatePercent())
+        : runningRateCents;
+      if (overdueRateCents === null) throw new Error("Missing valid captured instance pricing");
+      await chargeOverdue(hourly, overdueRateCents, now);
     }
   }
 
@@ -134,14 +118,17 @@ export async function terminateGpu(id: string, teamId: string): Promise<Terminat
   let settled = true;
   if (hourly) {
     try {
-      await settleFinalUsage(podMetadata!, subscription, now);
+      await creditUnused(hourly, runningRateCents, now);
     } catch (error) {
       settled = false;
-      console.error(`[Billing] GPU ${instanceId} was deleted but its final settlement failed; record kept for review:`, error);
+      console.error(`[Billing] GPU ${instanceId} was deleted but crediting its unused time to ${hourly.stripeCustomerId} failed; credit it by hand:`, error);
     }
   }
-  if (podMetadata && settled) {
-    await prisma.podMetadata.delete({ where: { id: podMetadata.id } }).catch(() => {});
+  if (podMetadata) {
+    await prisma.podMetadata.delete({ where: { id: podMetadata.id } }).catch((error) => {
+      // Billing forgets it on its own once it is due, as hosted.ai no longer has the GPU.
+      console.error(`[Terminate] Could not forget the record of deleted GPU ${instanceId}:`, error);
+    });
   }
 
   return { instanceId, displayName: podMetadata?.displayName || undefined, productId: podMetadata?.productId, settled };
@@ -149,55 +136,70 @@ export async function terminateGpu(id: string, teamId: string): Promise<Terminat
 
 type SettlementRecord = NonNullable<Awaited<ReturnType<typeof prisma.podMetadata.findFirst>>>;
 
-/** Credits the unused part of the paid half hour, or charges the time since it ended. */
-async function settleFinalUsage(podMetadata: SettlementRecord, subscription: PoolSubscription | undefined, now: Date) {
-  const prepaidUntil = await claimFinalSettlement(podMetadata, now);
-  const gpuCount = getPodGpuCount(podMetadata, subscription?.per_pod_info?.vgpu_count);
-  const isStopped = Boolean(subscription?.pods?.length && subscription.pods.every(pod =>
-    ["stopped", "paused", "reserved"].includes((pod.pod_status || "").toLowerCase())));
-  // Stop does not reprice an already-paid running interval. Only overdue usage uses the current
-  // reservation rate; unused credit returns what was paid.
-  const hourlyRateCents = now >= prepaidUntil && isStopped && podMetadata.hourlyRateBasis === "per_instance"
-    ? getPodStoppedHourlyRateCents(podMetadata, gpuCount, getStoppedInstanceRatePercent())
-    : getPodHourlyRateCents(podMetadata, gpuCount);
-  if (hourlyRateCents === null) throw new Error("Missing valid captured instance pricing");
+// A settlement key names the paid-up time it settles, so Stripe refuses a repeat of the same
+// settlement (it was done already), while a later, different one goes through.
+function alreadySettled(error: unknown): boolean {
+  return (error as { type?: string } | null)?.type === "StripeIdempotencyError";
+}
 
-  const stripe = await getStripe();
-  const accountId = podMetadata.stripeCustomerId;
-  const metadata = { instance_id: podMetadata.instanceId || podMetadata.subscriptionId };
-  // One key per GPU, so a second terminate at the same moment can't settle again.
-  const options = { idempotencyKey: `settle_${podMetadata.id}` };
-
-  if (now < prepaidUntil) {
-    const usedMs = now.getTime() - (prepaidUntil.getTime() - BILLING_INTERVAL_MS);
-    const unusedMs = Math.min(BILLING_INTERVAL_MS, Math.max(0, BILLING_INTERVAL_MS - usedMs));
-    const prepaidCents = podMetadata.prepaidAmountCents ?? hourlyRateCents * BILLING_INTERVAL_MS / 3_600_000;
-    if (!Number.isFinite(prepaidCents) || prepaidCents < 0) throw new Error("Invalid saved prepayment");
-    const creditBackCents = Math.round(prepaidCents * unusedMs / BILLING_INTERVAL_MS);
-    if (creditBackCents > 0) {
-      const unusedMins = Math.round(unusedMs / 60000);
-      await stripe.customers.createBalanceTransaction(accountId, {
-        amount: -creditBackCents,
-        currency: "usd",
-        description: `GPU early termination credit: ${unusedMins} mins unused`,
-        metadata,
-      }, options);
-      console.log(`[Billing] Credited back $${(creditBackCents / 100).toFixed(2)} for early termination`);
-    }
-    return;
-  }
-
+/**
+ * Charges the time since the paid half hour ended and marks the GPU paid up to now. It takes that
+ * time over from the billing run first, so the run can't charge it too; if a run got there first,
+ * the GPU is paid ahead instead and creditUnused settles it. A failed charge gives the time back.
+ */
+async function chargeOverdue(record: SettlementRecord, rateCents: number, now: Date) {
+  const from = record.prepaidUntil!;
+  const claimed = await prisma.podMetadata.updateMany({
+    where: { id: record.id, prepaidUntil: from },
+    data: { prepaidUntil: now, prepaidAmountCents: 0 },
+  });
+  if (claimed.count === 0) return;
   // Only charge more than a minute, to avoid micro-charges.
-  const unbilledHours = (now.getTime() - prepaidUntil.getTime()) / 3_600_000;
-  if (unbilledHours <= 1 / 60) return;
-  const finalChargeCents = Math.round(unbilledHours * hourlyRateCents);
-  if (finalChargeCents <= 0) return;
-  const unbilledMins = Math.round(unbilledHours * 60);
-  await stripe.customers.createBalanceTransaction(accountId, {
-    amount: finalChargeCents,
-    currency: "usd",
-    description: `GPU final usage: ${unbilledMins} mins after prepaid period`,
-    metadata,
-  }, options);
-  console.log(`[Billing] Charged $${(finalChargeCents / 100).toFixed(2)} for final unbilled usage`);
+  const unbilledHours = (now.getTime() - from.getTime()) / 3_600_000;
+  const amount = unbilledHours > 1 / 60 ? Math.round(unbilledHours * rateCents) : 0;
+  if (amount <= 0) return;
+  try {
+    const stripe = await getStripe();
+    await stripe.customers.createBalanceTransaction(record.stripeCustomerId, {
+      amount,
+      currency: "usd",
+      description: `GPU final usage: ${Math.round(unbilledHours * 60)} mins after prepaid period`,
+      metadata: { instance_id: record.instanceId || record.subscriptionId },
+    }, { idempotencyKey: `settle_due_${record.id}_${from.getTime()}` });
+    console.log(`[Billing] Charged $${(amount / 100).toFixed(2)} for final unbilled usage`);
+  } catch (error) {
+    if (alreadySettled(error)) return;
+    await prisma.podMetadata.updateMany({
+      where: { id: record.id, prepaidUntil: now },
+      data: { prepaidUntil: from, prepaidAmountCents: record.prepaidAmountCents },
+    });
+    throw error;
+  }
+}
+
+/** Credits back the unused part of the half hour the GPU is paid up to, as saved right now. */
+async function creditUnused(record: SettlementRecord, runningRateCents: number, now: Date) {
+  const current = await prisma.podMetadata.findUnique({
+    where: { id: record.id },
+    select: { prepaidUntil: true, prepaidAmountCents: true },
+  });
+  const paidUntil = current?.prepaidUntil;
+  if (!paidUntil || now >= paidUntil) return;
+  const usedMs = now.getTime() - (paidUntil.getTime() - BILLING_INTERVAL_MS);
+  const unusedMs = Math.min(BILLING_INTERVAL_MS, Math.max(0, BILLING_INTERVAL_MS - usedMs));
+  const prepaidCents = current.prepaidAmountCents ?? runningRateCents * BILLING_INTERVAL_MS / 3_600_000;
+  const creditBackCents = Math.round(prepaidCents * unusedMs / BILLING_INTERVAL_MS);
+  if (creditBackCents <= 0) return;
+  try {
+    const stripe = await getStripe();
+    await stripe.customers.createBalanceTransaction(record.stripeCustomerId, {
+      amount: -creditBackCents,
+      currency: "usd",
+      description: `GPU early termination credit: ${Math.round(unusedMs / 60000)} mins unused`,
+      metadata: { instance_id: record.instanceId || record.subscriptionId },
+    }, { idempotencyKey: `settle_credit_${record.id}_${paidUntil.getTime()}` });
+    console.log(`[Billing] Credited back $${(creditBackCents / 100).toFixed(2)} for early termination`);
+  } catch (error) {
+    if (!alreadySettled(error)) throw error;
+  }
 }

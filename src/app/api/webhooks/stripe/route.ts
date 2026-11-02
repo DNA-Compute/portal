@@ -18,7 +18,7 @@ import { recordFirstDeposit, recordSubscription, recordChurn, recordReactivation
 import { processVoucherRedemption } from "@/lib/voucher";
 import { sendOnboardingEvent } from "@/lib/email/onboarding-events";
 import { prisma } from "@/lib/prisma";
-import { terminateGpu } from "@/lib/gpu-termination";
+import { terminateGpu, TerminationError } from "@/lib/gpu-termination";
 import { cacheCustomer } from "@/lib/customer-cache";
 import { getBrandName } from "@/lib/branding";
 import { createInvoiceForPayment } from "@/lib/invoice";
@@ -919,7 +919,9 @@ async function handleSubscriptionCanceled(
 
 /**
  * Ends the monthly GPUs on one Stripe subscription through terminateGpu, which deletes the GPU in
- * hosted.ai before forgetting our record. Returns how many could not be stopped.
+ * hosted.ai before forgetting our record. Returns how many could not be stopped this time and may
+ * stop on a retry. One that can never be stopped from here (no hosted.ai team, or a GPU on the
+ * retired pool system) is logged for an admin instead, so Stripe doesn't redeliver it in vain.
  */
 async function endMonthlyGpus(stripeSubscriptionId: string, teamId: string | undefined, reason: string): Promise<number> {
   const monthlyPods = await prisma.podMetadata.findMany({
@@ -927,13 +929,21 @@ async function endMonthlyGpus(stripeSubscriptionId: string, teamId: string | und
   });
   let unstopped = 0;
   for (const pod of monthlyPods) {
+    const gpu = pod.instanceId || pod.subscriptionId;
+    if (!teamId) {
+      console.error(`[Webhook] ADMIN: stop monthly GPU ${gpu} by hand (${reason}, ${stripeSubscriptionId}): no hosted.ai team for this customer`);
+      continue;
+    }
     try {
-      if (!teamId) throw new Error("No hosted.ai team for this customer");
-      await terminateGpu(pod.instanceId || pod.subscriptionId, teamId);
-      console.log(`Ended monthly GPU ${pod.instanceId || pod.subscriptionId} (${reason}, ${stripeSubscriptionId})`);
+      await terminateGpu(gpu, teamId);
+      console.log(`Ended monthly GPU ${gpu} (${reason}, ${stripeSubscriptionId})`);
     } catch (error) {
+      if (error instanceof TerminationError) {
+        console.error(`[Webhook] ADMIN: stop monthly GPU ${gpu} by hand (${reason}, ${stripeSubscriptionId}): ${error.message}`);
+        continue;
+      }
       unstopped++;
-      console.error(`Failed to end monthly GPU ${pod.instanceId || pod.subscriptionId} (${reason}):`, error);
+      console.error(`Failed to end monthly GPU ${gpu} (${reason}); Stripe will send the event again:`, error);
     }
   }
   return unstopped;

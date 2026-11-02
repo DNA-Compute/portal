@@ -100,7 +100,7 @@ describe("admin Terminate", () => {
     expect((await adminTerminate()).status).toBe(200);
     expect(mocks.deleteInstance).toHaveBeenCalledWith(instanceId);
     expect(mocks.unsubscribe).not.toHaveBeenCalled();
-    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -150 }), { idempotencyKey: "settle_metadata" });
+    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -150 }), { idempotencyKey: expect.stringMatching(/^settle_credit_metadata_\d+$/) });
     expect(mocks.deleteMetadata).toHaveBeenCalledWith({ where: { id: "metadata" } });
   });
 
@@ -121,7 +121,7 @@ describe("save snapshot and terminate", () => {
     expect(mocks.deleteInstance).toHaveBeenCalledTimes(1);
     expect(mocks.deleteInstance).toHaveBeenCalledWith(instanceId);
     expect(mocks.unsubscribe).not.toHaveBeenCalled();
-    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -150 }), { idempotencyKey: "settle_metadata" });
+    expect(mocks.charge).toHaveBeenCalledWith("cus_owner", expect.objectContaining({ amount: -150 }), { idempotencyKey: expect.stringMatching(/^settle_credit_metadata_\d+$/) });
     expect(mocks.logTerminated).toHaveBeenCalledWith("cus_owner", "H100", "GPU", instanceId);
   });
 
