@@ -31,7 +31,7 @@ const state = vi.hoisted(() => ({
   volumes: new Map<string, Array<{ id: number; team_id: string; size_in_gb: number }>>(),
   poolCache: null as null | { pools: Array<{ id: number; name: string; pods: Array<{ teamId: string; status: string }> }> },
 }));
-const mocks = vi.hoisted(() => ({ refill: vi.fn(), deleteInstance: vi.fn(), deleteVolume: vi.fn() }));
+const mocks = vi.hoisted(() => ({ refill: vi.fn(), deleteInstance: vi.fn(), deleteVolume: vi.fn(), instanceDetail: vi.fn() }));
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 const sameTime = (a: Date | null, b: Date | null) => (a?.getTime() ?? null) === (b?.getTime() ?? null);
@@ -62,6 +62,11 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
       const rows = state.pods.filter(p => p.subscriptionId === where.subscriptionId && sameTime(p.prepaidUntil, where.prepaidUntil));
       rows.forEach(p => Object.assign(p, data));
       return { count: rows.length };
+    },
+    deleteMany: async ({ where }: { where: { subscriptionId: string; prepaidUntil: Date | null } }) => {
+      const before = state.pods.length;
+      state.pods = state.pods.filter(p => !(p.subscriptionId === where.subscriptionId && sameTime(p.prepaidUntil, where.prepaidUntil)));
+      return { count: before - state.pods.length };
     },
     update: async () => ({}),
     create: async () => ({}),
@@ -101,6 +106,7 @@ vi.mock("@/lib/hostedai", () => ({
   getSharedVolumes: async (teamId: string) => state.volumes.get(teamId) ?? [],
   deleteSharedVolume: mocks.deleteVolume,
   deleteInstance: mocks.deleteInstance,
+  getUnifiedInstanceDetail: mocks.instanceDetail,
 }));
 vi.mock("@/lib/wallet", () => ({ checkAndRefillWallet: mocks.refill, WALLET_CONFIG: {} }));
 vi.mock("@/lib/pricing", () => ({ getStoragePricePerGBHourCents: () => state.storagePrice, getStoppedInstanceRatePercent: () => 25 }));
@@ -142,6 +148,7 @@ beforeEach(() => {
   mocks.refill.mockReset().mockResolvedValue({ refilled: false });
   mocks.deleteInstance.mockReset().mockResolvedValue(undefined);
   mocks.deleteVolume.mockReset();
+  mocks.instanceDetail.mockReset().mockResolvedValue({ status: "running" });
 });
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
@@ -321,6 +328,56 @@ describe("/api/sync negative balance", () => {
     await sync();
     expect(mocks.deleteInstance.mock.calls).toEqual([["hourly"]]);
     expect(mocks.deleteVolume).not.toHaveBeenCalled();
+  });
+});
+
+describe("/api/sync GPUs that no longer exist", () => {
+  const gone = () => new Error("Hosted.ai API error (404): instance not found");
+
+  it("forgets a GPU hosted.ai has deleted, so it is not reported as a billing error every run", async () => {
+    // A GPU stopped for debt or failed to start: missing from the team's list, and hosted.ai says it is gone.
+    addCustomer("cus", -10_000);
+    addGpu("gpu", new Date(NOW - 1000));
+    state.subs.set("team", []);
+    mocks.instanceDetail.mockRejectedValue(gone());
+    const body = await (await sync()).json();
+    expect(state.pods).toHaveLength(0);
+    expect(state.charges).toHaveLength(0);
+    expect(body.summary.podsErrors).toBe(0);
+  });
+
+  it("keeps billing the record of a GPU hosted.ai still has but left out of the team's list", async () => {
+    addCustomer("cus", -10_000);
+    addGpu("gpu", new Date(NOW - 1000));
+    state.subs.set("team", []);
+    const body = await (await sync()).json();
+    expect(state.pods).toHaveLength(1);
+    expect(body.summary.podsErrors).toBe(1);
+  });
+
+  it("keeps the record when hosted.ai cannot be asked", async () => {
+    addCustomer("cus", -10_000);
+    addGpu("gpu", new Date(NOW - 1000));
+    state.subs.set("team", []);
+    mocks.instanceDetail.mockRejectedValue(new Error("TIMEOUT: Request to /instances/unified/gpu timed out after 30000ms"));
+    await sync();
+    expect(state.pods).toHaveLength(1);
+  });
+
+  it("forgets a GPU stopped for debt once hosted.ai has deleted it", async () => {
+    addCustomer("cus", 0);
+    addGpu("gpu", new Date(NOW - 1000));
+    mocks.refill.mockResolvedValue({ refilled: false, error: "No payment method on file", paymentFailed: true });
+    mocks.deleteInstance.mockImplementation(async () => { state.subs.set("team", []); });
+    await sync();
+    expect(mocks.deleteInstance.mock.calls).toEqual([["gpu"]]);
+    expect(state.pods).toHaveLength(1);
+
+    mocks.instanceDetail.mockRejectedValue(gone());
+    vi.setSystemTime(NOW + 2 * BLOCK_MS);
+    const body = await (await sync()).json();
+    expect(state.pods).toHaveLength(0);
+    expect(body.summary.podsErrors).toBe(0);
   });
 });
 

@@ -235,7 +235,7 @@ describe("monitorDeployStatus", () => {
     // Claim runs first (idempotency guard), refund second.
     expect(mockUpdateMany).toHaveBeenCalledWith({
       where: { instanceId: "i-bad", deployStatus: "provisioning" },
-      data: { deployStatus: "failed_refunded", deployStatusReason: "terminal status: error" },
+      data: { deployStatus: "failed_refunded", deployStatusReason: "terminal status: error", hourlyRateCents: 0 },
     });
     expect(mockRefundDeployment).toHaveBeenCalledWith(
       "cus_1",

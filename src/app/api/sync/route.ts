@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordBillingRun } from "@/lib/billing-heartbeat";
 import { getStripe } from "@/lib/stripe";
-import { getSharedVolumes, getPoolSubscriptions, type SharedVolume } from "@/lib/hostedai";
+import { getSharedVolumes, getPoolSubscriptions, getUnifiedInstanceDetail, type SharedVolume } from "@/lib/hostedai";
 import { checkAndRefillWallet, WALLET_CONFIG } from "@/lib/wallet";
 import { getStoragePricePerGBHourCents, getStoppedInstanceRatePercent } from "@/lib/pricing";
 import { computeStorageCharge } from "@/lib/storage-billing";
@@ -57,7 +57,7 @@ interface PodBillingResult {
   subscriptionId: string;
   customerId: string;
   email?: string;
-  status: "billed" | "not_due" | "error" | "skipped_stopped";
+  status: "billed" | "not_due" | "error" | "skipped_stopped" | "ended";
   amountCents?: number;
   nextBillingAt?: Date;
   error?: string;
@@ -371,9 +371,18 @@ export async function POST(request: NextRequest) {
           ? subscriptions.find(s => s.id === pod.instanceId)
           : subscriptions.find(s => String(s.id) === pod.subscriptionId);
 
+        // A GPU stopped for debt, failed to start or deleted in hosted.ai leaves its record here. Forget
+        // it only once hosted.ai says the GPU itself is gone, not just missing from the team's list,
+        // so a GPU that is still running is never left unbilled. Otherwise it is skipped as an error.
+        if (!subscription && pod.instanceId && await isInstanceGone(pod.instanceId)) {
+          await prisma.podMetadata.deleteMany({ where: { subscriptionId: pod.subscriptionId, prepaidUntil: pod.prepaidUntil } });
+          console.log(`[Sync] Forgot pod ${pod.subscriptionId}: hosted.ai no longer has instance ${pod.instanceId}`);
+          podResults.push({ subscriptionId: pod.subscriptionId, customerId: pod.stripeCustomerId, email: customerEmail, status: "ended" });
+          continue;
+        }
+
         if (!subscription || (subscription.status !== "subscribed" && subscription.status !== "active")) {
           console.log(`[Sync] Skipping pod ${pod.subscriptionId}: subscription not active (status: ${subscription?.status || "not found"})`);
-          // SAFETY: Never delete pod_metadata — just skip billing
           podResults.push({
             subscriptionId: pod.subscriptionId,
             customerId: pod.stripeCustomerId,
@@ -1103,4 +1112,14 @@ export async function GET(request: NextRequest) {
       autoRefillAmountCents: WALLET_CONFIG.autoRefillAmountCents,
     },
   });
+}
+
+/** True only when hosted.ai answers that it has no such instance (404); any other answer or error is not proof. */
+async function isInstanceGone(instanceId: string): Promise<boolean> {
+  try {
+    await getUnifiedInstanceDetail(instanceId);
+    return false;
+  } catch (error) {
+    return error instanceof Error && error.message.includes("(404)");
+  }
 }

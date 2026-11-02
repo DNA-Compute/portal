@@ -170,9 +170,11 @@ async function failDeploy(
   try {
     const result = await prisma.podMetadata.updateMany({
       where: { instanceId: args.instanceId, deployStatus: "provisioning" },
+      // A zero rate stops billing and terminate settlement on a GPU whose prepay is refunded here.
       data: {
         deployStatus: "failed_refunded",
         deployStatusReason: reason.slice(0, 500),
+        hourlyRateCents: 0,
       },
     });
     claimed = result.count;
