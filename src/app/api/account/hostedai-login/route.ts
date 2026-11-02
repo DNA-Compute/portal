@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { createOneTimeLogin, ensureRoles } from "@/lib/hostedai";
+import { getHaiRoleForPacketRole } from "@/lib/auth/role-permissions";
 
 /**
  * Generate a fresh one-time login URL for hosted.ai dashboard.
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedCustomer(request);
     if (auth instanceof NextResponse) return auth;
-    const { payload, teamId } = auth;
+    const { payload, teamId, membership } = auth;
 
     if (!teamId) {
       return NextResponse.json(
@@ -21,13 +22,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a fresh OTL token
+    // Generate a fresh OTL token, in the member's own role: hosted.ai saves the role it is given,
+    // so team admin here would make every member a team admin there (as /verify does, PA-175).
     const roles = await ensureRoles();
     const otl = await createOneTimeLogin({
       email: payload.email,
       send_email_invite: false,
       teamId: teamId,
-      roleId: roles.teamAdmin,
+      roleId: roles[getHaiRoleForPacketRole(membership.role, membership.isOwner)],
     });
 
     return NextResponse.json({
