@@ -144,19 +144,22 @@ export async function getTwoFactorStatus(email: string): Promise<{
 }
 
 /**
- * Start 2FA setup - creates a pending record with secret
+ * Start 2FA setup - creates a pending record with secret.
+ * Returns null while 2FA is on: replacing it would switch it off without a code, so whoever holds
+ * only a login link could remove it. Turning it off first needs a code.
  */
 export async function startTwoFactorSetup(email: string): Promise<{
   secret: string;
   qrCode: string;
   backupCodes: string[];
-}> {
+} | null> {
   const normalizedEmail = email.toLowerCase();
+  if (await isTwoFactorEnabled(normalizedEmail)) return null;
   const secret = generateSecret();
   const backupCodes = generateBackupCodes();
   const hashedCodes = backupCodes.map(hashBackupCode);
 
-  // Upsert - either create new or update existing (in case of re-setup)
+  // Upsert - either create new or replace a setup that was never confirmed
   await prisma.twoFactorAuth.upsert({
     where: { email: normalizedEmail },
     create: {

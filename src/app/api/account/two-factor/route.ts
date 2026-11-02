@@ -75,6 +75,12 @@ export async function POST(request: NextRequest) {
       case "setup": {
         // Start 2FA setup - returns QR code and backup codes
         const setupData = await startTwoFactorSetup(payload.email);
+        if (!setupData) {
+          return NextResponse.json(
+            { error: "Two-factor authentication is already on. Turn it off with a code first to set it up again." },
+            { status: 409 }
+          );
+        }
         return NextResponse.json({
           qrCode: setupData.qrCode,
           secret: setupData.secret, // Show secret for manual entry

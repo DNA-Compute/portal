@@ -68,6 +68,12 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "setup": {
         const setupData = await startTwoFactorSetup(session.email);
+        if (!setupData) {
+          return NextResponse.json(
+            { error: "Two-factor authentication is already on. Turn it off with a code first to set it up again." },
+            { status: 409 }
+          );
+        }
         return NextResponse.json({
           qrCode: setupData.qrCode,
           secret: setupData.secret,
