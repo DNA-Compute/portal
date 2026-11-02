@@ -165,7 +165,8 @@ export default function HuggingFaceTab({
 
     try {
       const res = await fetch(
-        `/api/huggingface/model-memory?modelId=${encodeURIComponent(modelId)}`
+        `/api/huggingface/model-memory?modelId=${encodeURIComponent(modelId)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.ok) {
         const data = await res.json();

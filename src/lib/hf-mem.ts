@@ -8,6 +8,10 @@
 
 const MAX_METADATA_SIZE = 100_000;
 const REQUEST_TIMEOUT = 10_000;
+// The file says how big its header is, and anyone can publish a model: without these caps one
+// crafted repo makes the server download gigabytes, or thousands of files, into memory.
+const MAX_HEADER_BYTES = 100 * 1024 * 1024; // the safetensors format's own limit
+const MAX_SHARDS = 500;
 
 // Safetensors data types and their byte sizes
 const DTYPE_BYTES: Record<string, number> = {
@@ -84,6 +88,7 @@ async function fetchSafetensorsMetadata(
 
     // First 8 bytes = little-endian uint64 (metadata size)
     const metadataSize = Number(view.getBigUint64(0, true));
+    if (metadataSize > MAX_HEADER_BYTES) return null;
 
     let metadataBuffer: Uint8Array;
 
@@ -97,7 +102,7 @@ async function fetchSafetensorsMetadata(
         ...headers,
       };
 
-      const remainingResponse = await fetch(url, { headers: remainingHeaders });
+      const remainingResponse = await fetch(url, { headers: remainingHeaders, signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
       const remainingBuffer = await remainingResponse.arrayBuffer();
 
       // Combine buffers
@@ -228,6 +233,7 @@ export async function getModelMemory(
       );
       const index = await indexResponse.json();
       const shardFiles = [...new Set(Object.values(index.weight_map))] as string[];
+      if (shardFiles.length > MAX_SHARDS) return null;
 
       // Fetch metadata from all shards in parallel
       const metadataPromises = shardFiles.map((shard) =>
@@ -281,6 +287,7 @@ export async function getModelMemory(
             const shardIndexResponse = await fetch(`${baseUrl}/${pattern}`, { headers });
             const shardIndex = await shardIndexResponse.json();
             const shardFiles = [...new Set(Object.values(shardIndex.weight_map))] as string[];
+            if (shardFiles.length > MAX_SHARDS) return null;
 
             const mergedMetadata: SafetensorsMetadata = {};
             for (const shard of shardFiles) {
