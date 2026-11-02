@@ -91,7 +91,7 @@ export function adminHasPassword(email: string): boolean {
  */
 export function isFirstRun(): boolean {
   if (!isOSS()) return false;
-  const data = readAdmins();
+  const data = readAdminsStrict();
   return data.admins.length === 0;
 }
 
@@ -104,7 +104,7 @@ export async function bootstrapFirstAdminWithPassword(
   password: string
 ): Promise<boolean> {
   if (!isOSS()) return false;
-  const data = readAdmins();
+  const data = readAdminsStrict();
   if (data.admins.length > 0) return false;
   if (!isAllowedAdminDomain(email)) return false;
 
@@ -130,20 +130,30 @@ function ensureAdminsFile(): void {
   }
 }
 
+/**
+ * Throws when the file cannot be read or parsed. First-run setup must use this: reading an
+ * unreadable file as "no admins" would let any visitor create an admin.
+ */
+function readAdminsStrict(): AdminsData {
+  ensureAdminsFile();
+  return JSON.parse(fs.readFileSync(ADMINS_FILE, "utf-8"));
+}
+
+/** An unreadable file reads as no admins, which denies every admin login. */
 function readAdmins(): AdminsData {
   try {
-    ensureAdminsFile();
-    const data = fs.readFileSync(ADMINS_FILE, "utf-8");
-    const parsed = JSON.parse(data);
-    return parsed;
+    return readAdminsStrict();
   } catch (error) {
     console.error(`Failed to read admins file: ${error}`);
     return { admins: [] };
   }
 }
 
+/** Written whole to a temporary file and renamed into place, so a crash never leaves it half-written. */
 function writeAdmins(data: AdminsData): void {
-  fs.writeFileSync(ADMINS_FILE, JSON.stringify(data, null, 2));
+  const tmp = `${ADMINS_FILE}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, ADMINS_FILE);
 }
 
 export function getAdmins(): Admin[] {
