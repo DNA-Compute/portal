@@ -346,6 +346,16 @@ describe("/api/sync GPUs that no longer exist", () => {
     expect(body.summary.podsErrors).toBe(0);
   });
 
+  it("treats hosted.ai's 403 for a deleted instance as gone", async () => {
+    // hosted.ai answers "you are not authorized" for an instance it has deleted (seen on staging).
+    addCustomer("cus", -10_000);
+    addGpu("gpu", new Date(NOW - 1000));
+    state.subs.set("team", []);
+    mocks.instanceDetail.mockRejectedValue(new Error("Hosted.ai API error (403): you are not authorized to perform this action"));
+    await sync();
+    expect(state.pods).toHaveLength(0);
+  });
+
   it("keeps billing the record of a GPU hosted.ai still has but left out of the team's list", async () => {
     addCustomer("cus", -10_000);
     addGpu("gpu", new Date(NOW - 1000));

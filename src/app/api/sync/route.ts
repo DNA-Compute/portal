@@ -1114,12 +1114,17 @@ export async function GET(request: NextRequest) {
   });
 }
 
-/** True only when hosted.ai answers that it has no such instance (404); any other answer or error is not proof. */
+/**
+ * True only when hosted.ai refuses the instance itself. For a deleted instance it answers 403 ("you
+ * are not authorized"), seen on staging, rather than 404. It is only asked right after listing the
+ * team's instances worked with the same key, so a 403 here is about this instance, not a revoked
+ * key. Any other answer or error is not proof.
+ */
 async function isInstanceGone(instanceId: string): Promise<boolean> {
   try {
     await getUnifiedInstanceDetail(instanceId);
     return false;
   } catch (error) {
-    return error instanceof Error && error.message.includes("(404)");
+    return error instanceof Error && /\((403|404)\)/.test(error.message);
   }
 }
