@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hostedaiRequest } from "@/lib/hostedai/client";
+import { createOneTimeLogin } from "@/lib/hostedai/teams";
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch as typeof fetch;
@@ -38,6 +39,18 @@ describe("hosted.ai client logs", () => {
     for (const secret of ["s3cret-pass", "ssh-pass-123", "tok-abc", "body-pass-9", "key-xyz"]) expect(text).not.toContain(secret);
     expect(text).toContain("ubuntu@host");
     expect(text).toContain("[redacted]");
+  });
+
+  it("logs neither the password nor the link of a one-time console login", async () => {
+    // The link signs whoever opens it in to the customer's hosted.ai console.
+    mockFetch.mockResolvedValueOnce(ok({ url: "https://hai.example/otl/LOGIN-LINK", expires_at: "soon" }));
+
+    const otl = await createOneTimeLogin({ email: "c@example.com", teamId: "team", roleId: "role", password: "onboard-pass-7" });
+
+    expect(otl.url).toBe("https://hai.example/otl/LOGIN-LINK");
+    const text = logged();
+    expect(text).not.toContain("onboard-pass-7");
+    expect(text).not.toContain("LOGIN-LINK");
   });
 
   it("redacts secrets in a logged error body", async () => {

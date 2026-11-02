@@ -52,7 +52,8 @@ export function clearCache(keyPattern?: string): void {
   }
 }
 
-const SECRET_KEY = /pass|secret|token|api_?key|private|credential/i;
+// "url" covers one-time login links, which sign whoever opens them in to the console.
+const SECRET_KEY = /pass|secret|token|api_?key|private|credential|^url$/i;
 
 /** A copy of an API payload that is safe to log: values under secret-looking keys are replaced. */
 function redactForLog(value: unknown): unknown {

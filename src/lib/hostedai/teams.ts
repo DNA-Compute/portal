@@ -105,11 +105,6 @@ export async function onboardUser(params: {
   const url = `${await getApiUrl()}/api/onboard`;
 
   console.log("Onboarding user:", params.email, "with name:", params.name);
-  console.log("Password details - length:", params.password.length,
-    "hasUpper:", /[A-Z]/.test(params.password),
-    "hasLower:", /[a-z]/.test(params.password),
-    "hasDigit:", /[0-9]/.test(params.password),
-    "hasSpecial:", /#/.test(params.password));
 
   try {
     const requestBody = {
@@ -180,8 +175,6 @@ export async function createOneTimeLogin(params: {
       password: params.password || process.env.DEFAULT_USER_PASSWORD || generateSecurePassword(),
     },
   };
-
-  console.log("Creating OTL with data:", JSON.stringify(requestData, null, 2));
 
   return hostedaiRequest<OTLResponse>("POST", "/create-otl", requestData);
 }

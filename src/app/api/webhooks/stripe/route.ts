@@ -785,7 +785,7 @@ async function handleCheckoutCompleted(
   // So OTL should NOT include user_details - this makes shouldOnboard=false
   console.log("=== CREATING ONE-TIME LOGIN ===");
   try {
-    const otl = await createOneTimeLogin({
+    await createOneTimeLogin({
       email: customerEmail,
       send_email_invite: false, // We send our own email
       teamId: team.id,
@@ -793,7 +793,7 @@ async function handleCheckoutCompleted(
       // NO preOnboard/userName/password - user is already onboarded via team creation
     });
 
-    console.log(`✅ Created OTL for ${customerEmail}: ${otl.url}`);
+    console.log(`✅ Created OTL for ${customerEmail}`);
   } catch (error) {
     console.error("❌ WARNING: Failed to create OTL (non-fatal):", error);
     // Don't throw - OTL is optional, user can still log in with password
