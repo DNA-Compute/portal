@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { hostedaiRequest } from "@/lib/hostedai/client";
+import { hostedaiRequest, resetConnectionPause } from "@/lib/hostedai/client";
 import { createOneTimeLogin } from "@/lib/hostedai/teams";
 
 const mockFetch = vi.fn();
@@ -14,6 +14,7 @@ const ok = (body: unknown) => ({ ok: true, status: 200, headers: new Headers(), 
 const connectTimeout = () => Object.assign(new TypeError("fetch failed"), { cause: { code: "UND_ERR_CONNECT_TIMEOUT" } });
 
 beforeEach(() => {
+  resetConnectionPause();
   mockFetch.mockReset();
   logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -126,5 +127,66 @@ describe("hosted.ai client retries", () => {
     await expect(hostedaiRequest("POST", "/instances", {})).rejects.toThrow(/redirected .*elsewhere\.example.*HOSTEDAI_API_URL/);
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockFetch.mock.calls[0][1].redirect).toBe("manual");
+  });
+});
+
+describe("hosted.ai client pause when it cannot connect", () => {
+  /** A request whose every attempt cannot connect; resolves to the error it ended with. */
+  async function unreachable(): Promise<Error> {
+    const pending = hostedaiRequest("GET", "/instances").catch((e: Error) => e);
+    await vi.runAllTimersAsync();
+    return pending;
+  }
+
+  it("fails calls at once, without connecting, after three requests in a row could not connect", async () => {
+    mockFetch.mockRejectedValue(connectTimeout());
+    for (let i = 0; i < 3; i++) await unreachable();
+    const attempts = mockFetch.mock.calls.length;
+
+    await expect(hostedaiRequest("GET", "/teams")).rejects.toThrow(/cannot be reached; not calling GET \/teams until/);
+    expect(mockFetch.mock.calls.length).toBe(attempts);
+  });
+
+  it("counts a request whose retry was cut short by its deadline", async () => {
+    mockFetch.mockRejectedValue(connectTimeout());
+    for (let i = 0; i < 3; i++) {
+      const pending = hostedaiRequest("GET", "/instances", undefined, 600).catch(() => undefined);
+      await vi.runAllTimersAsync();
+      await pending;
+    }
+    await expect(hostedaiRequest("GET", "/teams")).rejects.toThrow(/cannot be reached/);
+  });
+
+  it("lets one call test the connection after the pause, and pauses twice as long while it still fails", async () => {
+    mockFetch.mockRejectedValue(connectTimeout());
+    for (let i = 0; i < 3; i++) await unreachable();
+    vi.setSystemTime(Date.now() + 60_000);
+    const before = mockFetch.mock.calls.length;
+
+    await unreachable();
+    expect(mockFetch.mock.calls.length).toBeGreaterThan(before);
+    const afterTest = mockFetch.mock.calls.length;
+    vi.setSystemTime(Date.now() + 60_000);
+    await expect(hostedaiRequest("GET", "/teams")).rejects.toThrow(/cannot be reached/);
+    vi.setSystemTime(Date.now() + 60_000);
+    await unreachable();
+    expect(mockFetch.mock.calls.length).toBeGreaterThan(afterTest);
+  });
+
+  it("resumes normal calls once hosted.ai answers, even with an error status", async () => {
+    mockFetch.mockRejectedValue(connectTimeout());
+    for (let i = 0; i < 3; i++) await unreachable();
+    vi.setSystemTime(Date.now() + 60_000);
+    mockFetch.mockReset().mockResolvedValueOnce({ ok: false, status: 500, headers: new Headers(), text: async () => "busy" })
+      .mockResolvedValueOnce(ok({ id: "i-1" }));
+
+    await expect(hostedaiRequest("GET", "/instances")).rejects.toThrow("(500)");
+    await expect(hostedaiRequest("GET", "/instances")).resolves.toEqual({ id: "i-1" });
+  });
+
+  it("does not pause for failures where hosted.ai answered", async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 503, headers: new Headers(), text: async () => "down" });
+    for (let i = 0; i < 5; i++) await expect(hostedaiRequest("GET", "/instances")).rejects.toThrow("(503)");
+    expect(mockFetch).toHaveBeenCalledTimes(5);
   });
 });

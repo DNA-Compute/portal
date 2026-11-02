@@ -88,6 +88,52 @@ function logBody(text: string): string {
 const NEVER_CONNECTED = new Set(["UND_ERR_CONNECT_TIMEOUT", "ECONNREFUSED"]);
 const RETRY_DELAYS_MS = [250, 1_000];
 
+/**
+ * When hosted.ai stops answering connections, every page and job would otherwise wait out the
+ * connect timeout and its retries on every call: on prod in 2026-10 that was hundreds of attempts
+ * an hour, 40-second admin pages, and a firewall ban that kept renewing itself. After
+ * PAUSE_AFTER_FAILURES requests in a row that could not connect, calls fail at once for a pause;
+ * then one call is let through to test the connection, and the pause doubles (up to
+ * MAX_PAUSE_MS) while that test call keeps failing. Any answer from hosted.ai, even an error
+ * status, ends the pause. Per process, which is fine for the one portal server.
+ */
+const PAUSE_AFTER_FAILURES = 3;
+const FIRST_PAUSE_MS = 60_000;
+const MAX_PAUSE_MS = 10 * 60_000;
+const connection = { failures: 0, pausedUntil: 0, pauseMs: FIRST_PAUSE_MS };
+
+/** Clears the pause. @internal For tests. */
+export function resetConnectionPause(): void {
+  Object.assign(connection, { failures: 0, pausedUntil: 0, pauseMs: FIRST_PAUSE_MS });
+}
+
+/** Throws while calls are paused; otherwise lets the call through (and claims the test call when a pause ends). */
+function checkConnectionPause(method: string, endpoint: string): void {
+  if (connection.failures < PAUSE_AFTER_FAILURES) return;
+  const now = Date.now();
+  if (now < connection.pausedUntil) {
+    throw Object.assign(
+      new Error(`hosted.ai cannot be reached; not calling ${method} ${endpoint} until ${new Date(connection.pausedUntil).toISOString()}`),
+      { cause: { code: "HOSTEDAI_PAUSED" } },
+    );
+  }
+  // This call tests the connection; others keep failing at once until it is answered.
+  connection.pausedUntil = now + connection.pauseMs;
+}
+
+function connectionWorked(): void {
+  if (connection.failures >= PAUSE_AFTER_FAILURES) console.log("[Hosted.AI] Connection is back; calls resume");
+  resetConnectionPause();
+}
+
+function connectionFailed(code: string): void {
+  connection.failures++;
+  if (connection.failures < PAUSE_AFTER_FAILURES) return;
+  if (connection.failures > PAUSE_AFTER_FAILURES) connection.pauseMs = Math.min(connection.pauseMs * 2, MAX_PAUSE_MS);
+  connection.pausedUntil = Date.now() + connection.pauseMs;
+  console.error(`[Hosted.AI] Cannot connect (${code}) ${connection.failures} times in a row; pausing calls for ${connection.pauseMs / 1000}s`);
+}
+
 function connectFailureCode(error: unknown): string | undefined {
   const code = error instanceof Error ? (error.cause as { code?: unknown } | undefined)?.code : undefined;
   return typeof code === "string" && NEVER_CONNECTED.has(code) ? code : undefined;
@@ -105,6 +151,7 @@ export async function hostedaiRequest<T>(
   data?: Record<string, unknown>,
   timeoutMs?: number
 ): Promise<T> {
+  checkConnectionPause(method, endpoint);
   const [apiUrl, apiKey] = await Promise.all([getApiUrl(), getApiKey()]);
   const url = `${apiUrl}/api${endpoint}`;
 
@@ -123,6 +170,10 @@ export async function hostedaiRequest<T>(
     controller.abort();
   }, effectiveTimeout);
 
+  // Set when an attempt could not connect; if the request then ends with no answer at all (the
+  // retries also fail, or the deadline cuts one short), it counts towards pausing calls.
+  let failedToConnect: string | undefined;
+  let answered = false;
   try {
     let response: Response;
     for (let attempt = 0; ; attempt++) {
@@ -139,10 +190,13 @@ export async function hostedaiRequest<T>(
           redirect: "manual",
           signal: controller.signal,
         });
+        answered = true;
+        connectionWorked();
         break;
       } catch (error) {
         const code = connectFailureCode(error);
         const delay = RETRY_DELAYS_MS[attempt];
+        if (code) failedToConnect = code;
         if (!code || delay === undefined || Date.now() + delay >= deadline) throw error;
         console.warn(`[Hosted.AI] Could not connect for ${method} ${endpoint} (${code}); retrying in ${delay}ms`);
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -195,6 +249,7 @@ export async function hostedaiRequest<T>(
       return { success: true } as T;
     }
   } catch (error) {
+    if (failedToConnect && !answered) connectionFailed(failedToConnect);
     // Handle abort/timeout
     if (error instanceof Error && error.name === 'AbortError') {
       console.log(`[Hosted.AI] Request timed out after ${effectiveTimeout}ms: ${endpoint}`);
