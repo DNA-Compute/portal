@@ -241,7 +241,8 @@ export function DashboardContent() {
   }>>([]);
 
   const fetchBareMetalNodes = React.useCallback(async () => {
-    if (!token) return;
+    // This edition has no bare-metal routes; asking would 404 on every dashboard load.
+    if (!token || !hasPremiumFeature("bare-metal")) return;
     try {
       const res = await fetch("/api/dashboard/bare-metal/deployments", {
         headers: { Authorization: `Bearer ${token}` },
