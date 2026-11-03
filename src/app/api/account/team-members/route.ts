@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyCustomerToken } from "@/lib/customer-auth";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
 import { sendEmail, escapeHtml } from "@/lib/email";

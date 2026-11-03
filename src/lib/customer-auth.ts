@@ -4,6 +4,8 @@ export {
   generateAdminBypassToken,
   generateTwoFactorVerifiedToken,
   verifyCustomerToken,
+  decodeCustomerToken,
+  needsTwoFactorCode,
   generateUnsubscribeToken,
   verifyUnsubscribeToken,
   type CustomerTokenPayload,

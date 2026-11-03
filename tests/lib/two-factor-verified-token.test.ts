@@ -3,7 +3,7 @@ import {
   generateCustomerToken,
   generateAdminBypassToken,
   generateTwoFactorVerifiedToken,
-  verifyCustomerToken,
+  decodeCustomerToken,
 } from "@/lib/auth/customer";
 
 // Regression for the auth review: re-signing a 2FA-verified token must NOT drop
@@ -15,7 +15,7 @@ describe("generateTwoFactorVerifiedToken claim preservation", () => {
     const bypass = generateAdminBypassToken("victim@example.com", "cus_victim");
     const verified = generateTwoFactorVerifiedToken(bypass);
     expect(verified).not.toBeNull();
-    const p = verifyCustomerToken(verified!);
+    const p = decodeCustomerToken(verified!);
     expect(p?.skipTwoFactor).toBe(true);
     expect(p?.twoFactorVerified).toBe(true);
   });
@@ -27,7 +27,7 @@ describe("generateTwoFactorVerifiedToken claim preservation", () => {
       next: "/dashboard?gpu=b200&plan=monthly",
       expiresInHours: 1,
     });
-    const p = verifyCustomerToken(generateTwoFactorVerifiedToken(token)!);
+    const p = decodeCustomerToken(generateTwoFactorVerifiedToken(token)!);
     expect(p?.userId).toBe("user_1");
     expect(p?.activeAccountId).toBe("cus_team");
     expect(p?.next).toBe("/dashboard?gpu=b200&plan=monthly");
@@ -36,7 +36,7 @@ describe("generateTwoFactorVerifiedToken claim preservation", () => {
 
   it("a normal token gains twoFactorVerified and does NOT acquire skipTwoFactor", () => {
     const token = generateCustomerToken("u@example.com", "cus_1", { expiresInHours: 1 });
-    const p = verifyCustomerToken(generateTwoFactorVerifiedToken(token)!);
+    const p = decodeCustomerToken(generateTwoFactorVerifiedToken(token)!);
     expect(p?.twoFactorVerified).toBe(true);
     expect(p?.skipTwoFactor).toBeUndefined();
   });

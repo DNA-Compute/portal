@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },

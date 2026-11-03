@@ -50,10 +50,10 @@ vi.mock("@/lib/auth/account-resolver", () => ({ resolveOperatingContext: async (
   accountId: "cus_attacker", customer: { id: "cus_attacker", email: "attacker@example.com", metadata: { hostedai_team_id: "team-attacker" } },
   teamId: "team-attacker", allTeamIds: ["team-attacker"], allCustomerIds: ["cus_attacker"], isOwner: true }) }));
 vi.mock("@/lib/auth/gate", () => ({ gatePermission: async () => null }));
-vi.mock("@/lib/auth/audit", () => ({ requirePermission: m.requirePermission }));
+vi.mock("@/lib/auth/audit", () => ({ requirePermission: m.requirePermission, forbidden: vi.fn() }));
 vi.mock("@/lib/auth/helpers", () => ({ getAuthenticatedCustomer: async () => ({
-  payload: { email: "attacker@example.com", customerId: "cus_attacker" }, customer: { id: "cus_attacker", email: "attacker@example.com" },
-  teamId: "team-attacker", allTeamIds: ["team-attacker"], accountId: "cus_attacker" }) }));
+  payload: { email: "attacker@example.com", customerId: "cus_attacker" }, customer: { id: "cus_attacker", email: "attacker@example.com", metadata: { hostedai_team_id: "team-attacker" } },
+  teamId: "team-attacker", allTeamIds: ["team-attacker"], accountId: "cus_attacker", can: () => true }) }));
 
 const victimPod = { pod_name: "victim-pod", pod_status: "running", ssh_info: { cmd: "ssh ubuntu@10.0.0.9 -p 22", pass: "victim-pass" } };
 const victimRow = {

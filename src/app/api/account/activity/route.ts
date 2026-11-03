@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyCustomerToken } from "@/lib/customer-auth";
-import { getActivityEvents } from "@/lib/activity";
+import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
+import { getActivityEvents, type ActivityEventType } from "@/lib/activity";
 
-// GET - Get activity events for a customer
+// Hidden from members who can't see billing, as the dashboard hides the wallet and payments.
+const BILLING_EVENTS = new Set<ActivityEventType>([
+  "payment_received",
+  "wallet_charged",
+  "wallet_topup",
+  "voucher_redeemed",
+  "budget_set",
+]);
+
+// GET - Get activity events for the account being worked in
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "");
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const payload = verifyCustomerToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 401 }
-      );
-    }
+    const auth = await getAuthenticatedCustomer(request);
+    if (auth instanceof NextResponse) return auth;
 
     // Get limit from query params
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-    const events = await getActivityEvents(payload.customerId, limit);
+    const events = await getActivityEvents(auth.accountId, limit);
 
-    return NextResponse.json({ events });
+    return NextResponse.json({
+      events: auth.can("billing.view") ? events : events.filter((e) => !BILLING_EVENTS.has(e.type)),
+    });
   } catch (error) {
     console.error("Get activity error:", error);
     return NextResponse.json(

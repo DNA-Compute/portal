@@ -52,7 +52,7 @@ const token = generateCustomerToken({
 });
 
 // Verify token from request
-const payload = verifyCustomerToken(token);
+const payload = await verifyCustomerToken(token);
 if (payload) {
   // { email, customerId, type: "customer-dashboard" }
 }

@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       // subscription linked to it, a voucher account under its email) needs its owner logged in.
       // Anyone else gets a login link sent to the owner instead.
       const bearer = request.headers.get("authorization")?.replace("Bearer ", "");
-      const loggedIn = bearer ? verifyCustomerToken(bearer) : null;
+      const loggedIn = bearer ? await verifyCustomerToken(bearer) : null;
       // A team admin buys for the account they're working in, whose email isn't their own.
       const actingFor = [loggedIn?.activeAccountId, loggedIn?.customerId];
       const account = loggedIn && (

@@ -18,7 +18,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 vi.mock('@/lib/customer-auth', () => ({
-  verifyCustomerToken: vi.fn(() => ({ email: 'customer@example.com', customerId: 'cus', type: 'customer-dashboard' })),
+  decodeCustomerToken: vi.fn(() => ({ email: 'customer@example.com', customerId: 'cus', type: 'customer-dashboard' })),
   generateTwoFactorVerifiedToken: vi.fn(),
 }));
 

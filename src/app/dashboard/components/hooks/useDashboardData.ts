@@ -329,9 +329,8 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
           return;
         }
 
-        // Check if 2FA is required but not yet verified
-        // Skip 2FA if this is an admin bypass token
-        if (result.twoFactor?.enabled && !twoFactorVerified && !result.skipTwoFactor) {
+        // The server holds everything back until the 2FA code is entered.
+        if (result.twoFactorPending) {
           setPendingUserEmail(result.userEmail);
           setTwoFactorRequired(true);
           setLoading(false);

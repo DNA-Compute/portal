@@ -53,7 +53,7 @@ export default async function InviteRouter({
   }
 
   // Session present — verify it points at the invitee.
-  const payload = verifyCustomerToken(jwtToken);
+  const payload = await verifyCustomerToken(jwtToken);
   if (!payload) {
     // Expired / invalid JWT. Treat the same as no session.
     const qs = new URLSearchParams({

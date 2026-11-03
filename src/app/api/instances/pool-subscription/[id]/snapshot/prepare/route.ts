@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyCustomerToken } from "@/lib/customer-auth";
-import { getStripe } from "@/lib/stripe";
+import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
+import { forbidden } from "@/lib/auth/audit";
 import { rejectUnownedInstance } from "@/lib/auth/instance-ownership";
 import { getPoolSubscriptions, getConnectionInfo, getAllPools, getStorageBlocks } from "@/lib/hostedai";
 import { getStoragePricePerGBHourCents } from "@/lib/pricing";
-import Stripe from "stripe";
 import { spawn } from "child_process";
 import { validateSSHParams } from "@/lib/ssh-validation";
 
@@ -86,23 +85,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "");
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const payload = verifyCustomerToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
-    }
+    const auth = await getAuthenticatedCustomer(request);
+    if (auth instanceof NextResponse) return auth;
+    if (!auth.can("snapshots.manage")) return forbidden(auth, "snapshots.manage", request);
 
     const { id: subscriptionId } = await params;
 
-    // Get customer to find team ID
-    const stripe = await getStripe();
-    const customer = (await stripe.customers.retrieve(payload.customerId)) as Stripe.Customer;
-    const teamId = customer.metadata?.hostedai_team_id;
+    const teamId = auth.customer.metadata?.hostedai_team_id;
 
     if (!teamId) {
       return NextResponse.json({ error: "No team associated with this account" }, { status: 400 });

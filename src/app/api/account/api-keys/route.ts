@@ -8,7 +8,7 @@ import { resolveOperatingContext } from "@/lib/auth/account-resolver";
 import { resolveMembership } from "@/lib/auth/membership";
 import { computeEffectivePermissions } from "@/lib/auth/api-key-permissions";
 import { PACKET_ROLES, type PacketRole } from "@/lib/auth/role-permissions";
-import type { ApiKeyListItem, CreateApiKeyResponse } from "@/lib/api";
+import type { CreateApiKeyResponse } from "@/lib/api";
 
 function isPacketRole(role: string): role is PacketRole {
   return (PACKET_ROLES as readonly string[]).includes(role);
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -246,7 +246,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
     }

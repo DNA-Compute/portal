@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyCustomerToken, generateTwoFactorVerifiedToken } from "@/lib/customer-auth";
+import { decodeCustomerToken, generateTwoFactorVerifiedToken } from "@/lib/customer-auth";
 import {
   getTwoFactorStatus,
   startTwoFactorSetup,
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = decodeCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = decodeCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },

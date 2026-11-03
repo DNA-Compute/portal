@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   if (!tokenJwt) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const payload = verifyCustomerToken(tokenJwt);
+  const payload = await verifyCustomerToken(tokenJwt);
   if (!payload) {
     return NextResponse.json(
       { error: "Invalid or expired token" },

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   if (!tokenJwt) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const payload = verifyCustomerToken(tokenJwt);
+  const payload = await verifyCustomerToken(tokenJwt);
   if (!payload) {
     return NextResponse.json(
       { error: "Invalid or expired token" },

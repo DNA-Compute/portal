@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -74,7 +74,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -173,7 +173,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = verifyCustomerToken(token);
+    const payload = await verifyCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },

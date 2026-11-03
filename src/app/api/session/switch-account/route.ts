@@ -13,6 +13,7 @@ import {
 import {
   reissueRefreshTokenWithAccount,
   buildSessionCookie,
+  isEphemeralToken,
   SESSION_COOKIE_NAME,
 } from "@/lib/auth/customer-session";
 import { prisma } from "@/lib/prisma";
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (!tokenJwt) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const payload = verifyCustomerToken(tokenJwt);
+  const payload = await verifyCustomerToken(tokenJwt);
   if (!payload) {
     return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
   }
@@ -98,10 +99,15 @@ export async function POST(request: NextRequest) {
   // Mint a new JWT scoped to the target account. customerId stays the same
   // (it's the JWT's authentication identity — the Stripe customer Stripe knows
   // about). activeAccountId is the workspace the user is operating in.
+  // The current token already passed the 2FA check, and an admin's Login as must stay marked
+  // as Login as: tab-only, with the banner, and recorded as the admin.
   const newToken = generateCustomerToken(payload.email, payload.customerId, {
     userId: user.id,
     activeAccountId: targetAccountId,
     expiresInHours: 1,
+    twoFactorVerified: true,
+    skipTwoFactor: payload.skipTwoFactor,
+    impersonator: payload.impersonator,
   });
 
   const res = NextResponse.json({
@@ -115,8 +121,9 @@ export async function POST(request: NextRequest) {
   // account into the refresh cookie (same jti, same expiry) so the switch survives
   // a later access-token refresh instead of silently reverting to the default
   // account. The membership check above already authorized targetAccountId.
+  // Login as never touches the cookie: it belongs to whoever signed in on this browser.
   const refreshCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (refreshCookie) {
+  if (refreshCookie && !isEphemeralToken(payload)) {
     const reissued = reissueRefreshTokenWithAccount(refreshCookie, targetAccountId);
     if (reissued) {
       res.cookies.set(buildSessionCookie(reissued, process.env.NODE_ENV === "production"));

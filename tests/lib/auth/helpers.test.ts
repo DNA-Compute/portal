@@ -7,12 +7,14 @@ const {
   mockFindSuspension,
   mockTeamMembershipFindUnique,
   mockUserFindUnique,
+  mockTwoFactorFindUnique,
 } = vi.hoisted(() => ({
   mockStripeList: vi.fn(),
   mockStripeRetrieve: vi.fn(),
   mockFindSuspension: vi.fn(),
   mockTeamMembershipFindUnique: vi.fn(),
   mockUserFindUnique: vi.fn(),
+  mockTwoFactorFindUnique: vi.fn(),
 }));
 
 vi.mock("@/lib/stripe", () => ({
@@ -28,6 +30,7 @@ vi.mock("@/lib/customer-suspension", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     teamMembership: { findUnique: mockTeamMembershipFindUnique },
+    twoFactorAuth: { findUnique: mockTwoFactorFindUnique },
     user: { findUnique: mockUserFindUnique },
     teamAuditLog: { create: vi.fn().mockResolvedValue({}) },
   },
@@ -60,7 +63,16 @@ describe("getAuthenticatedCustomer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFindSuspension.mockResolvedValue(null);
+    mockTwoFactorFindUnique.mockResolvedValue(null);
     setStripeReturning([baseCustomer]);
+  });
+
+  it("returns 401 for a login link while the user's 2FA code is still needed", async () => {
+    mockTwoFactorFindUnique.mockResolvedValue({ verified: true, createdAt: new Date(Date.now() - 60_000) });
+    const token = generateCustomerToken(TEST_EMAIL, TEST_CUSTOMER_ID);
+    const result = await getAuthenticatedCustomer(makeRequest(token));
+    expect((result as NextResponse).status).toBe(401);
+    expect(mockStripeRetrieve).not.toHaveBeenCalled();
   });
 
   it("returns 401 when no authorization header is provided", async () => {

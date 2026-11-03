@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { getSecret } from "./secrets";
 import { sanitizeNextPath } from "./safe-next";
+import { prisma } from "@/lib/prisma";
 
 function getJwtSecret(): string {
   return getSecret("CUSTOMER_JWT_SECRET");
@@ -28,6 +29,7 @@ export interface CustomerTokenPayload {
   // keeps the token ephemeral (never persisted to a cookie) and drives the
   // dashboard's impersonation banner + audit attribution.
   impersonator?: { adminEmail: string };
+  iat?: number; // Set by jsonwebtoken: when the token was issued, in seconds
 }
 
 export interface GenerateCustomerTokenOptions {
@@ -36,6 +38,11 @@ export interface GenerateCustomerTokenOptions {
   expiresInHours?: number;
   /** Deep-link intent to carry through login. Sanitized before signing. */
   next?: string;
+  /** The 2FA code was already entered for this sign-in (a session is only created after it). */
+  twoFactorVerified?: boolean;
+  /** Admin "Login as": keeps the token tab-only and the impersonation banner on. */
+  skipTwoFactor?: boolean;
+  impersonator?: { adminEmail: string };
 }
 
 export function generateCustomerToken(
@@ -57,6 +64,9 @@ export function generateCustomerToken(
   };
   if (options.userId) payload.userId = options.userId;
   if (options.activeAccountId) payload.activeAccountId = options.activeAccountId;
+  if (options.twoFactorVerified) payload.twoFactorVerified = true;
+  if (options.skipTwoFactor) payload.skipTwoFactor = true;
+  if (options.impersonator) payload.impersonator = options.impersonator;
   // Sanitize the deep-link target before it goes into the signed token, so a
   // recipient can never rewrite it and the dashboard can honour it as-is.
   const safeNext = sanitizeNextPath(options.next, getAppUrl());
@@ -119,7 +129,12 @@ export function generateTwoFactorVerifiedToken(originalToken: string): string | 
   }
 }
 
-export function verifyCustomerToken(token: string): CustomerTokenPayload | null {
+/**
+ * Check a customer token's signature and expiry only, without asking for the 2FA code. Only the
+ * routes that finish signing in use this: verify (to learn 2FA is needed), two-factor (to take the
+ * code) and logout. Every other route uses verifyCustomerToken.
+ */
+export function decodeCustomerToken(token: string): CustomerTokenPayload | null {
   try {
     const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as CustomerTokenPayload;
     if (decoded.type !== "customer-dashboard") {
@@ -129,6 +144,28 @@ export function verifyCustomerToken(token: string): CustomerTokenPayload | null 
   } catch {
     return null;
   }
+}
+
+/**
+ * Whether this token still needs the 2FA code before it may be used. A token issued after the user
+ * set up 2FA needs it until the code is entered; Login as tokens never do. A token issued before
+ * 2FA was set up stays valid, so turning 2FA on doesn't sign the user out.
+ */
+export async function needsTwoFactorCode(payload: CustomerTokenPayload): Promise<boolean> {
+  if (payload.skipTwoFactor || payload.twoFactorVerified) return false;
+  const twoFactor = await prisma.twoFactorAuth.findUnique({
+    where: { email: payload.email.toLowerCase() },
+    select: { verified: true, createdAt: true },
+  });
+  if (!twoFactor?.verified) return false;
+  return (payload.iat ?? 0) >= Math.floor(twoFactor.createdAt.getTime() / 1000);
+}
+
+/** Check a customer token, and refuse it while the user's 2FA code is still needed. */
+export async function verifyCustomerToken(token: string): Promise<CustomerTokenPayload | null> {
+  const payload = decodeCustomerToken(token);
+  if (!payload || await needsTwoFactorCode(payload)) return null;
+  return payload;
 }
 
 /**

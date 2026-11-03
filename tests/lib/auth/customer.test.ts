@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import {
   generateCustomerToken,
   generateAdminBypassToken,
-  verifyCustomerToken,
+  decodeCustomerToken,
   type CustomerTokenPayload,
 } from '../../../src/lib/auth/customer';
 
@@ -132,10 +132,10 @@ describe('Customer Authentication Module', () => {
     });
   });
 
-  describe('verifyCustomerToken', () => {
+  describe('decodeCustomerToken', () => {
     it('should verify and return payload for valid tokens', () => {
       const token = generateCustomerToken(TEST_EMAIL, TEST_CUSTOMER_ID);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result).toBeTruthy();
       expect(result?.email).toBe(TEST_EMAIL.toLowerCase());
       expect(result?.customerId).toBe(TEST_CUSTOMER_ID);
@@ -155,7 +155,7 @@ describe('Customer Authentication Module', () => {
       );
 
       // Wait a bit to ensure token is expired
-      const result = verifyCustomerToken(expiredToken);
+      const result = decodeCustomerToken(expiredToken);
       expect(result).toBeNull();
     });
 
@@ -170,12 +170,12 @@ describe('Customer Authentication Module', () => {
         { expiresIn: '1h' }
       );
 
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result).toBeNull();
     });
 
     it('should return null for malformed tokens', () => {
-      const result = verifyCustomerToken('not.a.valid.jwt.token');
+      const result = decodeCustomerToken('not.a.valid.jwt.token');
       expect(result).toBeNull();
     });
 
@@ -190,18 +190,18 @@ describe('Customer Authentication Module', () => {
         { expiresIn: '1h' }
       );
 
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result).toBeNull();
     });
 
     it('should return null for empty string token', () => {
-      const result = verifyCustomerToken('');
+      const result = decodeCustomerToken('');
       expect(result).toBeNull();
     });
 
     it('should verify admin bypass tokens correctly', () => {
       const token = generateAdminBypassToken(TEST_EMAIL, TEST_CUSTOMER_ID);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result).toBeTruthy();
       expect(result?.skipTwoFactor).toBe(true);
     });
@@ -209,7 +209,7 @@ describe('Customer Authentication Module', () => {
     it('should handle tokens with special characters in email', () => {
       const specialEmail = 'test+tag@example.com';
       const token = generateCustomerToken(specialEmail, TEST_CUSTOMER_ID);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result?.email).toBe(specialEmail.toLowerCase());
     });
 
@@ -224,13 +224,13 @@ describe('Customer Authentication Module', () => {
         { expiresIn: '1h' }
       );
 
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       // Token will still be returned but customerId will be undefined
       expect(result?.customerId).toBeUndefined();
     });
 
     it('should handle completely invalid token format', () => {
-      const result = verifyCustomerToken('invalid-token-no-dots');
+      const result = decodeCustomerToken('invalid-token-no-dots');
       expect(result).toBeNull();
     });
 
@@ -242,8 +242,8 @@ describe('Customer Authentication Module', () => {
       delete process.env.CUSTOMER_JWT_SECRET;
       delete process.env.ADMIN_JWT_SECRET;
 
-      // verifyCustomerToken catches all errors and returns null
-      const result = verifyCustomerToken(token);
+      // decodeCustomerToken catches all errors and returns null
+      const result = decodeCustomerToken(token);
       expect(result).toBeNull();
 
       // Restore the secrets for other tests
@@ -254,7 +254,7 @@ describe('Customer Authentication Module', () => {
     it('should preserve case-insensitive email from token', () => {
       const upperEmail = 'TEST@EXAMPLE.COM';
       const token = generateCustomerToken(upperEmail, TEST_CUSTOMER_ID);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result?.email).toBe('test@example.com');
     });
 
@@ -270,7 +270,7 @@ describe('Customer Authentication Module', () => {
         { expiresIn: '1h' }
       );
 
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result).toBeTruthy();
       expect(result?.email).toBe(TEST_EMAIL);
     });
@@ -280,21 +280,21 @@ describe('Customer Authentication Module', () => {
     it('should handle very long email addresses', () => {
       const longEmail = 'a'.repeat(100) + '@example.com';
       const token = generateCustomerToken(longEmail, TEST_CUSTOMER_ID);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result?.email).toBe(longEmail.toLowerCase());
     });
 
     it('should handle very long customer IDs', () => {
       const longId = 'customer-' + 'x'.repeat(200);
       const token = generateCustomerToken(TEST_EMAIL, longId);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result?.customerId).toBe(longId);
     });
 
     it('should handle unicode characters in email', () => {
       const unicodeEmail = 'tëst@éxample.com';
       const token = generateCustomerToken(unicodeEmail, TEST_CUSTOMER_ID);
-      const result = verifyCustomerToken(token);
+      const result = decodeCustomerToken(token);
       expect(result?.email).toBe(unicodeEmail.toLowerCase());
     });
 
@@ -302,8 +302,8 @@ describe('Customer Authentication Module', () => {
       const regularToken = generateCustomerToken(TEST_EMAIL, TEST_CUSTOMER_ID);
       const bypassToken = generateAdminBypassToken(TEST_EMAIL, TEST_CUSTOMER_ID);
 
-      const regularResult = verifyCustomerToken(regularToken);
-      const bypassResult = verifyCustomerToken(bypassToken);
+      const regularResult = decodeCustomerToken(regularToken);
+      const bypassResult = decodeCustomerToken(bypassToken);
 
       expect(regularResult?.skipTwoFactor).toBeUndefined();
       expect(bypassResult?.skipTwoFactor).toBe(true);

@@ -19,7 +19,7 @@
  *   email: "user@example.com",
  *   customerId: "cus_xxx"
  * });
- * const payload = verifyCustomerToken(token);
+ * const payload = await verifyCustomerToken(token);
  * ```
  */
 
@@ -28,6 +28,8 @@ export {
   generateCustomerToken,
   generateAdminBypassToken,
   verifyCustomerToken,
+  decodeCustomerToken,
+  needsTwoFactorCode,
   type CustomerTokenPayload,
 } from "./customer";
 

@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
     // PA-175: preserve the operating account so a switched workspace survives refresh.
     activeAccountId: identity.activeAccountId,
     expiresInHours: ACCESS_TOKEN_HOURS,
+    // verify creates a session only once the 2FA code is entered (or when 2FA is off).
+    twoFactorVerified: true,
   });
 
   const res = NextResponse.json({ token });

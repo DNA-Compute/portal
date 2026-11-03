@@ -99,8 +99,6 @@ export function DashboardContent() {
     tosConsentVersion,
     setTosConsentRequired,
     fetchInstances,
-    fetchActivityEvents,
-    fetchBillingStats,
     fetchSnapshots,
     setData,
     setProvisioningGpu,
@@ -632,9 +630,7 @@ export function DashboardContent() {
             })
             .catch(() => setError("Failed to load account data"))
             .finally(() => setLoading(false));
-          fetchInstances();
-          fetchActivityEvents();
-          fetchBillingStats();
+          // GPUs, activity and billing load again once the page picks up the new token.
         }}
       />
     );

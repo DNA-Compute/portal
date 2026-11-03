@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { verifyCustomerToken, type CustomerTokenPayload } from "@/lib/customer-auth";
+import { decodeCustomerToken, type CustomerTokenPayload } from "@/lib/customer-auth";
 import {
   createCustomerSession,
   buildSessionCookie,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the token
-    const payload = verifyCustomerToken(token);
+    const payload = decodeCustomerToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -87,6 +87,14 @@ export async function POST(request: NextRequest) {
         { error: "This account has been suspended. Contact support." },
         { status: 403 }
       );
+    }
+
+    // Until the 2FA code is entered, return only what the code screen needs: no console or billing
+    // links, no billing data, and no login recorded. Admin Login as tokens skip the code.
+    const twoFactorStatus = await getTwoFactorStatus(payload.email);
+    const twoFactorPending = twoFactorStatus.enabled && !payload.skipTwoFactor && !payload.twoFactorVerified;
+    if (twoFactorPending) {
+      return NextResponse.json({ twoFactor: twoFactorStatus, twoFactorPending: true, userEmail: payload.email });
     }
 
     // Get wallet balance for hourly customers
@@ -312,7 +320,7 @@ export async function POST(request: NextRequest) {
       return { version: "unknown", accepted: false };
     });
 
-    const [otlResult, portalSession, twoFactorStatus, tosResult] = await Promise.all([
+    const [otlResult, portalSession, tosResult] = await Promise.all([
       teamId
         ? createOneTimeLogin({
             email: payload.email,
@@ -330,7 +338,6 @@ export async function POST(request: NextRequest) {
         // the return to /dashboard, so the token can't leak via Stripe's redirect.
         return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       }),
-      getTwoFactorStatus(payload.email),
       tosVersionPromise,
     ]);
 
@@ -358,10 +365,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if 2FA can be skipped:
-    // - Admin bypass token (skipTwoFactor flag from "Login As" feature)
-    // - Token already carries twoFactorVerified from a prior TOTP check
-    const skipTwoFactor = payload.skipTwoFactor === true || payload.twoFactorVerified === true;
+    // Admin "Login as" token. The dashboard shows the impersonation banner for it.
+    const skipTwoFactor = payload.skipTwoFactor === true;
 
     // Log customer login to admin activity. During admin "Login as", attribute
     // it to the acting admin (not "system") for a clean audit trail.
@@ -398,7 +403,6 @@ export async function POST(request: NextRequest) {
     // PA-175 PR 3: surface the user's Packet role + can() map. The
     // membership was already resolved above (otlMembership) so HAI's
     // /create-otl gets the correct role; reuse that result here.
-    const membership = otlMembership;
     const role: PacketRole | null = otlPacketRole;
     const membershipIsOwner = otlMembershipIsOwner;
     const canMap = Object.fromEntries(
@@ -419,13 +423,10 @@ export async function POST(request: NextRequest) {
     // session cookie yet — establish a persistent 15-day session. Impersonation
     // (skipTwoFactor) is ephemeral and never gets a row, so it stays tab-scoped.
     // Repeat loads already carry the cookie, so no duplicate rows are created.
-    // Only persist once 2FA is satisfied — never create a session for a token
-    // still pending its TOTP step (the magic-link token before verification).
-    const twoFactorSatisfied = !twoFactorStatus.enabled || payload.twoFactorVerified === true;
+    // 2FA is already satisfied here: a token still waiting for its code returned above.
     let sessionRefreshToken: string | null = null;
     if (
       !isEphemeralToken(payload) &&
-      twoFactorSatisfied &&
       !request.cookies.get(SESSION_COOKIE_NAME)?.value
     ) {
       try {
@@ -476,7 +477,8 @@ export async function POST(request: NextRequest) {
       userDisplayName, // PA-224: logged-in user's display name (User.displayName), used for sidebar greeting
       bareMetalEnabled: customerSettings?.bareMetalEnabled ?? false,
       twoFactor: twoFactorStatus, // 2FA status for the user
-      skipTwoFactor, // Admin bypass flag
+      twoFactorPending: false,
+      skipTwoFactor, // Admin "Login as" token
       impersonator: payload.impersonator ?? null, // admin "Login as" marker → impersonation banner
       // PA-266: deep-link intent carried through login in the signed token.
       // Already sanitized at sign time; the dashboard opens the matching modal.

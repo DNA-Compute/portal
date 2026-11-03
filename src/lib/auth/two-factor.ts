@@ -172,6 +172,8 @@ export async function startTwoFactorSetup(email: string): Promise<{
       secret,
       verified: false,
       backupCodes: JSON.stringify(hashedCodes),
+      // Login tokens issued from now on need the code once this is confirmed (see needsTwoFactorCode).
+      createdAt: new Date(),
     },
   });
 

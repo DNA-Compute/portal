@@ -14,7 +14,7 @@ import {
   buildClearedSessionCookie,
   SESSION_COOKIE_NAME,
 } from "@/lib/auth/customer-session";
-import { verifyCustomerToken } from "@/lib/auth/customer";
+import { decodeCustomerToken } from "@/lib/auth/customer";
 
 export async function POST(request: NextRequest) {
   const isProd = process.env.NODE_ENV === "production";
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     let customerId: string | null = refresh ? decodeRefreshCustomerId(refresh) : null;
     if (!customerId) {
       const bearer = request.headers.get("authorization")?.replace("Bearer ", "");
-      const payload = bearer ? verifyCustomerToken(bearer) : null;
+      const payload = bearer ? decodeCustomerToken(bearer) : null;
       customerId = payload?.customerId ?? null;
     }
     if (customerId) {
