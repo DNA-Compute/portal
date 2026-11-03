@@ -958,8 +958,12 @@ describe('checkAndRefillWallet after a declined card', () => {
       id: 'cus_declined', balance: 20422, invoice_settings: { default_payment_method: 'pm_old' }, metadata: {},
     } as unknown as Stripe.Customer;
     vi.mocked(mockStripe.customers.retrieve).mockImplementation(async () => customer as never);
+    // Like Stripe, saving a metadata key as "" deletes it.
     vi.mocked(mockStripe.customers.update).mockImplementation(async (_id, params) => {
-      customer = { ...customer, metadata: { ...(params as Stripe.CustomerUpdateParams).metadata } } as Stripe.Customer;
+      const metadata = Object.fromEntries(
+        Object.entries((params as Stripe.CustomerUpdateParams).metadata ?? {}).filter(([, v]) => v !== "")
+      ) as Stripe.Metadata;
+      customer = { ...customer, metadata } as Stripe.Customer;
       return customer as never;
     });
     vi.mocked(mockStripe.customers.listBalanceTransactions).mockResolvedValue({ data: [] } as unknown as Stripe.ApiList<Stripe.CustomerBalanceTransaction>);
@@ -994,6 +998,18 @@ describe('checkAndRefillWallet after a declined card', () => {
     expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(3);
   });
 
+  it('waits too when there is no card on file', async () => {
+    customer = { ...customer, invoice_settings: { default_payment_method: null } } as unknown as Stripe.Customer;
+    vi.mocked(mockStripe.customers.listBalanceTransactions).mockResolvedValue({ data: [] } as unknown as Stripe.ApiList<Stripe.CustomerBalanceTransaction>);
+
+    expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: false, paymentFailed: true });
+    expect(customer.metadata.wallet_refill_failures).toBe('1');
+    hours(1);
+    expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: false, paymentFailed: true });
+    // The first try set the lock and the result; a wait returns before touching the customer.
+    expect(mockStripe.customers.update).toHaveBeenCalledTimes(2);
+  });
+
   it('tries a new card straight away', async () => {
     await checkAndRefillWallet('cus_declined');
     customer = { ...customer, invoice_settings: { default_payment_method: 'pm_new' } } as Stripe.Customer;
@@ -1001,7 +1017,7 @@ describe('checkAndRefillWallet after a declined card', () => {
 
     expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: true });
     expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(2);
-    expect(customer.metadata.wallet_refill_failures).toBe('');
+    expect(customer.metadata.wallet_refill_failures).toBeUndefined();
   });
 
   it('tries again once the customer has paid by hand since the decline', async () => {

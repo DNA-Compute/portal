@@ -308,7 +308,9 @@ export async function checkAndRefillWallet(
       const paidSinceFailure = recentTransactions.data.some(
         txn => (txn.description === "Wallet top-up" || txn.description === "Wallet funding") && txn.created > failedAt
       );
-      if (failures > 0 && customer.metadata?.wallet_refill_failed_pm === paymentMethod && !paidSinceFailure && Date.now() / 1000 < retryAt) {
+      // Stripe drops a metadata key saved as "", so a missing key means the failure had no card.
+      const failedPaymentMethod = customer.metadata?.wallet_refill_failed_pm ?? "";
+      if (failures > 0 && failedPaymentMethod === paymentMethod && !paidSinceFailure && Date.now() / 1000 < retryAt) {
         return {
           refilled: false,
           error: `Last top-up failed; next try ${new Date(retryAt * 1000).toISOString()}`,
