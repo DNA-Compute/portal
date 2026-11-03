@@ -8,6 +8,19 @@ import { createInvoiceForPayment } from "./invoice";
 /** Largest single automatic card top-up. */
 const MAX_AUTO_REFILL_CENTS = 50_000;
 
+/**
+ * Wait after a failed automatic top-up before charging the same card again: 1, 2, 4, then 7 days.
+ * Sync runs every few minutes, and card networks penalize retrying a declined card that often.
+ */
+function refillRetryWaitSeconds(failures: number): number {
+  return Math.min(7, 2 ** (failures - 1)) * 86_400;
+}
+
+function defaultPaymentMethodId(customer: Stripe.Customer): string {
+  const pm = customer.invoice_settings?.default_payment_method;
+  return (typeof pm === "string" ? pm : pm?.id) ?? "";
+}
+
 export interface WalletBalance {
   availableBalance: number; // in cents
   pendingBalance: number; // in cents
@@ -286,6 +299,23 @@ export async function checkAndRefillWallet(
         return { refilled: false, error: "Recent refill already processed", pending: true };
       }
 
+      // The last top-up failed on this same card (or there is still no card): wait before trying
+      // again. A new default card, or money added since the failure, ends the wait.
+      const paymentMethod = defaultPaymentMethodId(customer);
+      const failures = parseInt(customer.metadata?.wallet_refill_failures || "0", 10) || 0;
+      const failedAt = parseInt(customer.metadata?.wallet_refill_failed_at || "0", 10) || 0;
+      const retryAt = failedAt + refillRetryWaitSeconds(failures);
+      const paidSinceFailure = recentTransactions.data.some(
+        txn => (txn.description === "Wallet top-up" || txn.description === "Wallet funding") && txn.created > failedAt
+      );
+      if (failures > 0 && customer.metadata?.wallet_refill_failed_pm === paymentMethod && !paidSinceFailure && Date.now() / 1000 < retryAt) {
+        return {
+          refilled: false,
+          error: `Last top-up failed; next try ${new Date(retryAt * 1000).toISOString()}`,
+          paymentFailed: true,
+        };
+      }
+
       // Check 2: Look for in-progress refill lock (prevents race condition)
       const lockTimestamp = customer.metadata?.wallet_refill_lock;
       if (lockTimestamp) {
@@ -326,14 +356,12 @@ export async function checkAndRefillWallet(
         return { refilled: false, error: "Recent refill already processed (detected after lock)", pending: true };
       }
 
-      // Also check for recent successful payment intents with wallet_funding type
-      const recentPayments = await stripe.paymentIntents.list({
-        customer: customerId,
-        limit: 5,
-        created: { gte: tenMinutesAgo },
-      });
+      // Also check for a top-up that succeeded in the last 10 minutes, or is still processing: a
+      // bank debit can stay "processing" for days, and charging again meanwhile would charge twice.
+      const recentPayments = await stripe.paymentIntents.list({ customer: customerId, limit: 10 });
       const recentWalletPayment = recentPayments.data.find(
-        pi => pi.metadata?.type === "wallet_funding" && pi.status === "succeeded"
+        pi => pi.metadata?.type === "wallet_funding" &&
+          (pi.status === "processing" || (pi.status === "succeeded" && pi.created > tenMinutesAgo))
       );
       if (recentWalletPayment) {
         console.log(`[Wallet] Skipping refill for ${customerId}: found recent wallet payment (${recentWalletPayment.id})`);
@@ -351,11 +379,18 @@ export async function checkAndRefillWallet(
 
       const result = await fundWallet(customerId, refillAmountCents);
 
-      // Clear lock after payment completes (success or failure)
+      // Clear lock after payment completes (success or failure), and count failures for the wait above.
+      // A Stripe outage or a payment still processing leaves the count as it was.
+      const failureMetadata: Record<string, string> = result.success
+        ? { wallet_refill_failures: "", wallet_refill_failed_at: "", wallet_refill_failed_pm: "" }
+        : result.paymentFailed
+          ? { wallet_refill_failures: String(failures + 1), wallet_refill_failed_at: String(Math.floor(Date.now() / 1000)), wallet_refill_failed_pm: paymentMethod }
+          : {};
       const postRefillCustomer = await stripe.customers.update(customerId, {
         metadata: {
           ...customer.metadata,
           wallet_refill_lock: "",
+          ...failureMetadata,
         },
       });
       cacheCustomer(postRefillCustomer as Stripe.Customer).catch(() => {});

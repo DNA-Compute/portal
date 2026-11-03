@@ -741,6 +741,7 @@ describe('Wallet Module', () => {
           {
             id: 'pi_recent',
             status: 'succeeded',
+            created: Math.floor(Date.now() / 1000) - 60,
             metadata: {
               type: 'wallet_funding',
             },
@@ -942,5 +943,84 @@ describe('Wallet Module', () => {
     it('should provide access to auto-refill amount', () => {
       expect(WALLET_CONFIG.autoRefillAmountCents).toBe(10000);
     });
+  });
+});
+
+// Sync runs every few minutes. A declined card must not be charged on every run: card networks
+// penalize repeated retries, and the customer's bank sees hundreds of declines a day.
+describe('checkAndRefillWallet after a declined card', () => {
+  let customer: Stripe.Customer;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers({ now: new Date('2026-11-02T12:00:00Z') });
+    customer = {
+      id: 'cus_declined', balance: 20422, invoice_settings: { default_payment_method: 'pm_old' }, metadata: {},
+    } as unknown as Stripe.Customer;
+    vi.mocked(mockStripe.customers.retrieve).mockImplementation(async () => customer as never);
+    vi.mocked(mockStripe.customers.update).mockImplementation(async (_id, params) => {
+      customer = { ...customer, metadata: { ...(params as Stripe.CustomerUpdateParams).metadata } } as Stripe.Customer;
+      return customer as never;
+    });
+    vi.mocked(mockStripe.customers.listBalanceTransactions).mockResolvedValue({ data: [] } as unknown as Stripe.ApiList<Stripe.CustomerBalanceTransaction>);
+    vi.mocked(mockStripe.paymentIntents.list).mockResolvedValue({ data: [] } as unknown as Stripe.ApiList<Stripe.PaymentIntent>);
+    vi.mocked(mockStripe.paymentIntents.create).mockResolvedValue({ id: 'pi_declined', status: 'requires_payment_method' } as Stripe.PaymentIntent);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const hours = (h: number) => vi.advanceTimersByTime(h * 3600_000);
+
+  it('charges the card once, then waits a day, then two days, before trying again', async () => {
+    expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: false, paymentFailed: true });
+    hours(0.1);
+    // Still reported as failed, so sync keeps stopping GPUs for a debt nobody pays.
+    expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: false, paymentFailed: true });
+    hours(23);
+    await checkAndRefillWallet('cus_declined');
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(1);
+
+    hours(1);
+    await checkAndRefillWallet('cus_declined');
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(2);
+
+    hours(47);
+    await checkAndRefillWallet('cus_declined');
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(2);
+    hours(1);
+    await checkAndRefillWallet('cus_declined');
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(3);
+  });
+
+  it('tries a new card straight away', async () => {
+    await checkAndRefillWallet('cus_declined');
+    customer = { ...customer, invoice_settings: { default_payment_method: 'pm_new' } } as Stripe.Customer;
+    vi.mocked(mockStripe.paymentIntents.create).mockResolvedValue({ id: 'pi_ok', status: 'succeeded' } as Stripe.PaymentIntent);
+
+    expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: true });
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(2);
+    expect(customer.metadata.wallet_refill_failures).toBe('');
+  });
+
+  it('tries again once the customer has paid by hand since the decline', async () => {
+    await checkAndRefillWallet('cus_declined');
+    hours(1);
+    vi.mocked(mockStripe.customers.listBalanceTransactions).mockResolvedValue({
+      data: [{ amount: -5000, description: 'Wallet top-up', created: Math.floor(Date.now() / 1000) - 60 }],
+    } as unknown as Stripe.ApiList<Stripe.CustomerBalanceTransaction>);
+
+    await checkAndRefillWallet('cus_declined');
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not charge again while an earlier top-up is still processing', async () => {
+    vi.mocked(mockStripe.paymentIntents.list).mockResolvedValue({
+      data: [{ id: 'pi_bank', status: 'processing', metadata: { type: 'wallet_funding' } }],
+    } as unknown as Stripe.ApiList<Stripe.PaymentIntent>);
+
+    expect(await checkAndRefillWallet('cus_declined')).toMatchObject({ refilled: false, pending: true });
+    expect(mockStripe.paymentIntents.create).not.toHaveBeenCalled();
   });
 });
