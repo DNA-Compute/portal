@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { decodeCustomerToken, type CustomerTokenPayload } from "@/lib/customer-auth";
+import { decodeCustomerToken, needsTwoFactorCode, type CustomerTokenPayload } from "@/lib/customer-auth";
 import {
   createCustomerSession,
   buildSessionCookie,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     // Until the 2FA code is entered, return only what the code screen needs: no console or billing
     // links, no billing data, and no login recorded. Admin Login as tokens skip the code.
     const twoFactorStatus = await getTwoFactorStatus(payload.email);
-    const twoFactorPending = twoFactorStatus.enabled && !payload.skipTwoFactor && !payload.twoFactorVerified;
+    const twoFactorPending = twoFactorStatus.enabled && await needsTwoFactorCode(payload);
     if (twoFactorPending) {
       return NextResponse.json({ twoFactor: twoFactorStatus, twoFactorPending: true, userEmail: payload.email });
     }

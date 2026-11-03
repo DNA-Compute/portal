@@ -105,7 +105,6 @@ export function DashboardContent() {
     setTwoFactorVerified,
     setTwoFactorRequired,
     setLoading,
-    setError,
     ticketId,
   } = useDashboardData();
 
@@ -304,8 +303,10 @@ export function DashboardContent() {
   // - Polls every 5 minutes, not every 30 seconds.
   // - Pauses entirely while the tab is hidden; resumes with one immediate
   //   check when the tab is visible again.
+  const accountOpen = !!data;
   React.useEffect(() => {
-    if (!token) return;
+    // Wait for the account to load: before the 2FA code, the token is refused.
+    if (!token || !accountOpen) return;
 
     const checkUnread = async () => {
       try {
@@ -356,7 +357,7 @@ export function DashboardContent() {
       document.removeEventListener("visibilitychange", handleVisibility);
       stop();
     };
-  }, [token]);
+  }, [token, accountOpen]);
 
   // Clear unread badge when viewing support tab
   React.useEffect(() => {
@@ -604,7 +605,6 @@ export function DashboardContent() {
         userEmail={pendingUserEmail}
         onSuccess={(newToken) => {
           // Swap the URL token so page refreshes use the 2FA-verified JWT
-          const verifiedToken = newToken || token;
           if (newToken) {
             const url = new URL(window.location.href);
             url.searchParams.set("token", newToken);
@@ -614,23 +614,7 @@ export function DashboardContent() {
           setTwoFactorVerified(true);
           setTwoFactorRequired(false);
           setLoading(true);
-          // Re-fetch account data with the verified token
-          fetch("/api/account/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: verifiedToken }),
-          })
-            .then((res) => res.json())
-            .then((result) => {
-              if (result.error) {
-                setError(result.error);
-              } else {
-                setData(result);
-              }
-            })
-            .catch(() => setError("Failed to load account data"))
-            .finally(() => setLoading(false));
-          // GPUs, activity and billing load again once the page picks up the new token.
+          // The page picks up the new token from the URL and loads the account with it once.
         }}
       />
     );
@@ -1582,7 +1566,9 @@ export function DashboardContent() {
               <ProfileSettings token={token!} />
 
               {/* Budget Controls Section */}
-              <BudgetSettings token={token!} />
+              {data.can?.["billing.view"] && (
+                <BudgetSettings token={token!} canManage={data.can["billing.manage"] ?? false} />
+              )}
 
               {/* API Keys Section */}
               <ApiKeysSettings token={token!} />

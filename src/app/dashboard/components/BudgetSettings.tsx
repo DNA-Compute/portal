@@ -14,6 +14,8 @@ interface BudgetData {
 
 interface BudgetSettingsProps {
   token: string;
+  /** billing.manage: without it the settings are shown read-only. */
+  canManage: boolean;
 }
 
 function formatCurrency(cents: number | null): string {
@@ -28,7 +30,7 @@ function parseCurrency(value: string): number | null {
   return Math.round(parsed * 100);
 }
 
-export function BudgetSettings({ token }: BudgetSettingsProps) {
+export function BudgetSettings({ token, canManage }: BudgetSettingsProps) {
   const [budget, setBudget] = useState<BudgetData>({
     monthlyLimitCents: null,
     dailyLimitCents: null,
@@ -113,7 +115,7 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
       } else {
         setMessage({ type: "error", text: data.error || "Failed to save budget settings" });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: "error", text: "Failed to save budget settings" });
     } finally {
       setSaving(false);
@@ -146,7 +148,8 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit}>
+        <fieldset disabled={!canManage} className="space-y-6">
         {/* Spending Limits */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-[var(--fg)]">Spending Limits</h3>
@@ -310,14 +313,19 @@ export function BudgetSettings({ token }: BudgetSettingsProps) {
 
         {/* Submit Button */}
         <div className="pt-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-dark)] text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Budget Settings"}
-          </button>
+          {canManage ? (
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-dark)] text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Budget Settings"}
+            </button>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">Only a Team Admin can change the budget.</p>
+          )}
         </div>
+        </fieldset>
       </form>
     </div>
   );

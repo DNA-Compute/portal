@@ -367,6 +367,11 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
 
         setData(result);
         setLoading(false);
+        // Only now: until verify answers, the token may still be waiting for its 2FA code.
+        fetchInstances();
+        fetchActivityEvents();
+        fetchBillingStats();
+        fetchSnapshots();
       } catch {
         if (!cancelled) {
           setError("Failed to load account data");
@@ -376,14 +381,6 @@ export function useDashboardData(): DashboardDataState & DashboardDataActions & 
     }
 
     bootstrap();
-
-    // Only fetch additional data if we have a token and 2FA is satisfied.
-    if (token && (!twoFactorRequired || twoFactorVerified)) {
-      fetchInstances();
-      fetchActivityEvents();
-      fetchBillingStats();
-      fetchSnapshots();
-    }
 
     return () => {
       cancelled = true;

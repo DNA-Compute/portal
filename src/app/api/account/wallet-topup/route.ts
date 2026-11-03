@@ -92,10 +92,14 @@ export async function POST(request: NextRequest) {
     // Generate a fresh token for the return URL so the user stays authenticated
     // after Stripe redirects back (the dashboard requires ?token= in the URL).
     // Use 2-hour expiry to allow time for checkout completion.
+    // It keeps the 2FA mark (this token already passed the check) and an admin's Login as mark.
     const returnToken = generateCustomerToken(payload.email, payload.customerId, {
       expiresInHours: 2,
       userId: payload.userId,
       activeAccountId: context.accountId,
+      twoFactorVerified: true,
+      skipTwoFactor: payload.skipTwoFactor,
+      impersonator: payload.impersonator,
     });
 
     // Create checkout session for one-time payment

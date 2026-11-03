@@ -19,7 +19,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { lookupInvitation } from "@/lib/auth/accept-invitation";
-import { verifyCustomerToken } from "@/lib/customer-auth";
+import { decodeCustomerToken } from "@/lib/customer-auth";
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -53,7 +53,8 @@ export default async function InviteRouter({
   }
 
   // Session present — verify it points at the invitee.
-  const payload = await verifyCustomerToken(jwtToken);
+  // Routing only: the dashboard asks for the 2FA code, so a 2FA invitee needs no second email.
+  const payload = decodeCustomerToken(jwtToken);
   if (!payload) {
     // Expired / invalid JWT. Treat the same as no session.
     const qs = new URLSearchParams({
