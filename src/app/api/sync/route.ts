@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recordBillingRun } from "@/lib/billing-heartbeat";
+import { recordBillingRun, countUntrackedGpus } from "@/lib/billing-heartbeat";
 import { getStripe } from "@/lib/stripe";
 import { getSharedVolumes, getPoolSubscriptions, type SharedVolume } from "@/lib/hostedai";
 import { isInstanceGone } from "@/lib/gpu-termination";
@@ -1045,7 +1045,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[Sync] Completed:", summary);
     try {
-      await recordBillingRun(summary.podsErrors);
+      await recordBillingRun({ podsErrors: summary.podsErrors, untrackedGpus: await countUntrackedGpus() });
     } catch (heartbeatError) {
       console.error("[Sync] Failed to record the billing run for /api/status/billing:", heartbeatError);
     }
