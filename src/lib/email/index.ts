@@ -28,8 +28,11 @@
  * // Notify about GPU launch
  * await sendGpuLaunchedEmail({
  *   to: "user@example.com",
- *   gpuType: "NVIDIA A100",
- *   region: "us-east"
+ *   customerName: "Ada",
+ *   instanceName: "training-workspace",
+ *   poolName: "H100 fractional",
+ *   gpuCount: 1,
+ *   dashboardUrl: "https://example.com/dashboard",
  * });
  * ```
  */

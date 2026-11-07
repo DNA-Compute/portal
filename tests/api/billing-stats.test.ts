@@ -7,16 +7,11 @@ import { can } from "@/lib/auth/role-permissions";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   ledger: vi.fn(),
-  summary: vi.fn(),
   audit: vi.fn().mockResolvedValue({}),
 }));
 vi.mock("@/lib/auth/helpers", () => ({ getAuthenticatedCustomer: mocks.auth }));
 vi.mock("@/lib/prisma", () => ({ prisma: { teamAuditLog: { create: mocks.audit } } }));
 vi.mock("@/lib/stripe", () => ({ getStripe: async () => ({ customers: { listBalanceTransactions: mocks.ledger } }) }));
-vi.mock("@/lib/hostedai", () => ({
-  getTeamBillingSummaryV2: mocks.summary,
-  formatBillingDatetime: (date: Date) => date.toISOString(),
-}));
 vi.mock("@/lib/pricing", () => ({ getStoppedInstanceRatePercent: () => 25 }));
 vi.mock("@/lib/lifecycle", () => ({ addSpend: vi.fn() }));
 vi.mock("@/lib/customer-cache", () => ({ cacheCustomer: vi.fn() }));
@@ -79,12 +74,6 @@ describe("monthly retail wallet billing statistics", () => {
     } as AuthenticatedCustomer;
     mocks.auth.mockImplementation(async () => auth);
     mocks.ledger.mockImplementation(listTransactions);
-    mocks.summary.mockResolvedValue({
-      total_cost: 9999,
-      gpuaas_summary: [{ pool_hours: 7 }],
-      instance_billing_summary: [{ hours: 3 }],
-      shared_storage_billing_summary: [{ storage_name: "native-volume", cost: 800, hours: 4 }],
-    });
   });
   afterEach(() => vi.useRealTimers());
 
@@ -96,7 +85,7 @@ describe("monthly retail wallet billing statistics", () => {
     const response = await GET(request());
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toMatchObject({ totalCost: 7.75, storageCost: 1.25, gpuHours: 10, storageHours: 4 });
+    expect(body).toMatchObject({ totalCost: 7.75, storageCost: 1.25 });
     expect(body).not.toHaveProperty("instances");
     expect(body).not.toHaveProperty("storageVolumes");
   });
@@ -160,12 +149,18 @@ describe("monthly retail wallet billing statistics", () => {
     expect(await response.json()).toMatchObject({ totalCost: 7.25, storageCost: 0, periodStart: "2030-06-01T00:00:00.000Z" });
   });
 
-  it("keeps retail money available when the optional provider usage summary fails", async () => {
-    ledger.set("cus_owner", [transaction("retail", 300)]);
-    mocks.summary.mockRejectedValue(new Error("Native usage unavailable"));
-    const response = await GET(request());
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ totalCost: 3, storageCost: 0 });
+  it("counts billed GPU time from the ledger: launch block, usage blocks, minus unused-time credits", async () => {
+    // The staging test of 2026-11-07: launch, two 30-minute blocks, terminated with 23 minutes unused.
+    ledger.set("cus_owner", [
+      transaction("launch", 9, { description: "GPU deploy: H100 fractional", metadata: { hours_used: "0.5", rate_cents: "17" } }),
+      transaction("block1", 9, { metadata: { billing_type: "gpu_usage", billing_minutes: "30" } }),
+      transaction("block2", 9, { metadata: { billing_type: "gpu_usage", billing_minutes: "30" } }),
+      transaction("credit", -7, { metadata: { instance_id: "i-1", unused_minutes: "23" } }),
+      transaction("reserved", 2, { metadata: { billing_type: "configured_stopped_reservation", billing_minutes: "30" } }),
+      transaction("last_month", 9, { created: MONTH_START - 1, metadata: { billing_type: "gpu_usage", billing_minutes: "30" } }),
+    ]);
+    const body = await (await GET(request())).json();
+    expect(body.gpuHours).toBeCloseTo((30 + 30 + 30 - 23) / 60);
   });
 
   it("fails explicitly rather than returning zero when the ledger is unavailable", async () => {

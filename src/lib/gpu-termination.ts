@@ -196,7 +196,7 @@ async function creditUnused(record: SettlementRecord, runningRateCents: number, 
       amount: -creditBackCents,
       currency: "usd",
       description: `GPU early termination credit: ${Math.round(unusedMs / 60000)} mins unused`,
-      metadata: { instance_id: record.instanceId || record.subscriptionId },
+      metadata: { instance_id: record.instanceId || record.subscriptionId, unused_minutes: String(Math.round(unusedMs / 60000)) },
     }, { idempotencyKey: `settle_credit_${record.id}_${paidUntil.getTime()}` });
     console.log(`[Billing] Credited back $${(creditBackCents / 100).toFixed(2)} for early termination`);
   } catch (error) {

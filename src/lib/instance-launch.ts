@@ -144,7 +144,7 @@ async function notifyWhenReady(auth: AuthenticatedCustomer, input: ConfiguredLau
   });
   if (customer.email) {
     const token = generateCustomerToken(payload.email.toLowerCase(), customer.id);
-    await sendGpuLaunchedEmail({ to: customer.email, customerName: customer.name || customer.email.split("@")[0], poolName: resolved.productName, gpuCount, gpuSharePercent, dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}` });
+    await sendGpuLaunchedEmail({ to: customer.email, customerName: customer.name || customer.email.split("@")[0], instanceName: input.name, poolName: resolved.productName, gpuCount, gpuSharePercent, dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?token=${token}` });
   }
 }
 

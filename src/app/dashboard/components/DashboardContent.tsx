@@ -693,6 +693,7 @@ export function DashboardContent() {
         <ImpersonationBanner
           customerEmail={data.customer.email}
           adminEmail={data.impersonator?.adminEmail}
+          token={token}
         />
       )}
       <div className="flex flex-1 min-h-0 overflow-hidden flex-col md:flex-row">
@@ -772,14 +773,7 @@ export function DashboardContent() {
             )}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-zinc-400">Available balance</span>
-              <div className="flex items-center gap-2">
-                {totalRunning > 0 && isHourly && liveCostTicker.costPerSecond > 0 && (
-                  <span className="text-xs text-zinc-500 font-mono">
-                    -${liveCostTicker.costPerSecond.toFixed(4)}/s
-                  </span>
-                )}
-                <div className="w-8 h-5 rounded-sm bg-gradient-to-r from-rose-400 to-orange-400"></div>
-              </div>
+              <div className="w-8 h-5 rounded-sm bg-gradient-to-r from-rose-400 to-orange-400"></div>
             </div>
             <div className="flex items-baseline gap-2 mb-2">
               <span className={`text-3xl font-bold tabular-nums ${

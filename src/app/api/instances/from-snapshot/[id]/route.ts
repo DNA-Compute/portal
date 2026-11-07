@@ -450,6 +450,7 @@ export async function POST(
       await sendGpuLaunchedEmail({
         to: customer.email!,
         customerName: customer.name || customer.email!.split("@")[0],
+        instanceName: displayName,
         poolName: product.name,
         gpuCount,
         dashboardUrl,

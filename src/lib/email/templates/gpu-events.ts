@@ -72,20 +72,23 @@ ${plainTextFooter()}`;
 export async function sendGpuLaunchedEmail(params: {
   to: string;
   customerName: string;
+  /** The name the customer gave the instance, so they can tell their GPUs apart. */
+  instanceName: string;
   poolName: string;
   gpuCount: number;
   gpuSharePercent?: number;
   dashboardUrl: string;
 }) {
-  const { to, customerName, poolName, gpuCount, gpuSharePercent, dashboardUrl } = params;
+  const { to, customerName, instanceName, poolName, gpuCount, gpuSharePercent, dashboardUrl } = params;
   const allocation = gpuAllocationLabel(gpuCount, gpuSharePercent);
   const safeCustomerName = escapeHtml(customerName);
+  const safeInstanceName = escapeHtml(instanceName);
   const safePoolName = escapeHtml(poolName);
 
   const body = `
     ${emailGreeting(safeCustomerName)}
     ${emailSuccessBox(`<p style="margin: 0; font-size: 15px; color: #065f46;">
-      <strong>GPU Instance Started</strong><br>
+      <strong>GPU Instance Started: ${safeInstanceName}</strong><br>
       ${allocation} on <code style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 13px;">${safePoolName}</code>
     </p>`)}
     ${emailText("Your GPU is being provisioned. View connection details in your dashboard.")}
@@ -93,11 +96,11 @@ export async function sendGpuLaunchedEmail(params: {
     ${emailSignoff()}
   `;
 
-  const subject = `GPU instance started: ${allocation} on ${poolName}`;
-  const fallbackHtml = emailLayout({ preheader: `${allocation} provisioned on ${poolName}`, body });
+  const subject = `GPU instance started: ${instanceName} (${allocation} on ${poolName})`;
+  const fallbackHtml = emailLayout({ preheader: `${instanceName}: ${allocation} provisioned on ${poolName}`, body });
   const fallbackText = `Hi ${customerName},
 
-GPU Instance Started
+GPU Instance Started: ${instanceName}
 ${allocation} on ${poolName}
 
 Your GPU is being provisioned. View connection details in your dashboard.
@@ -109,7 +112,7 @@ ${plainTextFooter()}`;
 
   const template = await loadTemplate(
     "gpu-launched",
-    { customerName: safeCustomerName, poolName: safePoolName, gpuCount: String(gpuCount), gpuAllocation: allocation, dashboardUrl },
+    { customerName: safeCustomerName, instanceName: safeInstanceName, poolName: safePoolName, gpuCount: String(gpuCount), gpuAllocation: allocation, dashboardUrl },
     { subject, html: fallbackHtml, text: fallbackText }
   );
 

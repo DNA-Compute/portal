@@ -99,7 +99,6 @@ export interface BillingStats {
   totalCost: number;
   gpuHours: number;
   storageCost: number;
-  storageHours?: number;
   dailyCharges: Array<{ date: string; amountCents: number }>;
   periodStart: string | null;
   periodEnd: string | null;

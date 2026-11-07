@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCustomer } from "@/lib/auth/helpers";
 import { requirePermission } from "@/lib/auth/audit";
-import { getTeamBillingSummaryV2, formatBillingDatetime } from "@/lib/hostedai";
 import { getStoppedInstanceRatePercent } from "@/lib/pricing";
 import { getWalletTransactions, isUserFacingWalletTransaction } from "@/lib/wallet";
 
@@ -10,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await getAuthenticatedCustomer(request);
     if (auth instanceof NextResponse) return auth;
-    const { customer, teamId } = auth;
+    const { customer } = auth;
 
     // PA-202 gate: billing.view required (Team Admin + Finance Manager allowed,
     // Team Member + Read-only Member denied).
@@ -31,7 +30,11 @@ export async function GET(request: NextRequest) {
 
     let totalCostCents = 0;
     let storageCostCents = 0;
+    // GPU time the customer was billed for, from the wallet ledger. hosted.ai's usage report lists
+    // instances with every usage field "0", so it cannot be used for this.
+    let gpuMinutes = 0;
     for (const txn of transactions) {
+      if (txn.created >= periodStartSeconds && txn.created <= periodEndSeconds) gpuMinutes += billedGpuMinutes(txn);
       if (txn.created > periodEndSeconds || !isUserFacingWalletTransaction(txn) || txn.amount <= 0) continue;
       if (txn.currency !== "usd") {
         throw new Error(`Unsupported wallet charge currency: ${txn.currency}`);
@@ -44,52 +47,10 @@ export async function GET(request: NextRequest) {
       if (dayIndex >= 0 && dayIndex < dailyCharges.length) dailyCharges[dayIndex].amountCents += txn.amount;
     }
 
-    let gpuHours = 0;
-    let storageHours = 0;
-    if (teamId) {
-      try {
-        // Provider data supplies usage quantities only, never retail money.
-        const billing = await getTeamBillingSummaryV2(
-          teamId,
-          formatBillingDatetime(startOfMonth),
-          formatBillingDatetime(now)
-        );
-
-        let poolHours = 0;
-        if (Array.isArray(billing.gpuaas_summary)) {
-          poolHours = billing.gpuaas_summary.reduce((sum: number, item: { pool_hours?: number }) => {
-            return sum + (Number(item.pool_hours) || 0);
-          }, 0);
-        }
-
-        let instanceHours = 0;
-        if (Array.isArray(billing.instance_billing_summary)) {
-          instanceHours = billing.instance_billing_summary.reduce((sum: number, item: { hours?: number }) => {
-            return sum + (Number(item.hours) || 0);
-          }, 0);
-        }
-
-        if (Array.isArray(billing.shared_storage_billing_summary)) {
-          for (const storage of billing.shared_storage_billing_summary) {
-            storageHours += Number(storage.hours) || 0;
-          }
-        }
-
-        // Preserve provider quantity fallbacks; never estimate hours from dollars.
-        if (poolHours === 0) poolHours = Number(billing.pool_hours) || 0;
-        if (instanceHours === 0) instanceHours = Number(billing.instance_hours) || 0;
-        gpuHours = Number(billing.total_hours) || poolHours + instanceHours;
-      } catch (error) {
-        console.error("Failed to fetch billing summary:", error);
-        // Optional usage quantities must not hide successfully loaded retail wallet charges.
-      }
-    }
-
     return NextResponse.json({
       totalCost: totalCostCents / 100,
-      gpuHours,
+      gpuHours: Math.max(0, gpuMinutes) / 60,
       storageCost: storageCostCents / 100,
-      storageHours,
       dailyCharges,
       periodStart: startOfMonth.toISOString(),
       periodEnd: now.toISOString(),
@@ -104,4 +65,16 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Minutes of GPU time one ledger entry adds (launch and usage charges) or gives back (unused-time credits).
+ * shortcut: a failed launch's refund records no minutes, so its launch block still counts here.
+ */
+function billedGpuMinutes(txn: { metadata?: Record<string, string> | null }): number {
+  const meta = txn.metadata ?? {};
+  if (meta.billing_type === "gpu_usage") return Number(meta.billing_minutes) || 0;
+  if (meta.hours_used !== undefined) return (Number(meta.hours_used) || 0) * 60;
+  if (meta.unused_minutes !== undefined) return -(Number(meta.unused_minutes) || 0);
+  return 0;
 }

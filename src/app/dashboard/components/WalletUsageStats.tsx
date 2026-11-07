@@ -15,7 +15,7 @@ export function WalletUsageStats({ stats, error }: { stats: BillingStats | null;
       <div role="group" aria-label="GPU hours" className="bg-white rounded-2xl p-5 border border-[var(--line)]">
         <div className="text-xs text-[var(--muted)] mb-1">GPU Hours</div>
         <div className="text-3xl font-bold text-[var(--fg)]">{current ? `${current.gpuHours.toFixed(2)}h` : "—"}</div>
-        <div className="text-xs text-zinc-400">{current ? "Provider usage · this month (UTC)" : status}</div>
+        <div className="text-xs text-zinc-400">{current ? "Billed GPU time · this month (UTC)" : status}</div>
       </div>
 
       <div role="group" aria-label="Wallet charges" className="bg-white rounded-2xl p-5 border border-[var(--line)]">
