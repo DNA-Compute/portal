@@ -439,6 +439,8 @@ function AccountContent() {
         </div>
       </div>
 
+      <footer className="account-footer">Powered by DNAX</footer>
+
       <style jsx>{`
         /* ═══════════════════════════════════════════════════════════════
            This screen is the seam. A customer arrives here straight from the
@@ -628,6 +630,18 @@ function AccountContent() {
           color: var(--fg);
           font-variant-numeric: tabular-nums;
         }
+        .account-footer {
+          border-top: 1px solid var(--line);
+          padding: 16px 24px;
+          text-align: center;
+          font-family: var(--font-code);
+          font-size: 11px;
+          font-weight: var(--label-weight);
+          letter-spacing: var(--label-track);
+          text-transform: uppercase;
+          color: var(--fg-muted);
+        }
+
         .account-trust-label {
           font-family: var(--font-code);
           font-size: 11px;
